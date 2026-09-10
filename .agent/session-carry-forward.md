@@ -1,70 +1,92 @@
-# Carry-forward: Start Batch C
+# Carry-forward: Batch C plan awaiting implementation approval
 
 Date: 2026-09-10.
 
-**Next session:** Start Batch C (§1.4/§1.6/§1.10), covering road policy and graph connectivity. A/D and B are complete; they require no further validation or closure work. Use this handoff and the current review for context, not documents from completed batches.
+**Next action:** Owner reviews [the active Batch C plan](plans/batch-c-road-policy-and-visuals.md).
+Scope is approved; implementation is NOT approved and no code has changed. A/D and B
+are complete and require no validation or closure. Do not seek their retired documents.
 
 ## 1. Session goal
 
-Prepare the next session to address Batch C without reopening completed work. [The review](backlog/review-gpt-6-astra-09-07.md) records **6 fixed, 26 remaining** (3 High, 16 Medium, 7 Low). Batch C needs source verification specific to its findings, owner decisions on road handling and approval of its implementation approach.
+Investigate review §1.4/§1.6/§1.10, resolve owner road policy, measure a fresh baseline,
+and prepare an approved-scope plan. Owner expanded scope to distinguish roaded and
+roadless connections in the Preview panel, manual editor and exported PNG.
 
 ## 2. Fixes applied
 
-- [PNG rasterizer](../internal/services/preview_service/previewGeneratorService.go): loop count uses `int(math.Ceil(steps))`; floating-point increment and all existing stamp positions stay unchanged. Subpixel segments now paint without changing geometry, brush, dash policy or assets.
-- [Game rules](../internal/services/template_generator/providers/gameRulesProvider.go): `TournamentSaveArmy` uses `tournamentRules.SaveArmy`, rather than forced true. No protected schema or writer changes.
+None this session. Source verification confirms all three Batch C findings remain.
+Prior settled fixes stay intact: manual compare-before-mutation/dirty tracking and
+snapshot isolation; no output browsing-fallback authorization; additive PNG ceiling
+sample count with existing stamp spacing; configured tournament SaveArmy (nil rules
+plus tournament selector means false; normal constructor default remains true).
 
 ## 3. Features added / changed
 
-- Owner confirmed omitted `tournamentSaveArmy` means off in-game. This is owner-supplied validation, not an assistant game test.
-- Owner selected nil `TournamentRules` plus tournament victory selector => false, no new fallback. Normal constructor default explicitly sets true and is unchanged.
-- Owner approved focused before/after PNG pairs: short portal, longer portal and short direct edge. Eighteen paired images and four after-only cases are under `output/research/batch-b-png/20260910-101656/{before,after}`. These are ignored synthetic image diagnostics, not game exports.
-- Review-only artifact capture was removed at owner request. Pixel assertions run unconditionally and stay in-memory; future GUI flow and saved-preview golden coverage is separate work.
-- In-app vector rendering, GUI goldens and all output-directory authorization/persistence behavior remain unchanged.
+No implemented changes. Owner approved these Batch C requirements:
+
+- Checkbox means roads **between zones**. With EditorState present, set Road true/on or false/off on every non-explicit-Portal connection, including custom/imported, Default, empty, arena and proximity. On overwrites imported false; off overwrites true. Off removes whole zone-road segments referencing these connections, not edges.
+- Internal castle/object/foothold roads stay generated even off. Preserve explicit Portal flags and valid approaches, including Road=false portals; generated portals keep true. Portal placement rules alone do NOT grant road-policy exemption.
+- Reconcile foothold additions/removals/count changes with final mandatory content and actual main objects. Remove only confirmed invalid MainObject, incident Connection and named MandatoryContent references; preserve valid custom internal roads and opaque types. No prefix-only deletion, no new provenance metadata.
+- Nil EditorState preserves supplied roads/flags and existing mandatory content, with direct EnsureConnectionNames and normal graph checks but NO road cleanup.
+- Repair graph connectivity from edges, including accumulated repairs. Preserve impossible-isolation fallback independently of road materialization.
+- All three visual surfaces: explicit Road false is roadless, true roaded, nil roaded ONLY for explicit Portal. Owner will test this interpretation in-game.
+- GUI roadless non-portals #B0B0B0; roadless explicit portals #90EE90. Keep roaded colors. Selected editor edges retain road color (even roaded) and use thicker width. Legends: Road / No road / Portal / Portal without road.
+- PNG roadless strokes: existing color at 50% once per edge; stamps within one edge do not accumulate, intersections of separate edges may. Preserve geometry/dashes, clipping and opaque markers. Reusable mask, no per-edge full-image allocations.
+- Pending editor create/type changes show the checkbox policy before Apply via handler/service logic. Cancel stays non-mutating. No per-edge checkbox requested.
+- Road display classification is separate from existing effective preview Type. Keep placement-rule-derived portal shapes and existing type comparison behavior; road policy uses explicit Portal only. §1.15 unification remains deferred.
 
 ## 4. File modifications
 
-| File | Change |
-| --- | --- |
-| [previewGeneratorService.go](../internal/services/preview_service/previewGeneratorService.go) | One-line additive sample-count fix. |
-| [gameRulesProvider.go](../internal/services/template_generator/providers/gameRulesProvider.go) | One-line configured Save Army assignment. |
-| [createPreviewImage_test.go](../test/unit/internal/services/preview_service/previewGeneratorService/createPreviewImage_test.go) | Raster matrix, visibility, gaps, fitting/clipping, degeneracy and determinism. |
-| [createGameRules_test.go](../test/unit/internal/services/template_generator/providers/gameRulesProvider/createGameRules_test.go) | True/false, activation aliases, inactive, nil and default cases. |
-| [fromEditorState_test.go](../test/unit/internal/mappers/generatorConfigMapper/fromEditorState_test.go) | False propagation. |
-| [previewRasterFixture.go](../test/test_helpers/previewRasterFixture.go) | Fixed-layout test helper, 22 fixtures; enumeration privatized in owner cleanup commit. |
-| Removed review-only PNG capture utility | Was never committed; no environment-variable setup remains in test code. |
-| [tournamentSaveArmySerialization_integration_test.go](../test/integration/tournamentSaveArmySerialization_integration_test.go) | New real generation/save raw-JSON matrix with structure and tournament:true positive controls. |
-| [Review](backlog/review-gpt-6-astra-09-07.md) | §1.3/§1.7 fixed and counts updated; closure update unstaged. |
-| [Handoff](session-carry-forward.md) | Current committed state and next-session scope; closure update unstaged. |
+- Created [active Batch C plan](plans/batch-c-road-policy-and-visuals.md): approved requirements, concrete boundaries, phased tests and independent review corrections.
+- Updated [this handoff](session-carry-forward.md) for the approval gate.
+- Updated [settled decisions](memories/settled-decisions.md) with durable owner road/visual policy.
+- Refreshed ignored [coverage.txt](../coverage.txt), [coverage.html](../coverage.html) and [lcov.info](../lcov.info) with the fresh baseline task.
+- No production, tests, configuration, protected trees, Wire or goldens edited.
 
 ## 5. Tests added or updated
 
-Before production edits, ten PNG cases failed with zero visible connector pixels; three provider false/nil cases and both serialized-false cases failed with actual true. These regressions now pass. Test files are listed in §4.
+None added. Fresh Windows Go 1.27.0 full unit coverage run (`-count=1`) PASS;
+Go `cover -func` reports **74.5%**. Report-only lint: **0 issues**, three known
+unused-exclusion warnings. GOFLAGS empty. Existing tests lack the newly agreed
+road-state contracts despite high statement coverage.
 
-Windows Go 1.27.0 verification:
+No build/default/tagged/GUI/Linux/race/benchmark run this session. Last recorded
+`go test ./test/...` outcome was PASS in the completed previous session, not a fresh
+Batch C run. No implementation result or in-game correctness is claimed.
 
-- Build, full unit suite (`-count=1`), default `go test ./test/...`, tagged integration, tagged GUI integration, vet with `integration_test`, and test-layout: PASS.
-- Fresh baseline/final unit coverage: **74.5% / 74.5%**. `drawLine`, `drawConnections`, solid/dashed methods and `setTournamentRules`: 100%.
-- Final golangci-lint 2.13.1 report-only run: **0 issues**, three existing unused-exclusion warnings.
-- Independent Claude Opus 5 review: no blockers. Its optional short-portal gap regression was added; final full unit/coverage/lint/layout checks passed afterward. Default/tagged/GUI checks passed before that last test-only addition.
-- Pixel preservation follows the additive-stamp proof plus visual spot checks; no automated comparison of all 18 image pairs is claimed.
-- No protected data/schema/registry, generated Wire or GUI golden changes. No local Linux/race/benchmark/vulnerability-scan execution claimed.
-- After capture removal/helper cleanup: build, default `go test ./test/...`, fresh unit coverage task, layout and lint passed; 74.5% before/after. Final focused pixel tests after helper function ordering: 36 passed. GUI was not rerun for removal of a non-GUI capture utility. Owner commits were checked read-only; this final wrap-up changes documentation only.
+Claude Opus 5 reviewed design and written plan. Written-plan verdict: approve with
+corrections. Incorporated both blockers (whole-template golden flag updates without
+weakening equality; direct naming on nil-state path and revised old mock expectation)
+and clarified new type-change handler operation and unchanged shape classification.
 
 ## 6. Git status snapshot
 
-Last observed branch: `AD/visual_and_value_save_bugs`. HEAD: `a4c5fa3a05184b43f2ef1e3c0a7d4a55b74c55d2`. Implementation is committed; documentation-only edits were pending at wrap-up. Inspect current Git state before Batch C solely to preserve owner changes and staging, not to revalidate completed batches. Never stage, unstage, commit, push or switch branches speculatively.
+Baseline branch was `master`. Final observed branch is `AD/road_and_graph_invariants`,
+same HEAD `5b1feb0eb315a4df54ca1ea9e1defd070f6061d8`; the agent did not switch it.
+Initial and post-baseline status were clean. Final status: modified handoff and
+untracked .agent/plans/; staged diff empty. Memory and coverage artifacts are ignored.
+Inspect again before implementation; preserve all owner staging/changes. No agent
+staging, unstaging, commits, pushes, stashes or speculative branch changes.
 
 ## 7. Rejections / things the user declined
 
-- Retain settled A/D decisions: use `PathResolutionService`, consume pending base on every Apply, no saved output path or browsing-fallback authorization.
-- No protected edits, global test tags, bulk rewrite, generated Wire hand edits or fake production seams.
-- Owner rejected retaining the environment-gated PNG capture test: it only checked errors/file count, not image correctness. It was removed entirely, along with capture-only setup; fixture enumeration is private. Retain real unconditional pixel assertions. Future GUI flow and saved-preview goldens are separate work, not implemented here.
-- Retain floating-point stamp spacing rather than resampling long chords; unit tests stay in-memory and raw JSON checks use actual nested fields instead of substring assertions.
-- Carry-forward documents must be self-contained and forward-looking. Do not reference completed-batch planning documents or assign previous-batch checking, validation or closure to the next session. Completed-batch documents are disposable; unresolved corrections normally stay in the same session.
+- Original zero-roads-anywhere interpretation rejected: internal roads and portal approaches stay; only non-Portal border roads follow the checkbox.
+- Do not infer display state from zone-road references or default every nil to roaded.
+- Scope was initially withheld pending visual expansion, then approved in full.
+- Reject review suggestions contrary to owner: nil-state cleanup, orange selected roaded edges, deleting portal approaches for false flags, adding arena-marker castle roads, and relying solely on final generator cleanup for public repair correctness.
+- No protected edits, global tags, bulk rewrites, fake seams or Wire hand edits.
+- Keep PathResolutionService, pending-base consumption on every Apply and unpersisted session-only export selection. Browsing fallbacks never authorize export.
+- Keep unconditional in-memory PNG assertions; no environment-gated capture-only utility. Keep original floating-point stamp spacing, no resampling disguise.
+- Two exploration calls rejected lowercase model IDs; retried successfully using exact `GPT-5.6 Terra (copilot)` display name (already documented in tooling memory).
+- Completed plans are owner-deleted. Future handoffs must not link them or delegate their validation/closure; surviving decisions must be self-contained.
 
 ## 8. Open questions and confirmed later scope
 
-Batch C (§1.4/§1.6/§1.10) is not started: verify its current sources and tests, ask about generated/custom/imported road handling and optional nil EditorState behavior, then agree the scope and obtain approval before implementation. Preserve the accepted impossible-isolation connectivity fallback while keeping roads independent from graph connectivity. No previous-batch follow-up is required.
+Batch C source verification, baseline, policy questions and scope approval are done.
+**Written-plan implementation approval is pending.** Do not ask settled policy again.
+The owner will validate true/false/nil engine behavior after changes. Existing engine
+evidence is inconclusive: schema is optional bool; shipped examples use both values
+for direct and portal connections; examples do not prove defaults.
 
 Retained owner decisions for later work:
 
@@ -84,13 +106,21 @@ Other pending decisions: arena/manual invalidation and effective-mode aliases (�
 
 ## 9. Next recommended actions
 
-1. Read [AGENTS.md](../AGENTS.md), this handoff and review §1.4/§1.6/§1.10. Inspect current Git state to preserve owner changes.
-2. Trace Batch C's road rebuild, connectivity repair and foothold-content paths, their callers and existing tests. Do not repeat the full audit.
-3. Resolve generated versus custom/imported road handling when roads are disabled, stale foothold-target handling and behavior when `EditorState` is nil. Preserve required graph repairs independently of road creation.
-4. Confirm Batch C scope with the owner, prepare its new durable implementation plan and obtain approval. Then capture a fresh coverage baseline and implement with dedicated regression coverage.
+1. Read AGENTS, this handoff and [active plan](plans/batch-c-road-policy-and-visuals.md).
+2. Obtain owner implementation approval of the written plan. Do not implement yet.
+3. Inspect current Git; if HEAD/source changed, measure a new C baseline and reconcile current sources only. Do not repeat completed-batch audits or settled questions.
+4. Implement/verify the plan one phase at a time; update its checkboxes and summaries.
+5. Keep §8 later scope intact. In-game checks belong to the owner, not a claimed agent result.
 
 ## 10. Carry-forward prompt
 
-> Read [AGENTS.md](../AGENTS.md) first, then [this handoff](session-carry-forward.md) and [the review](backlog/review-gpt-6-astra-09-07.md). Start Batch C (§1.4/§1.6/§1.10): verify its current source paths and tests, ask about generated/custom/imported road policy and nil EditorState behavior, confirm scope and obtain approval before implementation. Preserve graph connectivity repair independently of road creation. Last observed Windows coverage was 74.5%, lint zero; measure a fresh baseline for C. Inspect current Git state to preserve owner changes. A/D and B are complete and require no validation or closure work. This handoff contains the required carry-forward decisions; do not seek documents from completed batches.
+> Read [AGENTS.md](../AGENTS.md) first, then [this handoff](session-carry-forward.md)
+> and [active Batch C plan](plans/batch-c-road-policy-and-visuals.md). Scope is approved;
+> written-plan implementation approval is pending. Obtain that approval before edits.
+> Batch C covers §1.4/§1.6/§1.10 plus all three road-state visual surfaces. Follow the
+> settled owner contract in the handoff/plan; do not reopen its policy questions.
+> Fresh Windows baseline at master 5b1feb0: full unit coverage PASS, 74.5%, lint zero.
+> Inspect Git to preserve owner changes. A/D and B are closed; no old-document lookup,
+> validation or closure work. Preserve all later scope in §8.
 >
 > Never modify protected data/schema/registry trees; proposed protected changes require owner approval and application. Preserve Windows/Linux portable paths and guarded platform code. Test nontrivial changes and measure coverage before/after. Keep multi-step work in an approved durable plan. Never stage, unstage, commit or push; preserve owner staging and do not switch branches speculatively. Never bulk-rewrite or hand-edit generated Wire output. Export only to the detected game templates directory or explicit session-only picker destination; never persist output paths or authorize browsing fallbacks. Never set global integration_test/gui/wireinject tags or add fake unit seams. Preserve later scope in §8.
