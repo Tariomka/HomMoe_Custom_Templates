@@ -207,15 +207,16 @@ func (this *PreviewLayoutService) buildPreviewConnections(
 		// Ctrl offset is 2× the desired bulge: a quadratic Bézier's midpoint
 		// sits halfway between the chord midpoint and the control point.
 		ctrl := startPoint.Add(endPoint).MultiplyScalar(0.5).
-			// ( x, y ) → ( y, -x ) rotates it 90°
-			Add(data.NewVec2(delta.Y, -delta.X).MultiplyScalar(2.0 * spread / distance))
+			Add(delta.RotateClockwise().MultiplyScalar(2.0 * spread / distance))
 		result = append(
 			result,
 			preview.Connection{
-				Start: startPoint,
-				End:   endPoint,
-				Ctrl:  ctrl,
-				Type:  getPreviewConnectionType(connection),
+				Start:          startPoint,
+				End:            endPoint,
+				Ctrl:           ctrl,
+				Type:           getPreviewConnectionType(connection),
+				HasRoad:        connection.HasRoad(),
+				ExplicitPortal: connection.IsExplicitPortal(),
 			})
 	}
 	return result

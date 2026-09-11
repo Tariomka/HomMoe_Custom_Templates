@@ -60,11 +60,13 @@ func (this *PositionedTopologyBuilder) BuildVariant(
 	}
 	if isIsolated {
 		connections = append(connections,
-			this.CreateMissingPlayerConnections(playerLabels, zones, connections, tuning)...)
+			this.CreateMissingPlayerConnections(
+				playerLabels, zones, connections, tuning, configuration.GenerateRoads)...)
 	}
 	connections = append(connections,
 		this.CreateMissingConnections(
-			playerLabels, allLabels, positions, zones, connections, tuning, neutralZones)...)
+			playerLabels, allLabels, positions, zones, connections,
+			tuning, neutralZones, configuration.GenerateRoads)...)
 	return this.CreateVariant(playerLabels, allLabels[0], len(allLabels), zones, connections)
 }
 

@@ -13,6 +13,7 @@ import (
 	"gioui.org/op/paint"
 	"gioui.org/unit"
 	"gioui.org/widget/material"
+	"github.com/Tariomka/hommoe_custom_templates/app/gui/constants"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
@@ -28,13 +29,11 @@ func DrawConnection(gtx layout.Context, conn preview.Connection, zoneRadius floa
 		return
 	}
 
-	lineColor := themes.ColorsPreview.DirectLine
-	lineWidth := float32(gtx.Dp(unit.Dp(2.0)))
+	lineWidth := float32(gtx.Dp(constants.DefaultConnectionLine))
 	if conn.IsPortal() {
-		lineColor = themes.ColorsPreview.PortalLine
-		lineWidth = float32(gtx.Dp(unit.Dp(1.5)))
+		lineWidth = float32(gtx.Dp(constants.DefaultConnectionLineSmall))
 	}
-	drawCurve(gtx, start, conn.Ctrl, end, lineWidth, lineColor)
+	drawCurve(gtx, start, conn.Ctrl, end, lineWidth, NewPreviewConnectionLineStyle(conn).Color())
 }
 
 func DrawPreviewZone(gtx layout.Context, theme *material.Theme, zone preview.Zone, zoneRadius float64) {

@@ -18,32 +18,33 @@ import (
 type TemplateHandlerMock struct {
 	mock.Mock
 
-	ValidateEditorStateFunc         func(editor_state_model.EditorState, bool) editor_state_dto.EditorStateValidationDto
-	BuildPreviewLayoutFunc          func(dtos.PreviewLayoutRequestDto) dtos.PreviewLayoutDto
-	GetContentRuleEditorOptionsFunc func(models.SidMapping) dtos.ContentRuleEditorOptionsDto
-	DescribeContentRuleFunc         func(models.SidMapping, editor_state_model.ContentRuleRow) dtos.ContentRuleDescriptionDto
-	ReapplyCastleSettingsFunc       func(dtos.CastleSettingsReapplyRequestDto) []template_model.Zone
-	GetZoneEditorOptionsFunc        func(editor_state_dto.EditorStateDto, int) dtos.ZoneEditorOptionsDto
-	CountZoneCastlesFunc            func(template_model.Zone) int
-	GetZoneQualityFunc              func(template_model.Zone) neutral_zone.Quality
-	GetZoneConnectionQualityFunc    func(string, string, []template_model.Zone, map[string]bool) neutral_zone.Quality
-	ApplyZoneEditorQualityFunc      func(dtos.ZoneEditorQualityRequestDto) template_model.Zone
-	DescribeZoneEditorGraphFunc     func([]template_model.Zone, []template_model.Connection) dtos.ZoneEditorGraphDto
-	CreateZoneEditorConnectionFunc  func(dtos.ZoneEditorConnectionRequestDto) template_model.Connection
-	FindOpenZonePositionFunc        func([]data.Vec2[float64]) data.Vec2[float64]
-	GetNextZoneLabelFunc            func([]template_model.Zone) string
-	CreateZoneEditorNeutralZoneFunc func(dtos.ZoneEditorNeutralZoneRequestDto) template_model.Zone
-	CanDeleteZoneFunc               func(string, map[string]bool) bool
-	RemoveZoneEditorZoneFunc        func(dtos.ZoneEditorRemoveRequestDto) dtos.ZoneEditorMutationDto
-	BuildZoneEditorGeometryFunc     func(dtos.ZoneEditorGeometryRequestDto) models.ZoneEditorGeometry
-	HitTestZoneEditorNodeFunc       func(dtos.ZoneEditorHitTestRequestDto) string
-	HitTestZoneEditorEdgeFunc       func(models.Position, []models.ZoneEditorEdge) int
-	GetZoneEditorGridStepFunc       func(float64) float64
-	SnapZoneEditorPositionFunc      func(dtos.ZoneEditorSnapRequestDto) models.ZoneEditorSnapResult
-	DescribeExistingBonusesFunc     func([]config.BonusEntry) dtos.ExistingBonusesDto
-	BuildBonusEntriesFunc           func(dtos.BonusCompositionRequestDto) dtos.BonusCompositionResultDto
-	FilterNewBonusEntriesFunc       func([]config.BonusEntry, map[string]bool) []config.BonusEntry
-	GetSpellCountLabelFunc          func(int) string
+	ValidateEditorStateFunc            func(editor_state_model.EditorState, bool) editor_state_dto.EditorStateValidationDto
+	BuildPreviewLayoutFunc             func(dtos.PreviewLayoutRequestDto) dtos.PreviewLayoutDto
+	GetContentRuleEditorOptionsFunc    func(models.SidMapping) dtos.ContentRuleEditorOptionsDto
+	DescribeContentRuleFunc            func(models.SidMapping, editor_state_model.ContentRuleRow) dtos.ContentRuleDescriptionDto
+	ReapplyCastleSettingsFunc          func(dtos.CastleSettingsReapplyRequestDto) []template_model.Zone
+	GetZoneEditorOptionsFunc           func(editor_state_dto.EditorStateDto, int) dtos.ZoneEditorOptionsDto
+	CountZoneCastlesFunc               func(template_model.Zone) int
+	GetZoneQualityFunc                 func(template_model.Zone) neutral_zone.Quality
+	GetZoneConnectionQualityFunc       func(string, string, []template_model.Zone, map[string]bool) neutral_zone.Quality
+	ApplyZoneEditorQualityFunc         func(dtos.ZoneEditorQualityRequestDto) template_model.Zone
+	DescribeZoneEditorGraphFunc        func([]template_model.Zone, []template_model.Connection) dtos.ZoneEditorGraphDto
+	CreateZoneEditorConnectionFunc     func(dtos.ZoneEditorConnectionRequestDto) template_model.Connection
+	ChangeZoneEditorConnectionTypeFunc func(dtos.ZoneEditorConnectionTypeRequestDto) template_model.Connection
+	FindOpenZonePositionFunc           func([]data.Vec2[float64]) data.Vec2[float64]
+	GetNextZoneLabelFunc               func([]template_model.Zone) string
+	CreateZoneEditorNeutralZoneFunc    func(dtos.ZoneEditorNeutralZoneRequestDto) template_model.Zone
+	CanDeleteZoneFunc                  func(string, map[string]bool) bool
+	RemoveZoneEditorZoneFunc           func(dtos.ZoneEditorRemoveRequestDto) dtos.ZoneEditorMutationDto
+	BuildZoneEditorGeometryFunc        func(dtos.ZoneEditorGeometryRequestDto) models.ZoneEditorGeometry
+	HitTestZoneEditorNodeFunc          func(dtos.ZoneEditorHitTestRequestDto) string
+	HitTestZoneEditorEdgeFunc          func(models.Position, []models.ZoneEditorEdge) int
+	GetZoneEditorGridStepFunc          func(float64) float64
+	SnapZoneEditorPositionFunc         func(dtos.ZoneEditorSnapRequestDto) models.ZoneEditorSnapResult
+	DescribeExistingBonusesFunc        func([]config.BonusEntry) dtos.ExistingBonusesDto
+	BuildBonusEntriesFunc              func(dtos.BonusCompositionRequestDto) dtos.BonusCompositionResultDto
+	FilterNewBonusEntriesFunc          func([]config.BonusEntry, map[string]bool) []config.BonusEntry
+	GetSpellCountLabelFunc             func(int) string
 }
 
 func (this *TemplateHandlerMock) GenerateTemplate(
@@ -130,6 +131,17 @@ func (this *TemplateHandlerMock) CreateZoneEditorConnection(
 		return this.CreateZoneEditorConnectionFunc(request)
 	}
 	return template_model.Connection{}
+}
+
+func (this *TemplateHandlerMock) ChangeZoneEditorConnectionType(
+	request dtos.ZoneEditorConnectionTypeRequestDto,
+) template_model.Connection {
+	if this.ChangeZoneEditorConnectionTypeFunc != nil {
+		return this.ChangeZoneEditorConnectionTypeFunc(request)
+	}
+	connection := request.Connection.Clone()
+	connection.ConnectionType = request.ConnectionType
+	return connection
 }
 
 func (this *TemplateHandlerMock) FindOpenZonePosition(occupied []data.Vec2[float64]) data.Vec2[float64] {

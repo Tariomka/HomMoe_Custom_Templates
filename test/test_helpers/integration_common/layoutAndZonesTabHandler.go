@@ -59,3 +59,19 @@ func (this *LayoutAndZonesTabHandler) ToggleAdvancedZoneControl() *LayoutAndZone
 	this.runner.VerifySnapshot()
 	return this
 }
+
+// ToggleGenerateRoads flips "Generate roads between zones", the setting that
+// decides whether the generator - and the zone editor's pending edits - put a
+// road along every non-portal connection. It is the first checkbox of the
+// tab's left column (the Topology section above it carries none), which is how
+// it is addressed: Gio publishes no label for a checkbox, and the topology
+// description above it is as tall as the chosen topology's text. Callers
+// confirm the tap by asserting the setting flipped.
+func (this *LayoutAndZonesTabHandler) ToggleGenerateRoads() *LayoutAndZonesTabHandler {
+	this.runner.tb.Helper()
+	this.runner.NextFrame()
+	this.runner.ClickTopmostCheckboxIn(layoutPanelLeftColumnRect())
+	this.commit()
+	this.runner.VerifySnapshot()
+	return this
+}

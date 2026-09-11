@@ -22,6 +22,7 @@ type IZoneEditorHandler interface {
 		zones []template_model.Zone,
 		connections []template_model.Connection) dtos.ZoneEditorGraphDto
 	CreateZoneEditorConnection(request dtos.ZoneEditorConnectionRequestDto) template_model.Connection
+	ChangeZoneEditorConnectionType(request dtos.ZoneEditorConnectionTypeRequestDto) template_model.Connection
 	FindOpenZonePosition(occupied []data.Vec2[float64]) data.Vec2[float64]
 	GetNextZoneLabel(zones []template_model.Zone) string
 	CreateZoneEditorNeutralZone(request dtos.ZoneEditorNeutralZoneRequestDto) template_model.Zone

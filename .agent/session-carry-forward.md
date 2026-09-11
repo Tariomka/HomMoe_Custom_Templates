@@ -1,70 +1,162 @@
-# Carry-forward: Start Batch C
+# Carry-forward: Batch C closed, Batch E discovery is next
 
-Date: 2026-09-10.
+Date: 2026-09-11.
 
-**Next session:** Start Batch C (§1.4/§1.6/§1.10), covering road policy and graph connectivity. A/D and B are complete; they require no further validation or closure work. Use this handoff and the current review for context, not documents from completed batches.
+**Supersession note.** This revision replaces every earlier handoff, including the one
+that described Phase 5 as open. **Batch C is fully closed.** Two things in §8 below are
+now obsolete: its phase-status wording ("Phase 3 is complete", "Phase 4 remains
+unstarted") and its pending engine-validation paragraph. The owner ran the generated
+templates in the game on 2026-09-11 and reported: "Everything in-game looks good, the
+road values are correct in engine." That closed the last open question of the batch.
+Section 8 is nevertheless kept **verbatim** by owner request, contradictions included —
+do not edit it. Its **retained later-scope decisions remain binding**; only the two
+items named above are superseded. Batches A/D, B and C are all closed: no revisit, no
+re-verification, no lookup of retired documents.
 
 ## 1. Session goal
 
-Prepare the next session to address Batch C without reopening completed work. [The review](backlog/review-gpt-6-astra-09-07.md) records **6 fixed, 26 remaining** (3 High, 16 Medium, 7 Low). Batch C needs source verification specific to its findings, owner decisions on road handling and approval of its implementation approach.
+Close out Batch C Phase 5 after the owner's in-game confirmation, then prepare the
+handoff and a start prompt for the next batch. Batch-wide verification and the
+independent whole-batch review were already green; the owner's engine report was the
+only remaining gate and it came back positive.
+
+**No production code, tests, snapshots or generated files changed.** This session was
+documentation and handoff only.
 
 ## 2. Fixes applied
 
-- [PNG rasterizer](../internal/services/preview_service/previewGeneratorService.go): loop count uses `int(math.Ceil(steps))`; floating-point increment and all existing stamp positions stay unchanged. Subpixel segments now paint without changing geometry, brush, dash policy or assets.
-- [Game rules](../internal/services/template_generator/providers/gameRulesProvider.go): `TournamentSaveArmy` uses `tournamentRules.SaveArmy`, rather than forced true. No protected schema or writer changes.
+All four implementation phases are owner-committed on `AD/road_and_graph_invariants`:
+
+- Phase 1 — `07ca8b6`: explicit-Portal and road classification on the connection model;
+  endpoint-based, road-gated public topology repair that keeps graph repairs, guards,
+  the impossible-isolation fallback and collision-safe edge names.
+- Phase 2 — `abf0d36`: `RoadPolicyService` reconciliation for authoritative non-Portal
+  road flags, zone-scoped mandatory-content validation, eligible approach restoration
+  and invalid generated-road removal.
+- Phase 3 — `a574a9e`: pending editor create/type changes obey the road checkbox before
+  Apply through the handler/service layer; shared road-state colors, Preview legend and
+  selected-edge width; road display state kept separate from effective preview type.
+- Phase 4 — `0a55306`: PNG roadless strokes at 50% once per edge using one reusable
+  local `image.Alpha` mask, with the opaque raster path pinned to pre-change
+  fingerprints.
+
+Phase 5 applied no fixes. The independent review raised no blocker, and the owner's
+engine result required no corrective change either.
 
 ## 3. Features added / changed
 
-- Owner confirmed omitted `tournamentSaveArmy` means off in-game. This is owner-supplied validation, not an assistant game test.
-- Owner selected nil `TournamentRules` plus tournament victory selector => false, no new fallback. Normal constructor default explicitly sets true and is unchanged.
-- Owner approved focused before/after PNG pairs: short portal, longer portal and short direct edge. Eighteen paired images and four after-only cases are under `output/research/batch-b-png/20260910-101656/{before,after}`. These are ignored synthetic image diagnostics, not game exports.
-- Review-only artifact capture was removed at owner request. Pixel assertions run unconditionally and stay in-memory; future GUI flow and saved-preview golden coverage is separate work.
-- In-app vector rendering, GUI goldens and all output-directory authorization/persistence behavior remain unchanged.
+Settled behavior contract, verified by tests, by independent review and now by the
+owner's in-game check — **preserve all of it**:
+
+- Explicit Portal flags are preserved exactly, including `false` and `nil`. With
+  settings present, road policy overwrites `Road` on every non-explicit-Portal
+  connection, including custom, imported, Default, empty, arena and proximity edges.
+- Internal castle/object/foothold roads are independent of the between-zone road
+  checkbox. Roads-off never disables them and never removes valid Portal approaches;
+  roads-on restores eligible target sets rather than connector-record equality.
+- A `nil` `EditorState` preserves existing roads and content: policy runs only when the
+  state is present.
+- Final cleanup is zone-scoped and treats nil/empty mandatory content as authoritative,
+  removing only confirmed invalid `MainObject`, incident `Connection` or named
+  `MandatoryContent` references.
+- The arena marker is never an anchor; spawn anchoring and rebasing of shifted imported
+  non-arena anchors stay intact. Sources are cloned before mutation — no shared backing
+  arrays are written through.
+- Display classification: explicit `false` is roadless, explicit `true` is roaded, and
+  `nil` is roaded only for explicit Portals.
+- The editor legend stays removed by owner decision. Preview keeps its four-entry key
+  (`Road`, `No road`, `Portal`, `Portal without road`).
+- PNG roadless strokes apply 50% once per edge through one reusable local mask; the
+  opaque raster path, geometry, dashes and clipping are unchanged.
+- The output directory stays machine-detected, with an explicit session-only picker
+  escape hatch. It is never persisted, and no fallback authorizes an unrelated
+  directory.
 
 ## 4. File modifications
 
-| File | Change |
-| --- | --- |
-| [previewGeneratorService.go](../internal/services/preview_service/previewGeneratorService.go) | One-line additive sample-count fix. |
-| [gameRulesProvider.go](../internal/services/template_generator/providers/gameRulesProvider.go) | One-line configured Save Army assignment. |
-| [createPreviewImage_test.go](../test/unit/internal/services/preview_service/previewGeneratorService/createPreviewImage_test.go) | Raster matrix, visibility, gaps, fitting/clipping, degeneracy and determinism. |
-| [createGameRules_test.go](../test/unit/internal/services/template_generator/providers/gameRulesProvider/createGameRules_test.go) | True/false, activation aliases, inactive, nil and default cases. |
-| [fromEditorState_test.go](../test/unit/internal/mappers/generatorConfigMapper/fromEditorState_test.go) | False propagation. |
-| [previewRasterFixture.go](../test/test_helpers/previewRasterFixture.go) | Fixed-layout test helper, 22 fixtures; enumeration privatized in owner cleanup commit. |
-| Removed review-only PNG capture utility | Was never committed; no environment-variable setup remains in test code. |
-| [tournamentSaveArmySerialization_integration_test.go](../test/integration/tournamentSaveArmySerialization_integration_test.go) | New real generation/save raw-JSON matrix with structure and tournament:true positive controls. |
-| [Review](backlog/review-gpt-6-astra-09-07.md) | §1.3/§1.7 fixed and counts updated; closure update unstaged. |
-| [Handoff](session-carry-forward.md) | Current committed state and next-session scope; closure update unstaged. |
+Documentation only. Nothing in the source tree was created, edited or deleted:
+
+- The completed Batch C plan: closed out with its final phase status and verification
+  record. It is deliberately not linked or named here — that completed batch record is
+  retained for owner retirement, and the next batch must not be pointed at it.
+- [review backlog](backlog/review-gpt-6-astra-09-07.md): the surviving review, and the
+  document the next batch works from.
+- [handoff](session-carry-forward.md): this document; §8 retained verbatim.
+- Ignored [settled decisions](memories/settled-decisions.md): final visual/policy
+  decisions, now including the owner's positive engine result.
+
+No Go files, tests, snapshots, goldens, assets, dependencies, generated Wire or
+protected trees changed.
 
 ## 5. Tests added or updated
 
-Before production edits, ten PNG cases failed with zero visible connector pixels; three provider false/nil cases and both serialized-false cases failed with actual true. These regressions now pass. Test files are listed in §4.
+No tests were added or modified. The Batch C verification matrix stands as recorded on
+Windows, 2026-09-11; nothing was re-run in this session because nothing changed:
 
-Windows Go 1.27.0 verification:
+- Fresh full unit coverage with `-count=1`: **PASS, 75.1%**, matching the Phase 4
+  baseline. Every function changed by the batch is at **100%**.
+- `go build ./...`: **PASS**.
+- `go test ./test/...`: **PASS**.
+- `go test -tags=integration_test ./test/integration/...`: **PASS**.
+- `go test -tags='integration_test,gui' ./test/integration/...`: **PASS** with actual
+  execution — GUI **29.469 s**, integration **2.899 s**.
+- `go run ./cmd/testlayoutcheck .`: **PASS**. Report-only lint: **0 issues** plus the
+  three existing unused-exclusion warnings. `gofmt -l` clean on every changed Go file.
+- Independent Claude Opus 5 whole-batch review: **APPROVED, no blockers**. That review
+  is complete — do not schedule a rerun without an actual code change to justify it.
 
-- Build, full unit suite (`-count=1`), default `go test ./test/...`, tagged integration, tagged GUI integration, vet with `integration_test`, and test-layout: PASS.
-- Fresh baseline/final unit coverage: **74.5% / 74.5%**. `drawLine`, `drawConnections`, solid/dashed methods and `setTournamentRules`: 100%.
-- Final golangci-lint 2.13.1 report-only run: **0 issues**, three existing unused-exclusion warnings.
-- Independent Claude Opus 5 review: no blockers. Its optional short-portal gap regression was added; final full unit/coverage/lint/layout checks passed afterward. Default/tagged/GUI checks passed before that last test-only addition.
-- Pixel preservation follows the additive-stamp proof plus visual spot checks; no automated comparison of all 18 image pairs is claimed.
-- No protected data/schema/registry, generated Wire or GUI golden changes. No local Linux/race/benchmark/vulnerability-scan execution claimed.
-- After capture removal/helper cleanup: build, default `go test ./test/...`, fresh unit coverage task, layout and lint passed; 74.5% before/after. Final focused pixel tests after helper function ordering: 36 passed. GUI was not rerun for removal of a non-GUI capture utility. Owner commits were checked read-only; this final wrap-up changes documentation only.
+The engine evidence, stated precisely: acceptance is an **owner report** from running
+the game. The assistant ran nothing in-game, built nothing on Linux or a native Steam
+Deck target, and this is **not** evidence that in-game bonuses/bans or hero-hire
+behavior is fixed. Those remain open in the review.
 
 ## 6. Git status snapshot
 
-Last observed branch: `AD/visual_and_value_save_bugs`. HEAD: `a4c5fa3a05184b43f2ef1e3c0a7d4a55b74c55d2`. Implementation is committed; documentation-only edits were pending at wrap-up. Inspect current Git state before Batch C solely to preserve owner changes and staging, not to revalidate completed batches. Never stage, unstage, commit, push or switch branches speculatively.
+Branch `AD/road_and_graph_invariants`, HEAD `0a55306`. Phases 1–4 are owner-committed at
+`07ca8b6`, `abf0d36`, `a574a9e` and `0a55306`. The Phase 5 documentation is **staged by
+the owner**; this session's further documentation edits sit on top of it, unstaged.
+
+The agent performed no Git mutation of any kind: no staging, unstaging, commit, push,
+stash, branch or worktree operation, and the owner's index was left exactly as found.
+No tooling was installed.
 
 ## 7. Rejections / things the user declined
 
-- Retain settled A/D decisions: use `PathResolutionService`, consume pending base on every Apply, no saved output path or browsing-fallback authorization.
-- No protected edits, global test tags, bulk rewrite, generated Wire hand edits or fake production seams.
-- Owner rejected retaining the environment-gated PNG capture test: it only checked errors/file count, not image correctness. It was removed entirely, along with capture-only setup; fixture enumeration is private. Retain real unconditional pixel assertions. Future GUI flow and saved-preview goldens are separate work, not implemented here.
-- Retain floating-point stamp spacing rather than resampling long chords; unit tests stay in-memory and raw JSON checks use actual nested fields instead of substring assertions.
-- Carry-forward documents must be self-contained and forward-looking. Do not reference completed-batch planning documents or assign previous-batch checking, validation or closure to the next session. Completed-batch documents are disposable; unresolved corrections normally stay in the same session.
+- Do not restore the editor legend or its deleted test. Do not reopen settled Batch C
+  approval questions, reimplement a committed phase, or re-verify a closed batch.
+- Topology retirement/redesign (Batch K, review §2.3) is explicitly **out of scope** for
+  the next batch. Note coordination implications only; do not start it.
+- No opportunistic work: no GUI/PNG geometry consolidation, no DTO removal, no schema
+  changes, no package renames, no allocation tuning, no output-path changes.
+- Do not claim engine defaults or in-game outcomes the assistant did not observe. The
+  positive result is the owner's report and covers road values only.
+- The earlier §8 comparison mismatch was a PowerShell 5.1 text-decoding artifact, not a
+  content change. Use explicit UTF-8 for Git stdout
+  (`ProcessStartInfo.StandardOutputEncoding`) and for disk reads whenever verifying §8;
+  no §8 content was ever altered.
+- Optional observation, **not** assigned work: a service comment still names the legacy
+  rebuild entry point rather than the current reconciliation finalizer. Cosmetic, out of
+  scope, not a task.
 
 ## 8. Open questions and confirmed later scope
 
-Batch C (§1.4/§1.6/§1.10) is not started: verify its current sources and tests, ask about generated/custom/imported road handling and optional nil EditorState behavior, then agree the scope and obtain approval before implementation. Preserve the accepted impossible-isolation connectivity fallback while keeping roads independent from graph connectivity. No previous-batch follow-up is required.
+Batch C policy/scope approval remains settled. **Phase 3 is complete with no blockers.**
+Owner Phase 3 authorization, 2026-09-10: "Changes reviewed, you can proceed".
+Phase 4 remains unstarted and belongs to a new session. Do not repeat settled questions.
+
+Non-blocking review observations, outside closeout scope:
+
+- `ConnectionLegendRow` remains an export used only by `LegendRows` after editor legend
+  removal. No behavior issue; optional simplification is not required for Phase 4.
+- Pre-existing editor dropdown normalization: its non-`WasUpdated` writeback can turn
+  types not offered by the Direct/Portal dropdown (for example Proximity) into Direct
+  on selection. This predates Phase 3; road policy still stamps correctly. Investigate
+  separately if requested, do not fix opportunistically in PNG work. See
+  [writebackProps](../app/gui/dialogs/zoneEditorConnectionProps.go#L105-L119).
+
+The owner will validate true/false/nil engine behavior after changes. Existing engine
+evidence is inconclusive: schema is optional bool; shipped examples use both values
+for direct and portal connections; examples do not prove defaults.
 
 Retained owner decisions for later work:
 
@@ -84,13 +176,76 @@ Other pending decisions: arena/manual invalidation and effective-mode aliases (�
 
 ## 9. Next recommended actions
 
-1. Read [AGENTS.md](../AGENTS.md), this handoff and review §1.4/§1.6/§1.10. Inspect current Git state to preserve owner changes.
-2. Trace Batch C's road rebuild, connectivity repair and foothold-content paths, their callers and existing tests. Do not repeat the full audit.
-3. Resolve generated versus custom/imported road handling when roads are disabled, stale foothold-target handling and behavior when `EditorState` is nil. Preserve required graph repairs independently of road creation.
-4. Confirm Batch C scope with the owner, prepare its new durable implementation plan and obtain approval. Then capture a fresh coverage baseline and implement with dedicated regression coverage.
+The next batch is **Batch E**, taken from §9 of the surviving review,
+[review-gpt-6-astra-09-07.md](backlog/review-gpt-6-astra-09-07.md): findings **§1.5**,
+**§1.11** and **§1.12** — effective tournament/arena manual invalidation, incident guard
+preset recalculation after quality changes, and enforcing two players for tournament
+mode. There is **no Batch E plan yet and no implementation approval**; do not invent
+either.
+
+1. Read [AGENTS.md](../AGENTS.md), this handoff, and the surviving review at
+  [backlog/review-gpt-6-astra-09-07.md](backlog/review-gpt-6-astra-09-07.md).
+2. Treat the next session as **read-only discovery**. Inspect how the arena/manual-edit
+  path, the guard preset recalculation path and the player-count path behave today.
+  Change nothing and add nothing; run only read-only inspection and, if useful, the
+  existing verification commands.
+3. Resolve product questions with the owner: §1.5 manual-edit invalidation versus arena recomputation and effective-mode aliases; §1.11 custom guard values, preset identity and stronger opposite endpoints; §1.12 restoring the previous non-tournament player count and correction/validation of loaded 3–8 player tournament states.
+4. Only after the owner confirms scope, write a durable plan under `.agent/plans/` and
+  obtain explicit owner approval before writing any code.
+5. Out of scope for Batch E, do not pull it in: topology retirement/redesign (Batch K,
+  review §2.3), which is coordination-implications-only; and any opportunistic GUI/PNG
+  geometry consolidation, DTO, schema or package work.
+6. Preserve §8 verbatim. Its Phase 3/Phase 4 status wording and its engine-validation
+  paragraph are obsolete; its later-scope decisions are still binding.
+
+**Deployment plan.** Nothing is deployed and none is claimed. The Windows source build
+and the full test matrix pass; Linux and native Steam Deck builds were not run. Batch C
+needs no schema migration, no Wire regeneration, no dependency installation and no
+output-path change. The owner confirmed the in-game result and performs all staging,
+commits, tagging and release.
 
 ## 10. Carry-forward prompt
 
-> Read [AGENTS.md](../AGENTS.md) first, then [this handoff](session-carry-forward.md) and [the review](backlog/review-gpt-6-astra-09-07.md). Start Batch C (§1.4/§1.6/§1.10): verify its current source paths and tests, ask about generated/custom/imported road policy and nil EditorState behavior, confirm scope and obtain approval before implementation. Preserve graph connectivity repair independently of road creation. Last observed Windows coverage was 74.5%, lint zero; measure a fresh baseline for C. Inspect current Git state to preserve owner changes. A/D and B are complete and require no validation or closure work. This handoff contains the required carry-forward decisions; do not seek documents from completed batches.
+> Read [AGENTS.md](../AGENTS.md) first, then [this handoff](session-carry-forward.md)
+> and the surviving review at
+> [backlog/review-gpt-6-astra-09-07.md](backlog/review-gpt-6-astra-09-07.md).
 >
-> Never modify protected data/schema/registry trees; proposed protected changes require owner approval and application. Preserve Windows/Linux portable paths and guarded platform code. Test nontrivial changes and measure coverage before/after. Keep multi-step work in an approved durable plan. Never stage, unstage, commit or push; preserve owner staging and do not switch branches speculatively. Never bulk-rewrite or hand-edit generated Wire output. Export only to the detected game templates directory or explicit session-only picker destination; never persist output paths or authorize browsing fallbacks. Never set global integration_test/gui/wireinject tags or add fake unit seams. Preserve later scope in §8.
+> **Batch C is fully closed** as of 2026-09-11: Phases 1–4 are owner-committed on
+> `AD/road_and_graph_invariants` (`07ca8b6`, `abf0d36`, `a574a9e`, `0a55306`, HEAD
+> `0a55306`), and the owner confirmed in-game that the road values are correct in the
+> engine. Batches A/D and B are closed too. Do not revisit, re-verify, reimplement or
+> look up any retired batch document; the completed batch record is retained for owner
+> retirement and is not your working document.
+>
+> **Next up is Batch E**, review §9: findings §1.5, §1.11 and §1.12 — effective
+> tournament/arena manual invalidation, incident guard preset recalculation after
+> quality changes, and enforcing two players for tournament mode. **There is no Batch E
+> plan and no implementation approval.** Your session is **read-only discovery plus
+> product questions**, nothing more: inspect current behavior, then settle with the
+> owner whether an effective-mode change clears manual edits or recomputes arena
+> placement (and how aliases and effective-mode transitions behave), what preset
+> identity means once guard values are customized and how a stronger opposite endpoint
+> affects recalculation, and whether turning tournament mode off restores
+> the remembered previous non-tournament player count and how a loaded 3–8 player
+> template is corrected or rejected. Confirm scope, then write a durable plan and get
+> explicit owner approval before writing any code.
+>
+> Out of scope: topology retirement/redesign (Batch K, review §2.3), coordination
+> implications only; and any opportunistic GUI/PNG geometry consolidation, DTO, schema
+> or package work.
+>
+> **Preserve the settled behavior:** explicit Portal flags including `false` and `nil`
+> plus valid Portal approaches; internal roads independent of the between-zone checkbox;
+> roads and content preserved on a `nil` state; sources cloned before mutation; one
+> reusable local mask applying 50% once per edge over an unchanged opaque raster path;
+> the legend on Preview only; and a machine-detected game output directory that is never
+> persisted.
+>
+> **Hard rules:** never touch protected `data/`, the template schema or the registry;
+> keep everything cross-platform; never change or persist the output directory; test
+> nontrivial changes and check coverage; never stage, unstage, commit, push, stash or
+> switch branches, and leave the owner's staged changes alone; never bulk-rewrite or
+> hand-edit generated Wire; never enable global `integration_test`, `gui` or
+> `wireinject` tags, and never add fake unit seams; keep plans durable and resumable.
+> Section 8 of the handoff is verbatim historical text — its phase-status and
+> engine-validation wording is superseded, its later-scope decisions are not.

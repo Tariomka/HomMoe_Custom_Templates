@@ -93,7 +93,17 @@ func (this *zoneEditorHandler) DescribeZoneEditorGraph(
 
 func (this *zoneEditorHandler) CreateZoneEditorConnection(
 	request dtos.ZoneEditorConnectionRequestDto) template_model.Connection {
-	return this.connectionEditor.NewDefaultConnection(request.From, request.To, request.Zones, request.PlayerZoneNames)
+	connection := this.connectionEditor.NewDefaultConnection(
+		request.From, request.To, request.Zones, request.PlayerZoneNames)
+	this.zoneEditor.ApplyConnectionRoadPolicy(&connection, request.GenerateRoads)
+	return connection
+}
+
+func (this *zoneEditorHandler) ChangeZoneEditorConnectionType(
+	request dtos.ZoneEditorConnectionTypeRequestDto) template_model.Connection {
+	connection := request.Connection.Clone()
+	this.zoneEditor.ChangeConnectionType(&connection, request.ConnectionType, request.GenerateRoads)
+	return connection
 }
 
 func (this *zoneEditorHandler) FindOpenZonePosition(occupied []data.Vec2[float64]) data.Vec2[float64] {

@@ -17,7 +17,8 @@ type ITopologyConnectionService interface {
 		playerLabels []string,
 		allZones []template_model.Zone,
 		connections []template_model.Connection,
-		tuning models.GenerationTuning) []template_model.Connection
+		tuning models.GenerationTuning,
+		generateRoads bool) []template_model.Connection
 
 	CreateMissingConnections(
 		playerLabels, allLabels []string,
@@ -25,7 +26,8 @@ type ITopologyConnectionService interface {
 		allZones []template_model.Zone,
 		connections []template_model.Connection,
 		tuning models.GenerationTuning,
-		neutralZones neutral_zone.Plans) []template_model.Connection
+		neutralZones neutral_zone.Plans,
+		generateRoads bool) []template_model.Connection
 
 	GetBorderGuardValue(
 		labelA, labelB string,

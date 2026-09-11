@@ -9,12 +9,14 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/file_service"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/preview_service"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/provider_interfaces"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
 )
 
 type templateHandler struct {
@@ -23,6 +25,7 @@ type templateHandler struct {
 	contentProvider   provider_interfaces.IMandatoryContentProvider
 	connectionEditor  connection_editor.IConnectionEditorService
 	zoneEditor        connection_editor.IZoneEditorService
+	roadPolicy        zone_interfaces.IRoadPolicyService
 	manualReapply     connection_editor.IManualReapplyService
 	fileService       file_service.IFileService
 	previewGenerator  preview_service.IPreviewGeneratorService
@@ -35,6 +38,7 @@ func NewTemplateHandler(
 	contentProvider provider_interfaces.IMandatoryContentProvider,
 	connectionEditor connection_editor.IConnectionEditorService,
 	zoneEditor connection_editor.IZoneEditorService,
+	roadPolicy zone_interfaces.IRoadPolicyService,
 	manualReapply connection_editor.IManualReapplyService,
 	fileService file_service.IFileService,
 	previewGenerator preview_service.IPreviewGeneratorService,
@@ -45,6 +49,7 @@ func NewTemplateHandler(
 		contentProvider:   contentProvider,
 		connectionEditor:  connectionEditor,
 		zoneEditor:        zoneEditor,
+		roadPolicy:        roadPolicy,
 		manualReapply:     manualReapply,
 		fileService:       fileService,
 		previewGenerator:  previewGenerator,
@@ -78,7 +83,7 @@ func (this *templateHandler) UpdateTemplate(templateDto dtos.TemplateUpdateDto) 
 
 	zones := templateDto.Zones
 	connections := templateDto.Connections
-	this.zoneEditor.RebuildZoneConnectionRoads(zones, connections)
+	this.zoneEditor.EnsureConnectionNames(connections)
 
 	updated := templateDto.Template.Clone()
 	updated.Variants[0].Zones = zones
@@ -87,6 +92,14 @@ func (this *templateHandler) UpdateTemplate(templateDto dtos.TemplateUpdateDto) 
 	if templateDto.EditorState != nil {
 		configuration := this.mapper.FromEditorState(templateDto.EditorState.EditorState)
 		updated.MandatoryContent = this.contentProvider.CreateContentsForZones(*configuration, zones)
+		this.roadPolicy.Reconcile(models.RoadReconciliationRequest{
+			Zones:                zones,
+			Connections:          connections,
+			MandatoryContent:     updated.MandatoryContent,
+			GenerateRoads:        configuration.GenerateRoads,
+			SpawnRemoteFootholds: configuration.SpawnRemoteFootholds,
+			RemoteFootholdCount:  configuration.RemoteFootholdCount,
+		})
 	}
 
 	var err error

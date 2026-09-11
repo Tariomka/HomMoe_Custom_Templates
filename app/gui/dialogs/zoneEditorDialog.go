@@ -349,6 +349,7 @@ func (this *ZoneEditorDialog) addConnection(from, to string) {
 		To:              to,
 		Zones:           this.zones,
 		PlayerZoneNames: this.playerZones,
+		GenerateRoads:   this.generateRoads,
 	})
 	this.working = append(this.working, &connection)
 	this.selectConnection(&connection)

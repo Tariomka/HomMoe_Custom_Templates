@@ -56,3 +56,16 @@ func templateWith(zones []template_model.Zone, connections []template_model.Conn
 		Variants: []template_model.Variant{{Zones: zones, Connections: connections}},
 	}
 }
+
+// roadTemplate wraps a single connection of the given type and road flag into a
+// two-zone template, for the projection of road status.
+func roadTemplate(connectionType string, road *bool) *template_model.Template {
+	return templateWith(
+		[]template_model.Zone{namedZone("Spawn-A"), namedZone("Neutral-B")},
+		[]template_model.Connection{{
+			From:           "Spawn-A",
+			To:             "Neutral-B",
+			ConnectionType: connectionType,
+			Road:           road,
+		}})
+}

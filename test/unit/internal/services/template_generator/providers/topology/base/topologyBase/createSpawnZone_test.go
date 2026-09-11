@@ -130,7 +130,36 @@ func TestWhenFootholdCountIsPositive_AddsRoadToEveryRemoteFoothold(t *testing.T)
 	assert.Equal(t, expectedRoads, zone.Roads)
 }
 
-func TestWhenRoadGenerationIsDisabled_ZoneHasNoRoads(t *testing.T) {
+func TestWhenRoadGenerationIsDisabled_ZoneKeepsItsInternalRoads(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
+	expectedRoads := []template_model.Road{
+		{
+			Type: "Stone",
+			From: template_model.TypedRef{Type: "MainObject", Args: []string{"0"}},
+			To:   template_model.TypedRef{Type: "MainObject", Args: []string{"1"}},
+		},
+		{
+			Type: "Stone",
+			From: template_model.TypedRef{Type: "MainObject", Args: []string{"0"}},
+			To:   template_model.TypedRef{Type: "MainObject", Args: []string{"2"}},
+		},
+		{
+			From: template_model.TypedRef{Type: "MainObject", Args: []string{"0"}},
+			To:   template_model.TypedRef{Type: "MandatoryContent", Args: []string{"name_remote_foothold_1"}},
+		},
+	}
+
+	// Act
+	zone := topologyBase.CreateSpawnZone(
+		newSpawnRequest("A", []string{"Gate-1"}, 2, 1, false, newUnitTuning()))
+
+	// Assert
+	assert.Equal(t, expectedRoads, zone.Roads)
+}
+
+func TestWhenRoadGenerationIsDisabled_ZoneHasNoConnectionApproachRoads(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	topologyBase := base.NewTopologyBase(test_helpers.NewZoneFactories())
@@ -140,5 +169,13 @@ func TestWhenRoadGenerationIsDisabled_ZoneHasNoRoads(t *testing.T) {
 		newSpawnRequest("A", []string{"Gate-1"}, 2, 1, false, newUnitTuning()))
 
 	// Assert
-	assert.Nil(t, zone.Roads)
+	assert.NotContains(t, roadTargetTypes(zone), "Connection")
+}
+
+func roadTargetTypes(zone template_model.Zone) []string {
+	var types []string
+	for _, road := range zone.Roads {
+		types = append(types, road.To.Type)
+	}
+	return types
 }

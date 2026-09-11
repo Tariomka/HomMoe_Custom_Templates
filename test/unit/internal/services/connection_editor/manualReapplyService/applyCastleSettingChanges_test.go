@@ -224,6 +224,69 @@ func TestWhenNeutralCastlesAreRebuilt_CreatesCastleRoadsToEachExtraCastle(t *tes
 		"expected castle roads from the primary castle to both extra castles")
 }
 
+func TestWhenMediumTierCountChanges_UpdatesZoneWithMatchingQuality(t *testing.T) {
+	t.Parallel()
+	// Arrange & Act
+	zones := applyAdvancedTierChange(neutral_zone.QualityMedium)
+
+	// Assert
+	assert.Equal(t, 3, test_helpers.NewZoneEditorService().CountZoneCastles(zones[0]))
+}
+
+func TestWhenLowTierCountChanges_UpdatesZoneWithMatchingQuality(t *testing.T) {
+	t.Parallel()
+	// Arrange & Act
+	zones := applyAdvancedTierChange(neutral_zone.QualityLow)
+
+	// Assert
+	assert.Equal(t, 3, test_helpers.NewZoneEditorService().CountZoneCastles(zones[0]))
+}
+
+func TestWhenLowestTierCountChanges_UpdatesZoneWithMatchingQuality(t *testing.T) {
+	t.Parallel()
+	// Arrange & Act
+	zones := applyAdvancedTierChange(neutral_zone.QualityLowest)
+
+	// Assert
+	assert.Equal(t, 3, test_helpers.NewZoneEditorService().CountZoneCastles(zones[0]))
+}
+
+// The platinum tier has no neutral option row of its own, so a neutral zone the
+// user re-tiered to it follows the hub castle count instead.
+func TestWhenHubCountChanges_UpdatesPlatinumTieredNeutralZone(t *testing.T) {
+	t.Parallel()
+	// Arrange & Act
+	zones := applyAdvancedTierChange(neutral_zone.QualityHighest)
+
+	// Assert
+	assert.Equal(t, 3, test_helpers.NewZoneEditorService().CountZoneCastles(zones[0]))
+}
+
+// applyAdvancedTierChange raises the advanced per-zone castle count of the given
+// tier to 3 and flags only that tier's option as changed, so the returned zone
+// is the one the tier switch routed to.
+func applyAdvancedTierChange(quality neutral_zone.Quality) []template_model.Zone {
+	configuration := config.NewGeneratorConfig()
+	advanced := &configuration.ZoneConfiguration.Advanced
+	changes := editor_state_model.CastleSettingChanges{}
+	switch quality {
+	case neutral_zone.QualityHighest:
+		advanced.HubZoneCastles, changes.Hub = 3, true
+	case neutral_zone.QualityMedium:
+		advanced.NeutralMediumCastlesPerZone, changes.NeutralMedium = 3, true
+	case neutral_zone.QualityLow:
+		advanced.NeutralLowCastlesPerZone, changes.NeutralLow = 3, true
+	case neutral_zone.QualityLowest:
+		advanced.NeutralLowestCastlesPerZone, changes.NeutralLowest = 3, true
+	case neutral_zone.QualityHigh, neutral_zone.QualityUnknown:
+		advanced.NeutralHighCastlesPerZone, changes.NeutralHigh = 3, true
+	}
+
+	zones := []template_model.Zone{makeNeutralZone("G", quality, 1)}
+	newManualReapplyService().ApplyCastleSettingChanges(zones, changes, configuration)
+	return zones
+}
+
 // applySimpleModeChange runs the simple-mode neutral castle propagation over a
 // castled neutral zone, a castle-less neutral zone and a spawn zone.
 func applySimpleModeChange() []template_model.Zone {

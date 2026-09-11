@@ -12,6 +12,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_connections"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
@@ -104,7 +105,18 @@ func (this *ZoneEditorDialog) writebackProps() {
 	}
 	typeItems := common_connections.GetConnectionTypes()
 	if index := this.typeDropdown.GetSelectedIndex(); index >= 0 && index < len(typeItems) {
-		connection.ConnectionType = typeItems[index]
+		if this.typeDropdown.WasUpdated {
+			// A picked type also decides the pending road state, so the change
+			// goes through the handler instead of being written here.
+			*connection = this.zoneHandler.ChangeZoneEditorConnectionType(
+				dtos.ZoneEditorConnectionTypeRequestDto{
+					Connection:     *connection,
+					ConnectionType: typeItems[index],
+					GenerateRoads:  this.generateRoads,
+				})
+		} else {
+			connection.ConnectionType = typeItems[index]
+		}
 	}
 	zoneItems := []string{connection.From, connection.To}
 	if index := this.guardZoneDropdown.GetSelectedIndex(); index >= 0 && index < len(zoneItems) {

@@ -188,5 +188,17 @@ func (this *ZoneEditorDialog) EditedConnectionNames() []string {
 	return names
 }
 
+// EditedConnectionRecords returns copies of the connections the editor is
+// holding, which is the only way to read a pending edit - a road flag, say -
+// before Apply commits it. ONLY FOR INTEGRATION TEST USE
+func (this *ZoneEditorDialog) EditedConnectionRecords() []template_model.Connection {
+	records := make([]template_model.Connection, 0, len(this.working))
+	for _, connection := range this.working {
+		records = append(records, connection.Clone())
+	}
+
+	return records
+}
+
 // StatusHint ONLY FOR INTEGRATION TEST USE
 func (this *ZoneEditorDialog) StatusHint() string { return this.hint }

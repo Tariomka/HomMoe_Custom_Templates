@@ -73,29 +73,36 @@ func (this *TopologyConnectionService) CreateMissingPlayerConnections(
 	playerLabels []string,
 	zones []template_model.Zone,
 	connections []template_model.Connection,
-	tuning models.GenerationTuning) []template_model.Connection {
+	tuning models.GenerationTuning,
+	generateRoads bool) []template_model.Connection {
 	if len(playerLabels) < 2 {
 		return nil
 	}
 
+	zoneNames := make(map[string]bool, len(zones))
+	for _, zone := range zones {
+		zoneNames[zone.Name] = true
+	}
+	connectedZones := make(map[string]bool, len(zones))
 	connectionNames := map[string]bool{}
 	for _, connection := range connections {
 		if connection.Name != "" {
 			connectionNames[connection.Name] = true
 		}
+		if connection.From != connection.To && zoneNames[connection.From] && zoneNames[connection.To] {
+			connectedZones[connection.From] = true
+			connectedZones[connection.To] = true
+		}
 	}
 	var additionalConnections []template_model.Connection
 	for _, label := range playerLabels {
 		zoneName := constants.GetPlayerZoneNameFor(label)
-		zone, ok := linq.FromSlice(zones).First(func(candidate template_model.Zone) bool {
-			return candidate.Name == zoneName
-		})
-		if !ok || spawnZoneHasConnection(zone, connectionNames) {
+		if !zoneNames[zoneName] || connectedZones[zoneName] {
 			continue
 		}
 
 		partner := linq.FromSlice(playerLabels).FirstOrDefault(func(candidate string) bool {
-			return candidate != label
+			return candidate != label && zoneNames[constants.GetPlayerZoneNameFor(candidate)]
 		})
 		if partner == "" {
 			continue
@@ -105,24 +112,15 @@ func (this *TopologyConnectionService) CreateMissingPlayerConnections(
 		if label > partner {
 			labelFrom, labelTo = partner, label
 		}
-		fallbackName := constants.GetFallbackConnectionNameFor(labelFrom, labelTo)
-		if connectionNames[fallbackName] {
-			continue
-		}
-
-		additionalConnections = append(additionalConnections, variant_content.NewConnectionBuilder().
-			WithName(fallbackName).
-			WithFrom(zoneName).
-			WithTo(constants.GetPlayerZoneNameFor(partner)).
-			WithConnectionTypeDirect().
-			WithGuardZone(zoneName).
-			WithSimTurnSquad().
-			WithGuardValue(this.GetBorderGuardValue(label, partner, playerLabels, nil, tuning)).
-			WithGuardWeeklyIncrement(common_connections.GetGuardWeeklyIncrements().Standard).
-			WithGuardMatchGroup("fallback_guard_"+fallbackName).
-			Build())
+		fallbackName := availableRepairName(constants.GetFallbackConnectionNameFor(labelFrom, labelTo), connectionNames)
+		additionalConnections = append(additionalConnections,
+			this.createFallbackConnection(fallbackName, label, partner, playerLabels, tuning))
 		connectionNames[fallbackName] = true
-		appendSpawnFallbackRoads(zones, label, partner, fallbackName)
+		connectedZones[zoneName] = true
+		connectedZones[constants.GetPlayerZoneNameFor(partner)] = true
+		if generateRoads {
+			appendSpawnFallbackRoads(zones, label, partner, fallbackName)
+		}
 	}
 	return additionalConnections
 }
@@ -133,7 +131,8 @@ func (this *TopologyConnectionService) CreateMissingConnections(
 	zones []template_model.Zone,
 	connections []template_model.Connection,
 	tuning models.GenerationTuning,
-	neutralZones neutral_zone.Plans) []template_model.Connection {
+	neutralZones neutral_zone.Plans,
+	generateRoads bool) []template_model.Connection {
 	if len(allLabels) < 2 {
 		return nil
 	}
@@ -162,18 +161,16 @@ func (this *TopologyConnectionService) CreateMissingConnections(
 		if labelA > labelB {
 			labelA, labelB = labelB, labelA
 		}
-		bridgeName := constants.GetBridgeConnectionNameFor(labelA, labelB)
-		if connectionNames[bridgeName] {
-			adjacency.Link(bestIndexes.X, bestIndexes.Y)
-			continue
-		}
+		bridgeName := availableRepairName(constants.GetBridgeConnectionNameFor(labelA, labelB), connectionNames)
 
 		zoneFrom := this.zoneLabelProvider.CreateZoneName(allLabels[bestIndexes.X], playerLabels)
 		zoneTo := this.zoneLabelProvider.CreateZoneName(allLabels[bestIndexes.Y], playerLabels)
 		additionalConnections = append(additionalConnections, this.createBridgeConnection(
 			bridgeName, zoneFrom, zoneTo, labelA, labelB, playerLabels, neutralZones, tuning))
 		connectionNames[bridgeName] = true
-		appendBridgeRoads(zones, zoneFrom, zoneTo, bridgeName)
+		if generateRoads {
+			appendBridgeRoads(zones, zoneFrom, zoneTo, bridgeName)
+		}
 		adjacency.Link(bestIndexes.X, bestIndexes.Y)
 	}
 
@@ -191,21 +188,6 @@ func (this *TopologyConnectionService) GetBorderGuardValue(
 	return tuning.ScaleByBorderGuardStrength(higherQuality.GetGuardValue())
 }
 
-// labelQuality ranks a label for guarding purposes. QualityUnknown is -1, so a
-// player label always loses the max against a real tier while still supplying
-// the player-border guard value when both endpoints are players.
-func labelQuality(label string, playerLabels []string, neutralZones neutral_zone.Plans) neutral_zone.Quality {
-	if zone_helpers.IsZoneNameHub(label) {
-		return neutral_zone.QualityHighest
-	}
-
-	if slices.Contains(playerLabels, label) {
-		return neutral_zone.QualityUnknown
-	}
-
-	return neutralZones.GetQuality(label)
-}
-
 func (this *TopologyConnectionService) createBridgeConnection(
 	bridgeName, zoneFrom, zoneTo, labelA, labelB string,
 	playerLabels []string,
@@ -221,6 +203,24 @@ func (this *TopologyConnectionService) createBridgeConnection(
 		WithGuardValue(this.GetBorderGuardValue(labelA, labelB, playerLabels, neutralZones, tuning)).
 		WithGuardWeeklyIncrement(common_connections.GetGuardWeeklyIncrements().Standard).
 		WithGuardMatchGroup(fmt.Sprintf("bridge_guard_%s-%s", labelA, labelB)).
+		Build()
+}
+
+func (this *TopologyConnectionService) createFallbackConnection(
+	fallbackName, label, partner string,
+	playerLabels []string,
+	tuning models.GenerationTuning) template_model.Connection {
+	zoneName := constants.GetPlayerZoneNameFor(label)
+	return variant_content.NewConnectionBuilder().
+		WithName(fallbackName).
+		WithFrom(zoneName).
+		WithTo(constants.GetPlayerZoneNameFor(partner)).
+		WithConnectionTypeDirect().
+		WithGuardZone(zoneName).
+		WithSimTurnSquad().
+		WithGuardValue(this.GetBorderGuardValue(label, partner, playerLabels, nil, tuning)).
+		WithGuardWeeklyIncrement(common_connections.GetGuardWeeklyIncrements().Standard).
+		WithGuardMatchGroup("fallback_guard_" + fallbackName).
 		Build()
 }
 
@@ -252,15 +252,27 @@ func (this *TopologyConnectionService) buildZoneAdjacency(
 	return adjacency
 }
 
-func spawnZoneHasConnection(zone template_model.Zone, connectionNames map[string]bool) bool {
-	connectionType := registry.GetRoadConnectionTypeValues().Connection
-	for _, road := range zone.Roads {
-		if road.To.Type == connectionType && len(road.To.Args) > 0 && connectionNames[road.To.Args[0]] {
-			return true
-		}
+func availableRepairName(baseName string, connectionNames map[string]bool) string {
+	name := baseName
+	for suffix := 2; connectionNames[name]; suffix++ {
+		name = fmt.Sprintf("%s-%d", baseName, suffix)
+	}
+	return name
+}
+
+// labelQuality ranks a label for guarding purposes. QualityUnknown is -1, so a
+// player label always loses the max against a real tier while still supplying
+// the player-border guard value when both endpoints are players.
+func labelQuality(label string, playerLabels []string, neutralZones neutral_zone.Plans) neutral_zone.Quality {
+	if zone_helpers.IsZoneNameHub(label) {
+		return neutral_zone.QualityHighest
 	}
 
-	return false
+	if slices.Contains(playerLabels, label) {
+		return neutral_zone.QualityUnknown
+	}
+
+	return neutralZones.GetQuality(label)
 }
 
 func appendSpawnFallbackRoads(zones []template_model.Zone, label, partner, fallbackName string) {

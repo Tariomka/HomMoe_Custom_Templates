@@ -29,6 +29,19 @@ func (this *ZoneEditorServiceMock) RebuildCastleRoads(zone *template_model.Zone)
 	this.Called(zone)
 }
 
+func (this *ZoneEditorServiceMock) ApplyConnectionRoadPolicy(
+	connection *template_model.Connection,
+	generateRoads bool) {
+	this.Called(connection, generateRoads)
+}
+
+func (this *ZoneEditorServiceMock) ChangeConnectionType(
+	connection *template_model.Connection,
+	connectionType string,
+	generateRoads bool) {
+	this.Called(connection, connectionType, generateRoads)
+}
+
 func (this *ZoneEditorServiceMock) NextFreeZoneLabel(zones []template_model.Zone) string {
 	arguments := this.Called(zones)
 	return arguments.String(0)

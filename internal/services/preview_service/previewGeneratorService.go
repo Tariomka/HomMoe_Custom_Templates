@@ -79,69 +79,107 @@ func (this *PreviewGeneratorService) drawConnections(
 	fitterCallback assetFitter,
 	scale float64) {
 	zoneRadius := assetRadius * scale
-	for _, conn := range connections {
-		controlPoint := fitterCallback(conn.Ctrl) // Bézier control point
-		startPoint, ok1 := helpers.CalculatePointTowards(fitterCallback(conn.Start), controlPoint, zoneRadius)
-		endPoint, ok2 := helpers.CalculatePointTowards(fitterCallback(conn.End), controlPoint, zoneRadius)
-		if !ok1 || !ok2 {
+	brushSource := image.NewUniform(color.RGBA{R: 0x33, G: 0x18, B: 0x18, A: 0xFF})
+	maskSource := image.NewUniform(color.Alpha{A: 128})
+	var strokeMask *image.Alpha
+	for _, connection := range connections {
+		controlPoint := fitterCallback(connection.Ctrl) // Bézier control point
+		startPoint, startValid := helpers.CalculatePointTowards(
+			fitterCallback(connection.Start), controlPoint, zoneRadius)
+		endPoint, endValid := helpers.CalculatePointTowards(fitterCallback(connection.End), controlPoint, zoneRadius)
+		if !startValid || !endValid {
 			continue
 		}
 
-		if conn.IsPortal() {
-			this.drawDashedLine(canvas, startPoint, controlPoint, endPoint)
-		} else {
-			this.drawSolidLine(canvas, startPoint, controlPoint, endPoint)
+		var target draw.Image = canvas
+		source := brushSource
+		if !connection.HasRoad {
+			if strokeMask == nil {
+				strokeMask = image.NewAlpha(canvas.Bounds())
+			}
+			target, source = strokeMask, maskSource
 		}
 
-		if conn.IsGladiatorArena() {
+		var painted image.Rectangle
+		if connection.IsPortal() {
+			painted = this.drawDashedLine(target, source, startPoint, controlPoint, endPoint)
+		} else {
+			painted = this.drawSolidLine(target, source, startPoint, controlPoint, endPoint)
+		}
+
+		if !connection.HasRoad && !painted.Empty() {
+			// Src stamps overwrite the mask, so an edge contributes opacity only once.
+			draw.DrawMask(canvas, painted, brushSource, image.Point{}, strokeMask, painted.Min, draw.Over)
+			for pixelY := painted.Min.Y; pixelY < painted.Max.Y; pixelY++ {
+				offset := strokeMask.PixOffset(painted.Min.X, pixelY)
+				clear(strokeMask.Pix[offset : offset+painted.Dx()])
+			}
+		}
+
+		if connection.IsGladiatorArena() {
 			midPoint := helpers.GetVectorOnQuadraticBezierCurve(startPoint, controlPoint, endPoint, 0.5)
 			this.assetProvider.DrawArenaMarker(canvas, midPoint, scale*arenaMarkerScale)
 		}
 	}
 }
 
-func (this *PreviewGeneratorService) drawSolidLine(canvas *image.RGBA, start, ctrl, end data.Vec2[float64]) {
+func (this *PreviewGeneratorService) drawSolidLine(
+	canvas draw.Image,
+	source *image.Uniform,
+	start, control, end data.Vec2[float64]) image.Rectangle {
+	painted := image.Rectangle{}
 	previousPoint := start
-	for i := range segmentsSolid {
-		t := float64(i+1) / segmentsSolid
-		currentPoint := helpers.GetVectorOnQuadraticBezierCurve(start, ctrl, end, t)
-		this.drawLine(canvas, previousPoint, currentPoint)
+	for index := range segmentsSolid {
+		progress := float64(index+1) / segmentsSolid
+		currentPoint := helpers.GetVectorOnQuadraticBezierCurve(start, control, end, progress)
+		painted = painted.Union(this.drawLine(canvas, source, previousPoint, currentPoint))
 		previousPoint = currentPoint
 	}
+	return painted
 }
 
-func (this *PreviewGeneratorService) drawDashedLine(canvas *image.RGBA, start, ctrl, end data.Vec2[float64]) {
+func (this *PreviewGeneratorService) drawDashedLine(
+	canvas draw.Image,
+	source *image.Uniform,
+	start, control, end data.Vec2[float64]) image.Rectangle {
+	painted := image.Rectangle{}
 	period := dashLength + dashGap
 	traveled := 0.0
 	previousPoint := start
-	for i := range segmentsDashed {
-		t := float64(i+1) / segmentsDashed
-		currentPoint := helpers.GetVectorOnQuadraticBezierCurve(start, ctrl, end, t)
+	for index := range segmentsDashed {
+		progress := float64(index+1) / segmentsDashed
+		currentPoint := helpers.GetVectorOnQuadraticBezierCurve(start, control, end, progress)
 		segmentLength := math.Hypot(
 			currentPoint.X-previousPoint.X,
 			currentPoint.Y-previousPoint.Y)
 		if math.Mod(traveled+segmentLength/2, period) < dashLength {
-			this.drawLine(canvas, previousPoint, currentPoint)
+			painted = painted.Union(this.drawLine(canvas, source, previousPoint, currentPoint))
 		}
 		traveled += segmentLength
 		previousPoint = currentPoint
 	}
+	return painted
 }
 
-func (this *PreviewGeneratorService) drawLine(canvas *image.RGBA, start, end data.Vec2[float64]) {
+func (this *PreviewGeneratorService) drawLine(
+	canvas draw.Image,
+	source *image.Uniform,
+	start, end data.Vec2[float64]) image.Rectangle {
+	painted := image.Rectangle{}
 	delta := end.Subtract(start)
 	steps := max(math.Abs(delta.X), math.Abs(delta.Y))
 	if steps <= 0 {
-		return
+		return painted
 	}
 
 	increment := delta.DivideScalar(steps)
 	half := connectorLineWidth / 2
-	brushSource := image.NewUniform(color.RGBA{R: 0x33, G: 0x18, B: 0x18, A: 0xFF})
-	for i := range int(math.Ceil(steps)) {
-		center := start.Add(increment.MultiplyScalar(float64(i))).ToPointRounded()
+	for index := range int(math.Ceil(steps)) {
+		center := start.Add(increment.MultiplyScalar(float64(index))).ToPointRounded()
 		brush := image.Rect(center.X-half, center.Y-half, center.X+half+1, center.Y+half+1).
 			Intersect(canvas.Bounds()) // Square brush around the center, clipped to the canvas.
-		draw.Draw(canvas, brush, brushSource, image.Point{}, draw.Src)
+		draw.Draw(canvas, brush, source, image.Point{}, draw.Src)
+		painted = painted.Union(brush)
 	}
+	return painted
 }

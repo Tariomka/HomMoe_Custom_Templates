@@ -17,7 +17,7 @@ func TestWhenFactoriesAreProvided_ReturnsUsableService(t *testing.T) {
 	// Act
 	service := connection_editor.NewZoneEditorService(
 		castleFactory,
-		roadFactory,
+		zones.NewRoadPolicyService(roadFactory),
 		zones.NewZoneFactory(castleFactory, roadFactory),
 	)
 

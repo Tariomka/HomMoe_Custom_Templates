@@ -32,6 +32,7 @@ import (
 var ZoneSet = wire.NewSet(
 	zone_services.NewCastleFactory,
 	zone_services.NewRoadFactory,
+	zone_services.NewRoadPolicyService,
 	zone_services.NewZoneFactory,
 	zone_services.NewZoneTierService,
 	zone_services.NewZoneLabelProvider,

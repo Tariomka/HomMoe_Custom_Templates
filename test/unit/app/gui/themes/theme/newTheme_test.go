@@ -13,6 +13,8 @@ import (
 	"testing"
 
 	"gioui.org/font/gofont"
+	"gioui.org/widget/material"
+	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -42,6 +44,35 @@ func TestWhenAppSourcesContainNonAsciiRunes_AllAreCoveredByTheBundledFonts(t *te
 
 	// Assert
 	assert.Empty(t, uncovered, "these runes are missing from gofont.Collection() and will render as .notdef")
+}
+
+func TestWhenTheThemeIsBuilt_ItCarriesTheCrimsonNightPalette(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	expected := material.Palette{
+		Bg:         themes.ColorsBase.Background,
+		Fg:         themes.ColorsBase.Text,
+		ContrastBg: themes.ColorsBase.PrimaryButton,
+		ContrastFg: themes.ColorsBase.Text,
+	}
+
+	// Act
+	theme := themes.NewTheme()
+
+	// Assert
+	assert.Equal(t, expected, theme.Palette)
+}
+
+func TestWhenTheThemeIsBuilt_ItGetsItsOwnShaper(t *testing.T) {
+	t.Parallel()
+	// Arrange - material.NewTheme leaves Shaper nil, so a non-nil one proves the
+	// bundled-font shaper documented above was installed.
+
+	// Act
+	theme := themes.NewTheme()
+
+	// Assert
+	assert.NotNil(t, theme.Shaper)
 }
 
 type runeOccurrence struct {

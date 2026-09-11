@@ -5,7 +5,6 @@ import (
 	"image/color"
 	"math"
 	"strconv"
-	"strings"
 
 	"gioui.org/font"
 	"gioui.org/io/event"
@@ -16,6 +15,7 @@ import (
 	"gioui.org/op/paint"
 	"gioui.org/unit"
 	"gioui.org/widget/material"
+	"github.com/Tariomka/hommoe_custom_templates/app/gui/constants"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/utils"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
@@ -210,15 +210,10 @@ func (this *ZoneEditorDialog) drawEdges(gtx layout.Context, theme *material.Them
 			continue
 		}
 
-		lineColor := themes.ColorsPreview.DirectLine
-		width := float32(gtx.Dp(unit.Dp(2)))
-		if strings.EqualFold(connection.ConnectionType, "Portal") {
-			lineColor = themes.ColorsPreview.PortalLine
-			width = float32(gtx.Dp(unit.Dp(1.6)))
-		}
+		lineColor := utils.NewEditorConnectionLineStyle(*connection).Color()
+		width := float32(gtx.Dp(constants.DefaultConnectionLine))
 		if connection == this.selected {
-			lineColor = themes.ColorsZoneEditor.EdgeSelected
-			width = float32(gtx.Dp(unit.Dp(3)))
+			width = float32(gtx.Dp(constants.DefaultConnectionLineLarge))
 		}
 		var path clip.Path
 		path.Begin(gtx.Ops)
@@ -234,7 +229,7 @@ func (this *ZoneEditorDialog) drawEdges(gtx layout.Context, theme *material.Them
 				mid.X+marker, mid.Y+marker)
 			paint.FillShape(gtx.Ops, themes.ColorsZoneEditor.UserAddedDot, clip.UniformRRect(dot, marker).Op(gtx.Ops))
 		}
-		drawCanvasText(
+		this.drawCanvasText(
 			gtx, theme, edge.MidPoint.Subtract(data.NewVec2(0, float64(gtx.Dp(unit.Dp(9))))),
 			strconv.Itoa(connection.GuardValue), 9, themes.ColorsZoneEditor.GuardLabel)
 	}
@@ -326,7 +321,7 @@ func (this *ZoneEditorDialog) moveDraggedZone(pos models.Position) {
 	this.geometryDirty = true
 }
 
-func drawCanvasText(
+func (this *ZoneEditorDialog) drawCanvasText(
 	gtx layout.Context,
 	theme *material.Theme,
 	center models.Position,

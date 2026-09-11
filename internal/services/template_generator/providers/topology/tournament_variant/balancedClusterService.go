@@ -78,7 +78,8 @@ func (this *BalancedClusterService) CreateClusterVariant(
 	connections := this.createConnections(
 		playerLabel, orderedLabels, tuning, allNeutralZonePlans, connectionNames, sortedPairs)
 	connections = append(connections, this.CreateMissingConnections(
-		singlePlayerList, orderedLabels, positions, zones, connections, tuning, allNeutralZonePlans)...)
+		singlePlayerList, orderedLabels, positions, zones, connections, tuning,
+		allNeutralZonePlans, configuration.GenerateRoads)...)
 	return zones, connections
 }
 

@@ -85,6 +85,17 @@ func (this *ZoneEditorHandler) ButtonLabels() []string {
 	return this.base.runner.ButtonLabelsIn(zoneEditorRect())
 }
 
+// CanvasRect is the square the canvas draws into, in window pixels, for the
+// assertions that are about what the canvas is painted with.
+func (this *ZoneEditorHandler) CanvasRect() image.Rectangle {
+	this.base.runner.tb.Helper()
+	side := this.Dialog().CanvasSquareSide()
+	topLeft := this.CanvasPoint(models.Position{})
+	return image.Rect(
+		int(topLeft.X), int(topLeft.Y),
+		int(topLeft.X)+side, int(topLeft.Y)+side)
+}
+
 // ZonePosition reads where the canvas currently draws the named zone.
 func (this *ZoneEditorHandler) ZonePosition(name string) models.Position {
 	this.base.runner.tb.Helper()

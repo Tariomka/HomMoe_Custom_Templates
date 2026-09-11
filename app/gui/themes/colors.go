@@ -81,6 +81,9 @@ var ColorsPreview = struct {
 	DirectLine color.NRGBA // crimson roads
 	PortalLine color.NRGBA // portals stay cool blue
 
+	NoRoadLine       color.NRGBA // connection the generator lays no road along
+	PortalNoRoadLine color.NRGBA // explicit portal without a road
+
 	ZoneLabel   color.NRGBA // zone value text
 	CastleBadge color.NRGBA // castle-count badge
 }{
@@ -102,8 +105,12 @@ var ColorsPreview = struct {
 	HubEdge:      color.NRGBA{R: 0x82, G: 0xB4, B: 0xC8, A: 0xFF},
 	DirectLine:   color.NRGBA{R: 0xC4, G: 0x44, B: 0x58, A: 0xFF},
 	PortalLine:   color.NRGBA{R: 0x5A, G: 0xAA, B: 0xD2, A: 0xB4},
-	ZoneLabel:    color.NRGBA{R: 0xF2, G: 0xEE, B: 0xF2, A: 0xFF},
-	CastleBadge:  color.NRGBA{R: 0xFF, G: 0xD9, B: 0x9C, A: 0xFF},
+
+	NoRoadLine:       color.NRGBA{R: 0xB0, G: 0xB0, B: 0xB0, A: 0xFF},
+	PortalNoRoadLine: color.NRGBA{R: 0x90, G: 0xEE, B: 0x90, A: 0xFF},
+
+	ZoneLabel:   color.NRGBA{R: 0xF2, G: 0xEE, B: 0xF2, A: 0xFF},
+	CastleBadge: color.NRGBA{R: 0xFF, G: 0xD9, B: 0x9C, A: 0xFF},
 }
 
 // ColorsZoneEditor - Zone-editor canvas accents.

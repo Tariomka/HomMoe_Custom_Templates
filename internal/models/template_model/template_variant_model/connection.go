@@ -1,9 +1,12 @@
 package template_variant_model
 
 import (
+	"strings"
+
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template_entity"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model/template_common_model"
+	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
 
 type Connection struct {
@@ -30,6 +33,18 @@ type Connection struct {
 	PortalPlacementRulesTo   []template_common_model.PlacementRule
 
 	IsUserAdded bool
+}
+
+func (this Connection) IsExplicitPortal() bool {
+	return strings.EqualFold(this.ConnectionType, registry.GetConnectionTypeValues().Portal)
+}
+
+func (this Connection) HasRoad() bool {
+	if this.Road != nil {
+		return *this.Road
+	}
+
+	return this.IsExplicitPortal()
 }
 
 func (this Connection) Clone() Connection {

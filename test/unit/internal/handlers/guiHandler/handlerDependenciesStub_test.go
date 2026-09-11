@@ -143,6 +143,13 @@ func (this *handlerDependenciesStub) CreateZoneEditorConnection(
 	return template_model.Connection{}
 }
 
+func (this *handlerDependenciesStub) ChangeZoneEditorConnectionType(
+	request dtos.ZoneEditorConnectionTypeRequestDto,
+) template_model.Connection {
+	this.zoneEditorCalled = true
+	return request.Connection
+}
+
 func (this *handlerDependenciesStub) FindOpenZonePosition([]data.Vec2[float64]) data.Vec2[float64] {
 	return data.Vec2[float64]{}
 }

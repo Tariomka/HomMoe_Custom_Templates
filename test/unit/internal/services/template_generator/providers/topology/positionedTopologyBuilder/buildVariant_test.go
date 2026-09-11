@@ -71,6 +71,29 @@ func TestWhenDirectPlayerConnectionsAreDisabled_SkipsLayoutPlayerPair(t *testing
 	assert.NotContains(t, connectionNames(variant.Connections), "Rnd-A-B")
 }
 
+func TestWhenRoadlessIsolatedPlayersAreLinkedThroughNeutral_NoFallbackIsCreated(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.GenerateRoads = false
+	configuration.NoDirectPlayerConnections = true
+	neutralZones := neutral_zone.Plans{}
+	neutralZones.AddPlan("N", neutral_zone.QualityMedium, 1)
+	tuning := test_helpers.NewGenerationTuning(configuration, 3)
+	builder := newPositionedTopologyBuilder()
+	layoutBuilder := func([]string, neutral_zone.Plans) ([]string, models.Positions, []models.ConnectionIndexes) {
+		return []string{"A", "N", "B"}, models.Positions{
+			data.NewVec2(0.0, 0.0), data.NewVec2(0.5, 0.0), data.NewVec2(1.0, 0.0),
+		}, []models.ConnectionIndexes{{X: 0, Y: 1}, {X: 1, Y: 2}}
+	}
+
+	// Act
+	variant := builder.BuildVariant(*configuration, []string{"A", "B"}, neutralZones, tuning, "", layoutBuilder, nil)
+
+	// Assert
+	assert.Equal(t, []string{"Rnd-A-N", "Rnd-N-B"}, connectionNames(variant.Connections))
+}
+
 func TestWhenRandomPortalsAreEnabled_AddsPortalConnection(t *testing.T) {
 	t.Parallel()
 	// Arrange
@@ -116,6 +139,90 @@ func TestWhenLayoutIsDisconnected_AddsBridgeConnection(t *testing.T) {
 	assert.Equal(t, 1, countConnectionsWithPrefix(variant.Connections, "Bridge-"))
 }
 
+func TestWhenRoadlessLayoutIsDisconnected_PreservesBridgeWithoutConnectionRoads(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.GenerateRoads = false
+	neutralZones := neutral_zone.Plans{}
+	neutralZones.AddPlan("N1", neutral_zone.QualityLow, 0)
+	neutralZones.AddPlan("N2", neutral_zone.QualityMedium, 1)
+	tuning := test_helpers.NewGenerationTuning(configuration, 3)
+	builder := newPositionedTopologyBuilder()
+	layoutBuilder := func([]string, neutral_zone.Plans) ([]string, models.Positions, []models.ConnectionIndexes) {
+		return []string{"A", "N1", "N2"}, models.Positions{
+			data.NewVec2(0.0, 0.0), data.NewVec2(0.5, 0.0), data.NewVec2(1.0, 0.0),
+		}, []models.ConnectionIndexes{{X: 0, Y: 1}}
+	}
+
+	// Act
+	variant := builder.BuildVariant(*configuration, []string{"A"}, neutralZones, tuning, "", layoutBuilder, nil)
+
+	// Assert
+	assert.Equal(t, []string{"Rnd-A-N1", "Bridge-N1-N2"}, connectionNames(variant.Connections))
+}
+
+func TestWhenRoadlessLayoutIsDisconnected_DoesNotMaterializeBridgeConnectionRoads(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.GenerateRoads = false
+	neutralZones := neutral_zone.Plans{}
+	neutralZones.AddPlan("N1", neutral_zone.QualityLow, 0)
+	neutralZones.AddPlan("N2", neutral_zone.QualityMedium, 1)
+	tuning := test_helpers.NewGenerationTuning(configuration, 3)
+	builder := newPositionedTopologyBuilder()
+	layoutBuilder := func([]string, neutral_zone.Plans) ([]string, models.Positions, []models.ConnectionIndexes) {
+		return []string{"A", "N1", "N2"}, models.Positions{
+			data.NewVec2(0.0, 0.0), data.NewVec2(0.5, 0.0), data.NewVec2(1.0, 0.0),
+		}, []models.ConnectionIndexes{{X: 0, Y: 1}}
+	}
+
+	// Act
+	variant := builder.BuildVariant(*configuration, []string{"A"}, neutralZones, tuning, "", layoutBuilder, nil)
+
+	// Assert
+	assert.Empty(t, connectionRoadTargets(variant.Zones))
+}
+
+func TestWhenRoadlessIsolationHasNoNeutral_FallbackIsKeptWithoutConnectionRoads(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.GenerateRoads = false
+	configuration.NoDirectPlayerConnections = true
+	tuning := test_helpers.NewGenerationTuning(configuration, 2)
+	builder := newPositionedTopologyBuilder()
+	layoutBuilder := func([]string, neutral_zone.Plans) ([]string, models.Positions, []models.ConnectionIndexes) {
+		return []string{"A", "B"}, models.Positions{data.NewVec2(0.0, 0.0), data.NewVec2(1.0, 0.0)}, nil
+	}
+
+	// Act
+	variant := builder.BuildVariant(*configuration, []string{"A", "B"}, nil, tuning, "", layoutBuilder, nil)
+
+	// Assert
+	assert.Equal(t, []string{"Fallback-A-B"}, connectionNames(variant.Connections))
+}
+
+func TestWhenRoadlessIsolationHasNoNeutral_DoesNotMaterializeFallbackConnectionRoads(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.GenerateRoads = false
+	configuration.NoDirectPlayerConnections = true
+	tuning := test_helpers.NewGenerationTuning(configuration, 2)
+	builder := newPositionedTopologyBuilder()
+	layoutBuilder := func([]string, neutral_zone.Plans) ([]string, models.Positions, []models.ConnectionIndexes) {
+		return []string{"A", "B"}, models.Positions{data.NewVec2(0.0, 0.0), data.NewVec2(1.0, 0.0)}, nil
+	}
+
+	// Act
+	variant := builder.BuildVariant(*configuration, []string{"A", "B"}, nil, tuning, "", layoutBuilder, nil)
+
+	// Assert
+	assert.Empty(t, connectionRoadTargets(variant.Zones))
+}
+
 func TestWhenZoneDecoratorProvided_AppliesItToBuiltZones(t *testing.T) {
 	t.Parallel()
 	// Arrange
@@ -153,6 +260,21 @@ func countConnectionsWithPrefix(connections []template_model.Connection, prefix 
 		}
 	}
 	return count
+}
+
+func connectionRoadTargets(zones []template_model.Zone) []string {
+	var connectionNames []string
+	for _, zone := range zones {
+		for _, road := range zone.Roads {
+			if road.From.Type == "Connection" && len(road.From.Args) > 0 {
+				connectionNames = append(connectionNames, road.From.Args[0])
+			}
+			if road.To.Type == "Connection" && len(road.To.Args) > 0 {
+				connectionNames = append(connectionNames, road.To.Args[0])
+			}
+		}
+	}
+	return connectionNames
 }
 
 func newPositionedTopologyBuilder() *topology.PositionedTopologyBuilder {

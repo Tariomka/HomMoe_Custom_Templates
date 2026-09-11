@@ -163,8 +163,10 @@ func (this *TopologyBase) CreateMissingPlayerConnections(
 	playerLabels []string,
 	zones []template_model.Zone,
 	connections []template_model.Connection,
-	tuning models.GenerationTuning) []template_model.Connection {
-	return this.connectionService.CreateMissingPlayerConnections(playerLabels, zones, connections, tuning)
+	tuning models.GenerationTuning,
+	generateRoads bool) []template_model.Connection {
+	return this.connectionService.CreateMissingPlayerConnections(
+		playerLabels, zones, connections, tuning, generateRoads)
 }
 
 func (this *TopologyBase) CreateMissingConnections(
@@ -173,9 +175,10 @@ func (this *TopologyBase) CreateMissingConnections(
 	zones []template_model.Zone,
 	connections []template_model.Connection,
 	tuning models.GenerationTuning,
-	neutralZones neutral_zone.Plans) []template_model.Connection {
+	neutralZones neutral_zone.Plans,
+	generateRoads bool) []template_model.Connection {
 	return this.connectionService.CreateMissingConnections(
-		playerLabels, allLabels, positions, zones, connections, tuning, neutralZones)
+		playerLabels, allLabels, positions, zones, connections, tuning, neutralZones, generateRoads)
 }
 
 func (this *TopologyBase) CreateConnectorZoneRoads(connectionNames []string, generateRoads bool) []template_model.Road {

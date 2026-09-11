@@ -70,6 +70,19 @@ func (this PreviewRasterFixture) WithoutConnections() PreviewRasterFixture {
 	return this
 }
 
+// WithoutRoads returns the same geometry with every connection marked roadless,
+// which is the only difference a raster test needs to compare the two stroke styles.
+func (this PreviewRasterFixture) WithoutRoads() PreviewRasterFixture {
+	roadless := make([]preview.Connection, len(this.Layout.Connections))
+	copy(roadless, this.Layout.Connections)
+	for index := range roadless {
+		roadless[index].HasRoad = false
+	}
+
+	this.Layout.Connections = roadless
+	return this
+}
+
 // FindPreviewRasterFixture returns the fixture registered under the given name.
 func FindPreviewRasterFixture(name string) (PreviewRasterFixture, bool) {
 	for _, fixture := range newPreviewRasterFixtures() {
@@ -143,8 +156,9 @@ func newCurvedFixture(
 				{Name: previewFixtureEndZone, Label: previewFixtureEndZone,
 					Center: end, Type: preview.ZoneTypeNeutral},
 			},
-			Connections: []preview.Connection{{Start: start, Ctrl: controlPoint, End: end, Type: connectionType}},
-			ZoneRadius:  previewFixtureZoneRadius,
+			Connections: []preview.Connection{{
+				Start: start, Ctrl: controlPoint, End: end, Type: connectionType, HasRoad: true}},
+			ZoneRadius: previewFixtureZoneRadius,
 		},
 	}
 }
@@ -158,9 +172,10 @@ func newConnectorOnlyFixture(
 	return PreviewRasterFixture{
 		Name: name,
 		Layout: preview.Layout{
-			Positions:   map[string]data.Vec2[float64]{previewFixtureStartZone: start},
-			Connections: []preview.Connection{{Start: start, Ctrl: midpoint, End: end, Type: connectionType}},
-			ZoneRadius:  previewFixtureZoneRadius,
+			Positions: map[string]data.Vec2[float64]{previewFixtureStartZone: start},
+			Connections: []preview.Connection{{
+				Start: start, Ctrl: midpoint, End: end, Type: connectionType, HasRoad: true}},
+			ZoneRadius: previewFixtureZoneRadius,
 		},
 	}
 }

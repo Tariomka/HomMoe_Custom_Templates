@@ -12,6 +12,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestWhenDefaultConfiguration_ReturnsGoldenTemplate(t *testing.T) {
@@ -411,13 +412,14 @@ func TestWhenRoadsEnabled_ProducesRoads(t *testing.T) {
 	assert.True(t, hasRoads)
 }
 
-func TestWhenRoadsDisabled_ProducesNoRoads(t *testing.T) {
+func TestWhenRoadsDisabled_KeepsTheInternalZoneRoads(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
 	configuration.Topology = config.TopologyRing
 	configuration.PlayerCount = gofakeit.Number(2, 8)
 	configuration.ZoneConfiguration.NeutralZoneCount = gofakeit.Number(2, 6)
+	configuration.ZoneConfiguration.PlayerZoneCastles = 1
 	configuration.GenerateRoads = false
 	generator := test_helpers.NewTemplateGenerator(configuration)
 
@@ -425,10 +427,130 @@ func TestWhenRoadsDisabled_ProducesNoRoads(t *testing.T) {
 	actual, _ := generateTemplate(generator)
 
 	// Assert
-	zonesWithRoads := linq.FromSlice(actual.Variants[0].Zones).
-		Where(func(zone template_entity.Zone) bool { return len(zone.Roads) > 0 }).
+	// A zone's own castle<->castle and foothold routes are what makes it
+	// playable; the checkbox only owns the roads between zones.
+	hasInternalRoads := linq.FromSlice(actual.Variants[0].Zones).
+		Where(func(zone template_entity.Zone) bool { return len(internalRoadsOf(zone)) > 0 }).
+		Any()
+	assert.True(t, hasInternalRoads)
+}
+
+func TestWhenRoadsDisabled_RemovesEveryNonPortalApproachRoad(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = config.TopologyRing
+	configuration.PlayerCount = gofakeit.Number(2, 8)
+	configuration.ZoneConfiguration.NeutralZoneCount = gofakeit.Number(2, 6)
+	configuration.RandomPortals = false
+	configuration.GenerateRoads = false
+	generator := test_helpers.NewTemplateGenerator(configuration)
+
+	// Act
+	actual, _ := generateTemplate(generator)
+
+	// Assert
+	var approaches []string
+	for _, zone := range actual.Variants[0].Zones {
+		approaches = append(approaches, connectionRoadTargets(zone)...)
+	}
+	assert.Empty(t, approaches)
+}
+
+func TestWhenRoadsDisabled_StampsRoadsOffOnEveryNonPortalConnection(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = config.TopologyRing
+	configuration.PlayerCount = gofakeit.Number(2, 8)
+	configuration.ZoneConfiguration.NeutralZoneCount = gofakeit.Number(2, 6)
+	configuration.RandomPortals = false
+	configuration.GenerateRoads = false
+	generator := test_helpers.NewTemplateGenerator(configuration)
+
+	// Act
+	actual, _ := generateTemplate(generator)
+
+	// Assert
+	assert.Empty(t, connectionsFailingRoadFlag(actual, false))
+}
+
+func TestWhenRoadsEnabled_StampsRoadsOnOnEveryNonPortalConnection(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = config.TopologyRing
+	configuration.PlayerCount = gofakeit.Number(2, 8)
+	configuration.ZoneConfiguration.NeutralZoneCount = gofakeit.Number(2, 6)
+	configuration.RandomPortals = false
+	configuration.GenerateRoads = true
+	generator := test_helpers.NewTemplateGenerator(configuration)
+
+	// Act
+	actual, _ := generateTemplate(generator)
+
+	// Assert
+	assert.Empty(t, connectionsFailingRoadFlag(actual, true))
+}
+
+// The checkbox does not own portal approaches: a generated portal keeps its
+// own road flag whatever the setting says.
+func TestWhenRoadsDisabled_KeepsThePortalConnectionRoadFlags(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = config.TopologyRing
+	configuration.PlayerCount = 4
+	configuration.ZoneConfiguration.NeutralZoneCount = 4
+	configuration.RandomPortals = true
+	configuration.MaxPortalConnections = gofakeit.Number(1, 8)
+	configuration.GenerateRoads = false
+	generator := test_helpers.NewTemplateGenerator(configuration)
+
+	// Act
+	actual, _ := generateTemplate(generator)
+
+	// Assert
+	portals := linq.FromSlice(actual.Variants[0].Connections).
+		Where(func(connection template_entity.Connection) bool {
+			return connection.ConnectionType == "Portal"
+		}).
 		ToSlice()
-	assert.Empty(t, zonesWithRoads)
+	require.NotEmpty(t, portals)
+	for _, portal := range portals {
+		assert.NotNilf(t, portal.Road, "portal %s lost its road flag", portal.Name)
+		assert.Truef(t, *portal.Road, "portal %s was switched off by the zone-road setting", portal.Name)
+	}
+}
+
+// With every other connection roadless, the approach roads that survive must
+// be exactly the ones leading to a portal.
+func TestWhenRoadsDisabled_KeepsThePortalApproachRoads(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.Topology = config.TopologyRing
+	configuration.PlayerCount = 4
+	configuration.ZoneConfiguration.NeutralZoneCount = 4
+	configuration.RandomPortals = true
+	configuration.MaxPortalConnections = 8
+	configuration.GenerateRoads = false
+	generator := test_helpers.NewTemplateGenerator(configuration)
+
+	// Act
+	actual, _ := generateTemplate(generator)
+
+	// Assert
+	portalNames := connectionNamesOfType(actual, "Portal")
+	require.NotEmpty(t, portalNames)
+	var approaches []string
+	for _, zone := range actual.Variants[0].Zones {
+		approaches = append(approaches, connectionRoadTargets(zone)...)
+	}
+	require.NotEmpty(t, approaches, "the portal approaches must survive the disabled setting")
+	for _, target := range approaches {
+		assert.Containsf(t, portalNames, target, "road to %s survived on a roadless connection", target)
+	}
 }
 
 // ── Castle factions ──────────────────────────────────────────────────
@@ -853,6 +975,55 @@ func zonesWithPrefix(generated *template_entity.RmgTemplate, prefix string) []te
 	return linq.FromSlice(generated.Variants[0].Zones).
 		Where(func(zone template_entity.Zone) bool { return strings.HasPrefix(zone.Name, prefix) }).
 		ToSlice()
+}
+
+// internalRoadsOf returns the zone's own routes: everything that does not lead
+// out to a connection.
+func internalRoadsOf(zone template_entity.Zone) []template_entity.Road {
+	return linq.FromSlice(zone.Roads).
+		Where(func(road template_entity.Road) bool {
+			return road.From.Type != "Connection" && road.To.Type != "Connection"
+		}).
+		ToSlice()
+}
+
+// connectionRoadTargets returns the name of every connection the zone's roads
+// lead to.
+func connectionRoadTargets(zone template_entity.Zone) []string {
+	var targets []string
+	for _, road := range zone.Roads {
+		for _, reference := range []template_entity.TypedRef{road.From, road.To} {
+			if reference.Type == "Connection" && len(reference.Args) > 0 {
+				targets = append(targets, reference.Args[0])
+			}
+		}
+	}
+	return targets
+}
+
+func connectionNamesOfType(generated *template_entity.RmgTemplate, connectionType string) []string {
+	var names []string
+	for _, connection := range generated.Variants[0].Connections {
+		if connection.ConnectionType == connectionType {
+			names = append(names, connection.Name)
+		}
+	}
+	return names
+}
+
+// connectionsFailingRoadFlag names every non-portal connection whose road flag
+// is not the stamped setting, so a failure reports which one drifted.
+func connectionsFailingRoadFlag(generated *template_entity.RmgTemplate, expected bool) []string {
+	var failing []string
+	for _, connection := range generated.Variants[0].Connections {
+		if strings.EqualFold(connection.ConnectionType, "Portal") {
+			continue
+		}
+		if connection.Road == nil || *connection.Road != expected {
+			failing = append(failing, connection.Name)
+		}
+	}
+	return failing
 }
 
 // extraCastleFactionTypes collects the faction type of the second main object
