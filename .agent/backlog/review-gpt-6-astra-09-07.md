@@ -10,8 +10,13 @@
 
 **Finding count:** **32 actionable items: 8 High, 17 Medium, 7 Low.** This includes owner-requested architecture/product work scoped on 2026-09-08, not just proved defects. Informational observations and prior-item dispositions are not included in that count. Findings are source-verified unless a runtime reproduction is explicitly recorded. Performance claims are reasoned, not benchmark measurements. In-game behavior was not tested.
 
-**Current progress (2026-09-10):** **6 fixed, 26 remaining**: 3 High, 16 Medium,
-7 Low. The original audit measurements above remain historical.
+**Current progress (2026-09-11):** **9 fixed, 23 remaining**: 1 High, 15 Medium,
+7 Low. Batch C code/tests are owner-committed through `0a55306`; whole-batch
+independent review and Windows verification pass, coverage **75.1%**, lint zero.
+Owner confirms in-app visuals and correct road values in-engine on Steam Deck;
+Batch C is closed. Owner-reported acceptance is recorded separately in §10 and
+does not establish a native Linux application build or unrelated engine behavior.
+The original audit measurements above remain historical.
 
 **Fix-session protocol:** ask → plan → owner approves → implement and verify → owner commits → mark the stable item `✅ FIXED`. Owner-confirmed scope below is not permission to implement before the per-item plan is approved. Protected-directory changes remain owner-approved and owner-applied only. Each future change must follow the test layout, AAA, `t.Parallel()`, testify, coverage, build, and tag requirements in [AGENTS.md](../../AGENTS.md). Proposed new test paths below are deliberately not hyperlinks until the files exist.
 
@@ -144,7 +149,21 @@ session-only picker confirmation. Owner committed the fix in `a9eb35c`
 
 **Owner decision.** Inspect changed PNG expectations. Do not automatically regenerate unrelated Gio goldens: this rasterizer is not their vector drawing path.
 
-### 1.4 🔴 Manual Apply and castle reapplication re-enable disabled roads
+### 1.4 ✅ FIXED — Manual Apply and castle reapplication re-enable disabled roads
+
+**Progress (2026-09-11).** Owner committed policy/finalization in `abf0d36`, pending
+editor policy and GUI styling through `a574a9e`, and PNG opacity in `0a55306`.
+[RoadPolicyService](../../internal/services/zones/roadPolicyService.go) stamps every
+non-explicit-Portal flag from current settings and removes whole disabled approach
+segments. Explicit Portal flags/valid approaches are preserved, including false/nil;
+internal castle/object roads remain independent of the checkbox. Custom valid and
+opaque routes survive. [UpdateTemplate](../../internal/handlers/templateHandler.go)
+skips all road/content reconciliation when EditorState is nil, retaining direct
+connection naming and graph diagnostics. Type-change inputs clone before policy;
+pending edits go through handlers, Cancel preserves retained state. Real generation,
+Apply, toggle, reapply and serialized-output matrices pass. Owner in-app visual
+approval and Steam Deck engine acceptance received (see §10). Historical
+evidence and original suggested fix below are superseded by this approved contract.
 
 **Evidence.** [RebuildZoneConnectionRoads](../../internal/services/connection_editor/zoneEditorService.go#L117-L135) calls `CreateOuterZoneRoads(nil, mainObjectCount, 0, true)` and `CreateConnectorZoneRoads(names, true)` and directly appends main-object connection roads. [RebuildCastleRoads](../../internal/services/connection_editor/zoneEditorService.go#L279-L291) also passes `true`. [UpdateTemplate](../../internal/handlers/templateHandler.go#L79-L90) calls the rebuild unconditionally although its DTO carries the editor settings.
 
@@ -166,7 +185,17 @@ session-only picker confirmation. Owner committed the fix in `a9eb35c`
 
 **Owner decision.** Clearing edits or relocating an arena is user-visible. Confirm the policy before implementation; do not drop edits on an unrelated victory-condition change unnecessarily.
 
-### 1.6 🔴 Connectivity repair both ignores road policy and uses roads as graph connectivity
+### 1.6 ✅ FIXED — Connectivity repair both ignores road policy and uses roads as graph connectivity
+
+**Progress (2026-09-11).** Owner commit `07ca8b6` makes
+[topology repair](../../internal/services/template_generator/providers/topology/base/topologyConnectionService.go)
+endpoint-based, including accumulated repair edges, and forwards the road setting
+through every public/base/caller path. Roads gate materialization only; graph repair,
+guards and required impossible-isolation fallback remain. Collision-safe names
+prevent silently losing an actual fallback/bridge edge. Public regressions cover
+already-connected roadless players, zero-neutral required fallback, component
+bridges, invalid endpoints and occupied names. Final Windows tests and independent
+whole-batch review pass; changed repair functions are 100% statement-covered.
 
 **Evidence.** [spawnZoneHasConnection](../../internal/services/template_generator/providers/topology/base/topologyConnectionService.go#L255-L264) scans `zone.Roads`, not connection endpoints. [CreateMissingPlayerConnections](../../internal/services/template_generator/providers/topology/base/topologyConnectionService.go#L87-L125) creates fallback connections when that predicate is false. [appendSpawnFallbackRoads and appendBridgeRoads](../../internal/services/template_generator/providers/topology/base/topologyConnectionService.go#L266-L325) append roads with no `GenerateRoads` condition. [positioned builder](../../internal/services/template_generator/providers/topology/positionedTopologyBuilder.go#L55-L69) calls these repair paths after constructing the ordinary graph.
 
@@ -231,7 +260,20 @@ unchanged by this scoped work. Owner committed the fix in `a9eb35c`
 
 **Owner decision.** None; retain intentionally mutable local editing copies, not aliases into stored snapshots.
 
-### 1.10 🟠 Foothold changes leave roads targeting removed mandatory content
+### 1.10 ✅ FIXED — Foothold changes leave roads targeting removed mandatory content
+
+**Progress (2026-09-11).** Owner commit `abf0d36` installs one
+[road reconciliation policy](../../internal/services/zones/roadPolicyService.go)
+after final mandatory content/arena placement in generation and Apply. It resolves
+named targets through each zone's final content groups, treating nil/empty final
+content as authoritative; removes only confirmed invalid references and restores
+eligible foothold/approach targets. Valid custom records/attributes and unknown
+reference types survive. Arena markers never become automatic castle anchors;
+imported non-arena indices are rebased and castle-road slices cloned before edits.
+Off→on restores eligible target sets, not redundant connector-record equality.
+Nil EditorState preserves supplied content/roads without reconciliation. Scoped,
+count/toggle, alias, arena-only and final JSON matrices pass; policy/scope functions
+are 100% covered. Final independent review approved; owner engine acceptance is in §10.
 
 **Evidence.** [road preservation](../../internal/services/connection_editor/zoneEditorService.go#L102-L121) keeps every road that is neither a connection road nor a castle road. [RoadFactory](../../internal/services/zones/roadFactory.go#L69-L77) creates foothold roads targeting `name_remote_foothold_N`. [CreateContentsForZones](../../internal/services/template_generator/providers/mandatoryContentProvider.go#L79-L85) recalculates foothold content from the current enabled/count settings, independently of those preserved roads. [UpdateTemplate](../../internal/handlers/templateHandler.go#L81-L90) combines those two results.
 
@@ -531,7 +573,7 @@ The configured run includes existing exclusions (protected registry duplication,
 | --- | --- | --- |
 | A: prevent silent loss/misplacement | §1.1, §1.2 | Dirty/exit tests and failed-detection export refusal. Highest user impact; preserve output hard rule. |
 | B: PNG and value contract | §1.3, §1.7 | Independent small fixes with public-API pixel and tournament-value tests. Confirm game's omitted-false semantics. |
-| C: road and graph invariants | §1.4, §1.6, §1.10 | Agree generated/custom-road handling, then separate graph connectivity from road policy. End-to-end road-target integrity and roads-off matrices. |
+| C: road and graph invariants | §1.4, §1.6, §1.10 | Complete: owner-committed code, automated verification/review and owner Steam Deck engine acceptance, 2026-09-11. No reimplementation or further closeout. |
 | D: manual state lifecycle | §1.8, §1.9 | Complete in Batch A. Retain compare-before-mutation tests if C changes road rebuilding. |
 | E: effective modes and guard propagation | §1.5, §1.11, §1.12 | Owner decisions on edit invalidation, custom guard values, player-count restoration. Do not include topology deletion/redesign automatically. |
 | F: editor geometry | §1.13, §1.14, §1.15; optionally §2.1 | Determinism first; batched real-input tests; shared classification; owner approval before visual-policy consolidation. |
@@ -561,6 +603,7 @@ For every code batch: capture coverage before/after, build, unit suite, test-lay
 3. Parallel-edge artifact: retain a current saved state plus PNG showing a missing **solid** curve after §1.3; distinguish node occlusion and §2.1 geometry differences from edge omission. Do not mark O04 fixed just because pair grouping exists.
 4. Geometric Hub v1 artifact: new schema-v2 saves preserve stamps, but missing historical coordinates cannot be reconstructed by plain migration. Recreate/re-save under current code and compare before/after load. Do not discard manual edits silently to manufacture a new layout.
 5. Historical preview artifacts: §1.13 proves a tie nondeterminism, not every saved artifact's cause. Retain an exact new reproducer if artifacts remain.
+6. **Complete: Batch C road acceptance, 2026-09-11.** After testing generated templates on Steam Deck, the owner reports: "Everything in-game looks good, the road values are correct in engine." This closes the batch's engine gate; no per-case matrix beyond that report is claimed. Retain false=roadless, true=roaded, nil=roaded only for explicit Portal as the accepted display contract, per-edge PNG half-opacity with opaque artwork, and the Preview-only four-entry legend (editor legend deliberately removed). This is owner-reported in-game validation, not an assistant run or proof of native Linux build compatibility. Other entries in this queue remain open.
 
 **Other verified non-issues:**
 
