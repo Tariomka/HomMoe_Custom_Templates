@@ -26,3 +26,9 @@ func (this *RoadPolicyServiceMock) RebuildZoneConnectionRoads(
 func (this *RoadPolicyServiceMock) RebuildCastleRoads(zone *template_model.Zone) {
 	this.Called(zone)
 }
+
+func (this *RoadPolicyServiceMock) StampConnectionRoad(
+	connection *template_model.Connection,
+	generateRoads bool) {
+	this.Called(connection, generateRoads)
+}

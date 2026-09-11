@@ -39,10 +39,33 @@ func (this *AppRunner) EnableSnapshots() {
 		return // headed without -update: no capture, no validation.
 	}
 
+	this.ensureHeadlessWindow()
+}
+
+// CaptureFrame renders the current editor state through a headless GPU window
+// and hands back its pixels, unmasked and unverified. It is for the assertions
+// that are about what a specific region is painted with - an edge colour, say -
+// rather than about the whole window matching a golden.
+func (this *AppRunner) CaptureFrame() *image.RGBA {
+	this.tb.Helper()
+	this.ensureHeadlessWindow()
+	return this.captureScreenshot()
+}
+
+// ensureHeadlessWindow opens the offscreen GPU window the captures render
+// through, once per runner.
+func (this *AppRunner) ensureHeadlessWindow() {
+	this.tb.Helper()
+	if this.headlessWin != nil {
+		return
+	}
+
 	headlessWindow, err := headless.NewWindow(WindowWidth, WindowHeight)
 	if err != nil {
-		this.tb.Fatalf("EnableSnapshots: cannot create headless GPU window: %v", err)
+		this.tb.Fatalf("cannot create headless GPU window: %v", err)
+		return
 	}
+
 	this.headlessWin = headlessWindow
 	this.tb.Cleanup(headlessWindow.Release)
 }
@@ -74,10 +97,12 @@ func (this *AppRunner) SnapshotsEnabled() bool {
 
 // VerifySnapshot renders, masks and then saves (-update) or validates the
 // screenshot for the action that just completed. No-op unless EnableSnapshots
-// armed this runner with a headless window.
+// armed this runner with a headless window: CaptureFrame opens that same window
+// for its own pixel assertions, so the window alone does not mean golden
+// verification was asked for.
 func (this *AppRunner) VerifySnapshot() {
 	this.tb.Helper()
-	if this.headlessWin == nil {
+	if this.snapshotFile == "" || this.headlessWin == nil {
 		return
 	}
 

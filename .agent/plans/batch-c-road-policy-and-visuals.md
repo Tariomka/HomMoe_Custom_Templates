@@ -1,6 +1,6 @@
 # Batch C: road policy, connectivity and visual road status
 
-Implement review §1.4/§1.6/§1.10 with the owner's clarified between-zone road policy, plus road-state styling in the Preview panel, manual editor and exported PNG. **Scope and written-plan implementation approved on 2026-09-10**, owner: “looks good, please proceed”. Phase 1 is committed at `07ca8b6`; Phase 2 is committed at `abf0d36`. Phase 3 is next, explicitly authorized by the owner: “Changes reviewed, you can proceed”. Resume in a fresh session without another approval gate.
+Implement review §1.4/§1.6/§1.10 with the owner's clarified between-zone road policy, plus road-state styling in the Preview panel, manual editor and exported PNG. **Scope and written-plan implementation approved on 2026-09-10**, owner: “looks good, please proceed”. Phase 1 is committed at `07ca8b6`; Phase 2 is committed at `abf0d36`. Phase 3 implementation is done and uncommitted; verification closeout remains explicitly outstanding below. On 2026-09-11 the owner requested wrap-up rather than further implementation or coverage expansion. Phase 4 has not started.
 
 ## For Future Agents
 
@@ -291,16 +291,16 @@ in that handoff remains unchanged. No extra approval question is needed for Phas
 
 ## Phase 3: Pending editor policy and GUI road styles
 
-Status: Not started
+Status: In progress (implementation complete; verification closeout deferred at owner request)
 
-- [ ] Thread the current checkbox through existing CreateZoneEditorConnection. Add
+- [x] Thread the current checkbox through existing CreateZoneEditorConnection. Add
   a handler/service operation for type-change policy (currently direct GUI writeback),
   with interface, real mocks and mirrored public-method tests. Show pending output
   before Apply; cancel must not mutate retained data.
-- [ ] Carry road display state in preview data; keep effective Type for shape unchanged.
-- [ ] Add approved theme colors and four legend entries; apply to both GUI canvases.
-- [ ] Selected editor edge uses thicker width and retains its road color for every state.
-- [ ] Cover changes to road flags/types without stale preview/editor styles, including
+- [x] Carry road display state in preview data; keep effective Type for shape unchanged.
+- [x] Add approved theme colors and four legend entries; apply to both GUI canvases.
+- [x] Selected editor edge uses thicker width and retains its road color for every state.
+- [x] Cover changes to road flags/types without stale preview/editor styles, including
   off→on regeneration and selection/unselection. Do not widen geometry/cache refactors.
 
 ### Verification Plan: Phase 3
@@ -313,12 +313,46 @@ Status: Not started
 
 ### Phase Summary: Phase 3
 
-Not started. Owner reviewed and committed Phase 2 at `abf0d36` and authorized the
-next phase on 2026-09-10: “Changes reviewed, you can proceed”. Git was clean before
-the documentation-only handoff update. The preceding session reached its budget;
-begin Phase 3 directly in a fresh session after inspecting current edits. Read
-[the refreshed handoff](../session-carry-forward.md), preserve all existing work,
-and use 74.9% as the last verified unit coverage reference before a fresh baseline.
+Started 2026-09-10 at `4923a5c`, with clean working tree and index. Fresh coverage
+baseline PASS, **74.9%**. Implementation finished; owner requested bounded wrap-up
+on 2026-09-11. No further source changes were made during wrap-up.
+
+- Pending create/type changes use the shared `StampConnectionRoad` policy through
+  DTO/handler/service contracts. Type changes clone input; Cancel isolation is tested.
+- Preview projection carries `HasRoad` and `ExplicitPortal` independently of effective
+  `Type`. Shared GUI styling preserves roaded colors and adds the approved roadless
+  gray/green. Both canvases show the four-entry road legend; selected editor edges
+  retain their color with thicker width.
+- Added service/handler/projection/style unit matrices and 25 GUI tests for pending
+  creation/type changes, Apply/Cancel, colors, legends, selection and regeneration.
+- 280 existing GUI goldens changed for shared legend/edge rendering. The preceding
+  implementation work reported inspecting all 280 and passing the new GUI tests;
+  wrap-up did not repeat image inspection or the full tagged GUI suite.
+- Final wrap-up checks: `go build ./...` PASS; cache-eligible
+  `go test ./test/unit/...` PASS; test-layout checker PASS; `git diff --check` PASS
+  with an LF-normalization warning only. Protected paths and PNG raster implementation
+  unchanged. Index empty, branch `AD/road_and_graph_invariants`, HEAD `4923a5c`.
+- Existing coverage report at wrap-up: **74.8%**, below the **74.9%** baseline
+  (earlier intermediate result was 74.6%). Pending policy and handler entry points
+  are 100% statement-covered. This was a report read, not a fresh coverage run.
+
+### Outstanding Phase 3 closeout
+
+- [ ] Resolve or explicitly accept the total-coverage shortfall, then regenerate the
+  full report. Do not keep adding unrelated tests merely to move the total; existing
+  supplemental tests are preserved for owner review.
+- [ ] Format the explicit changed-file list reported by `gofmt -l`; the handoff lists
+  all 14 remaining files. No bulk repository formatting or source rewrite.
+- [ ] Run final report-only lint and confirm remaining review findings are resolved.
+  Earlier independent review found formatting/coverage issues; no final approval
+  is claimed for the current tree.
+- [ ] Verify the final tree with the tagged integration/GUI suites and default
+  `go test ./test/...`; prior passing results are not a fresh final-tree run.
+
+The implementation checklist is complete, but the phase is not marked fully verified.
+Resume only these bounded closeout items if requested; no further policy approval
+questions, unrelated coverage hunt, or automatic Phase 4 work. See
+[the current handoff](../session-carry-forward.md) for inventory and later scope.
 
 ## Phase 4: PNG per-edge opacity
 

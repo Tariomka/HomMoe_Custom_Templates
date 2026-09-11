@@ -95,6 +95,10 @@ const (
 	advancedZoneControlCheckboxX = 660
 	advancedZoneControlCheckboxY = 355
 
+	// layoutPanelColumnSplit separates the Layout & Zones tab's two settings
+	// columns: its left column ends around x=555, its right one starts at 583.
+	layoutPanelColumnSplit = 570
+
 	// panelScroll* is a point over the left settings column that carries no
 	// interactive widget, so a wheel event there reaches the panel's list rather
 	// than a slider. Confirmed by scrolling and observing the rows move.
@@ -229,6 +233,12 @@ func topologyOptionsRect() image.Rectangle {
 		topologyOptionsLeft, topologyOptionsTop, topologyOptionsRight, topologyOptionsBottom)
 }
 
+// layoutPanelLeftColumnRect is the Layout & Zones tab's left settings column,
+// which holds the Topology, Connectivity, zone size and difficulty sections.
+func layoutPanelLeftColumnRect() image.Rectangle {
+	return image.Rect(0, tabStripCenterY, layoutPanelColumnSplit, WindowHeight)
+}
+
 // fileDialogRect is the modal panel the file explorer is drawn into.
 func fileDialogRect() image.Rectangle {
 	return image.Rect(
@@ -247,6 +257,20 @@ func previewCanvasMask() image.Rectangle {
 	return image.Rect(
 		previewCanvasBorderLeft+1, previewCanvasBorderTop+1,
 		previewCanvasBorderRight-1, previewCanvasBorderBottom-1)
+}
+
+// PreviewCanvasRect is the interior of the preview canvas in window pixels, for
+// the assertions that are about what the preview is painted with.
+func PreviewCanvasRect() image.Rectangle {
+	return previewCanvasMask()
+}
+
+// PreviewLegendRect is the strip under the preview canvas that the colour key
+// is drawn in.
+func PreviewLegendRect() image.Rectangle {
+	return image.Rect(
+		previewPanelContentLeft, previewCanvasBorderBottom+1,
+		previewPanelContentRight, statusMessageTop-1)
 }
 
 // statusMessageMask covers the status line, which embeds a timestamp.

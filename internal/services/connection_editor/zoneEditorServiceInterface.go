@@ -19,6 +19,17 @@ type IZoneEditorService interface {
 	// preserving every other road.
 	RebuildCastleRoads(zone *template_model.Zone)
 
+	// ApplyConnectionRoadPolicy stamps the current between-zone road setting on
+	// a pending connection, leaving an explicit Portal's own flag untouched.
+	ApplyConnectionRoadPolicy(connection *template_model.Connection, generateRoads bool)
+
+	// ChangeConnectionType records the new connection type and re-applies the
+	// between-zone road policy for it.
+	ChangeConnectionType(
+		connection *template_model.Connection,
+		connectionType string,
+		generateRoads bool)
+
 	// NextFreeZoneLabel returns the first generator label not used by any zone,
 	// or "" when the pool is exhausted.
 	NextFreeZoneLabel(zones []template_model.Zone) string

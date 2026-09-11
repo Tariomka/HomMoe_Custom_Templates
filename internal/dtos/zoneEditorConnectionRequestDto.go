@@ -7,4 +7,5 @@ type ZoneEditorConnectionRequestDto struct {
 	To              string
 	Zones           []template_model.Zone
 	PlayerZoneNames map[string]bool
+	GenerateRoads   bool
 }

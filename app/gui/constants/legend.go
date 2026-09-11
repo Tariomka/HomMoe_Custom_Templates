@@ -22,8 +22,13 @@ var LegendRows = [][]LegendItem{
 		{Label: "Gold (T4)", Color: themes.ColorsPreview.GoldEdge},
 		{Label: "Hub (T5)", Color: themes.ColorsPreview.HubEdge},
 	},
-	{
-		{Label: "Road", Color: themes.ColorsPreview.DirectLine, Line: true},
-		{Label: "Portal", Color: themes.ColorsPreview.PortalLine, Line: true},
-	},
+	ConnectionLegendRow,
+}
+
+//nolint:gochecknoglobals // Allocated once and reused on each render
+var ConnectionLegendRow = []LegendItem{
+	{Label: "Road", Color: themes.ColorsPreview.DirectLine, Line: true},
+	{Label: "No road", Color: themes.ColorsPreview.NoRoadLine, Line: true},
+	{Label: "Portal", Color: themes.ColorsPreview.PortalLine, Line: true},
+	{Label: "Portal without road", Color: themes.ColorsPreview.PortalNoRoadLine, Line: true},
 }

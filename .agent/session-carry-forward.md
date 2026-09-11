@@ -1,15 +1,33 @@
-# Carry-forward: Batch C Phase 2 complete, begin Phase 3
+# Carry-forward: Phase 3 implemented, verification closeout deferred
 
-Date: 2026-09-10.
+Date: 2026-09-11.
 
 ## 1. Session goal
 
-Complete approved Batch C Phase 2 road-policy and final-content reconciliation.
-Phase 1 and Phase 2 are implemented and owner-committed. Phase 3, pending editor
-policy and GUI road styles, is next and has not been implemented. No further approval
-question is needed.
+Implement approved Phase 3 pending-editor policy and GUI road styles. Implementation
+is done and uncommitted. The owner requested wrap-up rather than further iteration:
+record unresolved items and stop. Build/unit/layout checks pass, but coverage is
+74.8% against the 74.9% baseline and formatting/final review remain outstanding.
+Do not restart implementation, hunt unrelated coverage, or begin Phase 4 automatically.
 
 ## 2. Fixes applied
+
+Phase 3, current uncommitted work:
+
+- Pending connection creation and type changes obey the current road checkbox before
+  Apply through [zoneEditorHandler.go](../internal/handlers/zoneEditorHandler.go) and
+  [zoneEditorService.go](../internal/services/connection_editor/zoneEditorService.go),
+  reusing [roadPolicyService.go](../internal/services/zones/roadPolicyService.go).
+- Type changes clone the input before mutation. GUI Apply/Cancel and retained-data
+  isolation are covered in [zoneEditorRoadPolicy_integration_test.go](../test/integration/gui/zoneEditorRoadPolicy_integration_test.go).
+- Preview road display state is separate from effective shape classification in
+  [previewLayoutService.go](../internal/services/preview_service/previewLayoutService.go).
+- Shared colors, legends and selected-edge width replace type-only road styling in
+  [connectionLineStyle.go](../app/gui/utils/connectionLineStyle.go),
+  [draw.go](../app/gui/utils/draw.go) and
+  [zoneEditorCanvas.go](../app/gui/dialogs/zoneEditorCanvas.go).
+
+Historical completed work follows; no reimplementation is needed.
 
 Phase 1, committed at `07ca8b6`:
 
@@ -57,7 +75,7 @@ Implemented contract:
   explicitly validates with roads enabled and unknown content. It has no production
   caller; no deletion/refactor is required in this batch.
 
-Approved full Batch C contract still pending in the visual surfaces:
+Phase 3 visual contract is now implemented; PNG remains Phase 4:
 
 - The shared display classifier is explicit false = roadless, explicit true = roaded,
   and nil = roaded only for explicit Portal. Road display classification stays separate
@@ -73,6 +91,83 @@ Approved full Batch C contract still pending in the visual surfaces:
   opaque markers remain unchanged. PNG work is Phase 4, separate from Phase 3 GUI work.
 
 ## 4. File modifications
+
+Current Phase 3 inventory (all existing work preserved; only plan/handoff edited
+during final wrap-up). Paths are relative to this handoff. New files are marked **new**.
+
+Production and documentation:
+
+- [plan](plans/batch-c-road-policy-and-visuals.md): implementation checklist and unresolved gates.
+- [handoff](session-carry-forward.md): current status and resumable inventory.
+- [.gitignore](../.gitignore): correct snapshot failure scratch directory.
+- [legend.go](../app/gui/constants/legend.go): shared four-entry connection key.
+- [zoneEditorCanvas.go](../app/gui/dialogs/zoneEditorCanvas.go): colors, selection width and canvas key.
+- [zoneEditorConnectionProps.go](../app/gui/dialogs/zoneEditorConnectionProps.go): type-change handler call.
+- [zoneEditorDialog.go](../app/gui/dialogs/zoneEditorDialog.go): forward checkbox on creation.
+- [zoneEditorDialog_testexports.go](../app/gui/dialogs/zoneEditorDialog_testexports.go): gated GUI observations.
+- [window_testexports.go](../app/gui/editor/window_testexports.go): gated GUI observations.
+- [previewPanel.go](../app/gui/panels/previewPanel.go): shared legend rendering.
+- [colors.go](../app/gui/themes/colors.go): roadless palette.
+- [connectionLineStyle.go](../app/gui/utils/connectionLineStyle.go), **new**: shared GUI color selection.
+- [draw.go](../app/gui/utils/draw.go): use projected road style.
+- [legendWidget.go](../app/gui/widgets/legendWidget.go), **new**: reusable legend row.
+- [zoneEditorConnectionRequestDto.go](../internal/dtos/zoneEditorConnectionRequestDto.go): creation road setting.
+- [zoneEditorConnectionTypeRequestDto.go](../internal/dtos/zoneEditorConnectionTypeRequestDto.go), **new**: type-change request.
+- [guiHandler.go](../internal/handlers/guiHandler.go): delegate type changes.
+- [zoneEditorHandlerInterface.go](../internal/handlers/handler_interfaces/zoneEditorHandlerInterface.go): new handler contract.
+- [zoneEditorHandler.go](../internal/handlers/zoneEditorHandler.go): pending policy and cloned type changes.
+- [previewConnection.go](../internal/models/preview/previewConnection.go): projected road/explicit-portal fields.
+- [zoneEditorService.go](../internal/services/connection_editor/zoneEditorService.go): pending-policy operations.
+- [zoneEditorServiceInterface.go](../internal/services/connection_editor/zoneEditorServiceInterface.go): operation contracts.
+- [previewLayoutService.go](../internal/services/preview_service/previewLayoutService.go): project road status.
+- [roadPolicyService.go](../internal/services/zones/roadPolicyService.go): reusable single-connection policy.
+- [roadPolicyServiceInterface.go](../internal/services/zones/zone_interfaces/roadPolicyServiceInterface.go): stamping contract.
+
+Integration tests and support:
+
+- [roadStyleVisuals_integration_test.go](../test/integration/gui/roadStyleVisuals_integration_test.go), **new**: 14 rendering/selection/regeneration tests.
+- [zoneEditorRoadPolicy_integration_test.go](../test/integration/gui/zoneEditorRoadPolicy_integration_test.go), **new**: 11 pending-policy/Apply/Cancel tests.
+- [appRunnerSemantics.go](../test/test_helpers/integration_common/appRunnerSemantics.go): semantic lookup support.
+- [appRunnerSnapshots.go](../test/test_helpers/integration_common/appRunnerSnapshots.go): frame capture support.
+- [handlerCoordinates.go](../test/test_helpers/integration_common/handlerCoordinates.go): GUI coordinates.
+- [layoutAndZonesTabHandler.go](../test/test_helpers/integration_common/layoutAndZonesTabHandler.go): road-setting interaction.
+- [zoneEditorHandler.go](../test/test_helpers/integration_common/zoneEditorHandler.go): editor interaction support.
+- [roadPolicyServiceMock.go](../test/test_helpers/roadPolicyServiceMock.go): stamping mock.
+- [templateHandlerMock.go](../test/test_helpers/templateHandlerMock.go): preview test behavior.
+- [zoneEditorServiceMock.go](../test/test_helpers/zoneEditorServiceMock.go): new service operations.
+- 280 tracked goldens in the [snapshot directory](../test/test_helpers/integration_common/snapshot/__snapshots__): shared legend/edge-color changes. The exact file inventory is `git diff --name-only -- '*.golden'`; none deleted or newly untracked at wrap-up. Prior work reported inspecting all 280; not re-inspected during wrap-up.
+
+Unit tests:
+
+- [close_test.go](../test/unit/app/gui/drivers/dialogHost/close_test.go), **new**: dialog close behavior.
+- [newTheme_test.go](../test/unit/app/gui/themes/theme/newTheme_test.go): theme coverage.
+- [color_test.go](../test/unit/app/gui/utils/connectionLineStyle/color_test.go), **new**: color matrix.
+- [newEditorConnectionLineStyle_test.go](../test/unit/app/gui/utils/connectionLineStyle/newEditorConnectionLineStyle_test.go), **new**: editor classification.
+- [newPreviewConnectionLineStyle_test.go](../test/unit/app/gui/utils/connectionLineStyle/newPreviewConnectionLineStyle_test.go), **new**: preview classification.
+- [toF32Point_test.go](../test/unit/app/gui/utils/math/toF32Point_test.go), **new**: coordinate conversion.
+- [toVec2_test.go](../test/unit/app/gui/utils/math/toVec2_test.go), **new**: coordinate conversion.
+- [changeZoneEditorConnectionType_test.go](../test/unit/internal/handlers/guiHandler/changeZoneEditorConnectionType_test.go), **new**: facade delegation.
+- [createZoneEditorConnection_test.go](../test/unit/internal/handlers/guiHandler/createZoneEditorConnection_test.go): creation delegation.
+- [handlerDependenciesStub_test.go](../test/unit/internal/handlers/guiHandler/handlerDependenciesStub_test.go): new operation stub.
+- [changeZoneEditorConnectionType_test.go](../test/unit/internal/handlers/zoneEditorHandler/changeZoneEditorConnectionType_test.go), **new**: cloning/policy.
+- [createZoneEditorConnection_test.go](../test/unit/internal/handlers/zoneEditorHandler/createZoneEditorConnection_test.go): checkbox policy.
+- [cloneZoneContentRows_test.go](../test/unit/internal/helpers/editor_state_helpers/zoneContentRow/cloneZoneContentRows_test.go), **new**: clone coverage.
+- [isRoadTypeCastle_test.go](../test/unit/internal/helpers/road_helpers/roadType/isRoadTypeCastle_test.go), **new**: reference classification.
+- [isRoadTypeConnection_test.go](../test/unit/internal/helpers/road_helpers/roadType/isRoadTypeConnection_test.go), **new**: reference classification.
+- [applyCastleSettingChanges_test.go](../test/unit/internal/services/connection_editor/manualReapplyService/applyCastleSettingChanges_test.go): supplemental regression coverage.
+- [snapPosition_test.go](../test/unit/internal/services/connection_editor/zoneEditorGeometryService/snapPosition_test.go): supplemental geometry coverage.
+- [applyConnectionRoadPolicy_test.go](../test/unit/internal/services/connection_editor/zoneEditorService/applyConnectionRoadPolicy_test.go), **new**: shared policy delegation.
+- [changeConnectionType_test.go](../test/unit/internal/services/connection_editor/zoneEditorService/changeConnectionType_test.go), **new**: type/policy operation.
+- [nextFreeZoneLabel_test.go](../test/unit/internal/services/connection_editor/zoneEditorService/nextFreeZoneLabel_test.go): supplemental label coverage.
+- [buildPreviewLayout_test.go](../test/unit/internal/services/preview_service/previewLayoutService/buildPreviewLayout_test.go): road/type projection matrix.
+- [common_test.go](../test/unit/internal/services/preview_service/previewLayoutService/common_test.go): projection fixtures.
+- [stampConnectionRoad_test.go](../test/unit/internal/services/zones/roadPolicyService/stampConnectionRoad_test.go), **new**: true/false/nil and explicit Portal policy.
+
+Ignored local coverage reports were refreshed earlier. Temporary golden inspection
+programs outside the repository are disposable scratch, not source dependencies or
+deployment artifacts. No source/test files were deleted; no PNG raster or Wire edits.
+
+Historical Phase 2 inventory:
 
 Phase 2 committed files at `abf0d36`:
 
@@ -108,11 +203,30 @@ Phase 2 committed files at `abf0d36`:
   [rebuildZoneConnectionRoads_test.go](../test/unit/internal/services/zones/roadPolicyService/rebuildZoneConnectionRoads_test.go),
   and [reconcile_test.go](../test/unit/internal/services/zones/roadPolicyService/reconcile_test.go).
 
-Current uncommitted documentation work is this rewritten handoff. No source, test,
-protected-tree, generated-output, index, or branch change is part of this documentation
-update.
+The preceding list is historical. Current uncommitted Phase 3 work is listed above;
+wrap-up changed only the plan and this handoff, preserving source/tests and the index.
 
 ## 5. Tests added or updated
+
+Phase 3 verification at wrap-up, 2026-09-11:
+
+- `go build ./...`: PASS.
+- `go test ./test/unit/...`: PASS (cache-eligible final run; the preceding implementation
+  work reported a fresh full unit pass).
+- `go run ./cmd/testlayoutcheck .`: PASS.
+- `git diff --check`: PASS; one CRLF-to-LF normalization warning, not a whitespace error.
+- Existing coverage report timestamp 2026-09-11 09:38:58: **74.8%**, versus **74.9%**
+  baseline. Earlier intermediate result was 74.6%. This wrap-up read the report and
+  did not regenerate it. `StampConnectionRoad`, `ApplyConnectionRoadPolicy`,
+  `ChangeConnectionType`, and both create/type-change handler entry points show 100%.
+- New GUI tests previously reported PASS, including pending changes, Cancel isolation,
+  four colors and selection. No fresh full tagged GUI run during wrap-up.
+- Last current-Phase-3 `go test ./test/...` result is not established in the available
+  wrap-up record; the prior Phase 2 result below is historical, not a final-tree pass.
+- Final report-only lint and independent review approval remain outstanding. Earlier
+  review found formatting/coverage issues. No fresh Linux/race/benchmark/in-game claims.
+
+Historical Phase 2 verification:
 
 Phase 2 added policy, factory, handler, generator, integration, arena-only,
 roads-disabled, nil-state, slice-alias, malformed-anchor, custom-road, and final-output
@@ -140,12 +254,20 @@ benchmark, or in-game validation is claimed.
 
 ## 6. Git status snapshot
 
-Branch `AD/road_and_graph_invariants`, clean `HEAD abf0d36`. Phase 1 is the earlier
-owner commit `07ca8b6`; the owner committed all Phase 2 source, tests, wiring, fixture,
-plan, and prior handoff changes. This documentation rewrite intentionally leaves the
-handoff modified. Do not stage, unstage, commit, push, stash, or switch branches.
+Branch `AD/road_and_graph_invariants`, HEAD `4923a5c`. Index empty at wrap-up.
+Working tree contains the modified/new files above plus 280 modified tracked goldens.
+New production files and tests remain untracked; tracked edits remain unstaged.
+Protected data/schema/registry paths have no diff. Phase 1/2 owner commits remain
+`07ca8b6`/`abf0d36`. No staging, unstaging, commits, pushes, stashes or branch changes.
 
 ## 7. Rejections / things the user declined
+
+- Owner on 2026-09-11: stop circling/overcomplicating; wrap up implemented Phase 3
+  and record unresolved work. Do not continue unrelated coverage additions or start PNG.
+- Implementation is complete, but do not label the phase fully verified while the
+  coverage shortfall, formatting and final review checks remain unresolved.
+- All supplemental tests and snapshot changes are preserved, not reverted or cleaned
+  up without owner direction. No new implementation work during this wrap-up.
 
 - Never skip cleanup because final content is nil or empty: it is authoritative during
   `Reconcile`. The settings-free legacy `RebuildZoneConnectionRoads` explicitly uses
@@ -168,9 +290,29 @@ handoff modified. Do not stage, unstage, commit, push, stash, or switch branches
 
 ## 8. Open questions and confirmed later scope
 
-Batch C source verification, baseline, policy questions, scope approval and written-plan
-implementation approval are done. **Phase 2 is complete; begin Phase 3 without asking approval or settled policy again.**
+Batch C policy/scope approval remains settled. **Phase 3 implementation is complete;
+verification closeout is deferred at owner request.** No new policy questions needed.
 Owner Phase 3 authorization, 2026-09-10: "Changes reviewed, you can proceed".
+Remaining closeout: coverage 74.8% < 74.9%, formatting, final report-only lint/review,
+and final-tree default/tagged integration checks. Phase 4 remains unstarted.
+
+Remaining formatting files (`gofmt -l` at wrap-up; format only an explicit rechecked list):
+
+- [appRunnerSemantics.go](../test/test_helpers/integration_common/appRunnerSemantics.go)
+- [connectionLineStyle.go](../app/gui/utils/connectionLineStyle.go)
+- [legendWidget.go](../app/gui/widgets/legendWidget.go)
+- [roadStyleVisuals_integration_test.go](../test/integration/gui/roadStyleVisuals_integration_test.go)
+- [zoneEditorRoadPolicy_integration_test.go](../test/integration/gui/zoneEditorRoadPolicy_integration_test.go)
+- [close_test.go](../test/unit/app/gui/drivers/dialogHost/close_test.go)
+- [color_test.go](../test/unit/app/gui/utils/connectionLineStyle/color_test.go)
+- [newEditorConnectionLineStyle_test.go](../test/unit/app/gui/utils/connectionLineStyle/newEditorConnectionLineStyle_test.go)
+- [newPreviewConnectionLineStyle_test.go](../test/unit/app/gui/utils/connectionLineStyle/newPreviewConnectionLineStyle_test.go)
+- [toF32Point_test.go](../test/unit/app/gui/utils/math/toF32Point_test.go)
+- [toVec2_test.go](../test/unit/app/gui/utils/math/toVec2_test.go)
+- [cloneZoneContentRows_test.go](../test/unit/internal/helpers/editor_state_helpers/zoneContentRow/cloneZoneContentRows_test.go)
+- [isRoadTypeCastle_test.go](../test/unit/internal/helpers/road_helpers/roadType/isRoadTypeCastle_test.go)
+- [isRoadTypeConnection_test.go](../test/unit/internal/helpers/road_helpers/roadType/isRoadTypeConnection_test.go)
+
 The owner will validate true/false/nil engine behavior after changes. Existing engine
 evidence is inconclusive: schema is optional bool; shipped examples use both values
 for direct and portal connections; examples do not prove defaults.
@@ -194,25 +336,38 @@ Other pending decisions: arena/manual invalidation and effective-mode aliases (�
 ## 9. Next recommended actions
 
 1. Read [AGENTS.md](../AGENTS.md), this handoff, and [the active Batch C plan](plans/batch-c-road-policy-and-visuals.md).
-2. Inspect Git and preserve owner changes. Phase 3 is authorized; do not ask for approval again.
-3. Implement only Phase 3 from the fresh **74.9%** coverage baseline: pending create/type policy through handler/service, preview road display state, GUI colors/legends, and selected-edge styling.
-4. Keep Phase 4 PNG opacity separate and leave §8 scope unchanged.
-5. Run focused model/service/handler and preview tests after each first substantive edit, then the Phase 3 verification matrix. The owner, not the agent, validates engine behavior in-game.
+2. Inspect Git and preserve all changes. Review the completed Phase 3 implementation;
+  do not rebuild it or repeat settled approval questions.
+3. Only if asked to resume closeout: apply bounded formatting, rerun report-only lint,
+  resolve or explicitly accept the 0.1 percentage-point coverage shortfall, and run
+  the final default/tagged integration verification. Do not hunt unrelated coverage.
+4. Complete independent review and mark the phase fully verified only with evidence.
+5. Phase 4 PNG opacity is separate, unstarted work. Do not start automatically.
+  Later scope in §8 remains unchanged; engine validation belongs to the owner.
+
+Deployment: no deployment performed. For owner review, the current Windows source
+build passes; no schema migration, dependency installation, Wire regeneration or
+output-path change is introduced by Phase 3. Formal release awaits the recorded
+closeout and remaining Batch C phases.
 
 ## 10. Carry-forward prompt
 
 > Read [AGENTS.md](../AGENTS.md) first, then [this handoff](session-carry-forward.md)
 > and [the active Batch C plan](plans/batch-c-road-policy-and-visuals.md). Owner approval
 > remains in force. Phase 1 (`07ca8b6`) and Phase 2 (`abf0d36`) are implemented and
-> committed; begin Phase 3 without asking again. Phase 3 GUI/pending-edit work is not
-> implemented. Owner Phase 3 authorization, 2026-09-10: "Changes reviewed, you can
-> proceed". Begin from the fresh 74.9% coverage baseline.
+> committed. Phase 3 GUI/pending-edit implementation is done, unstaged/untracked on
+> `AD/road_and_graph_invariants` at `4923a5c`. Inspect and preserve every current edit.
+> The owner requested wrap-up, not more implementation. Build/unit/layout checks pass;
+> coverage is 74.8% versus 74.9% baseline. Formatting, final lint/review and final-tree
+> default/tagged integration verification remain recorded, not silently passed.
+> Resume only requested bounded closeout; no unrelated coverage hunt or automatic Phase 4.
 >
 > Never modify protected `data/`, template schema, or registry trees. Keep all paths
 > cross-platform and never change or persist the game output directory. Test nontrivial
 > changes and measure coverage; never stage, unstage, commit, push, stash, or switch
 > branches. Never bulk-rewrite or hand-edit generated Wire. Never enable global
 > `integration_test`, `gui`, or `wireinject` tags, and never add fake unit seams.
+> Keep multi-session plans durable and resumable; read the plan before changing scope.
 > Preserve the complete later scope in §8 verbatim. Keep business policy in the
 > handler/service layer, carry road display state separately from effective preview
 > type, and leave Phase 4 PNG work untouched.

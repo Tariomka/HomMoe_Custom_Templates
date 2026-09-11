@@ -91,6 +91,35 @@ func (this *AppRunner) ClickButtonIn(area image.Rectangle, label string) {
 	this.clickBounds(this.ButtonBoundsIn(area, label))
 }
 
+// ClickTopmostCheckboxIn taps the highest checkbox inside area. A checkbox is
+// the one widget flavour that cannot be addressed by what it says: Gio's
+// material.CheckBox publishes semantic.CheckBox but no label, so a caller picks
+// one by where it sits and confirms the tap by asserting the state it flipped.
+// The whole row is the clickable area, so the tap lands on its centre.
+func (this *AppRunner) ClickTopmostCheckboxIn(area image.Rectangle) {
+	this.tb.Helper()
+	this.mu.Lock()
+	this.frameLocked()
+	topmost := image.Rectangle{}
+	for _, node := range this.router.AppendSemantics(nil) {
+		bounds := node.Desc.Bounds
+		if node.Desc.Class != semantic.CheckBox || !bounds.Min.In(area) {
+			continue
+		}
+		if topmost.Empty() || bounds.Min.Y < topmost.Min.Y {
+			topmost = bounds
+		}
+	}
+	this.mu.Unlock()
+
+	if topmost.Empty() {
+		this.tb.Fatalf("no checkbox inside %v", area)
+		return
+	}
+
+	this.clickBounds(topmost)
+}
+
 func (this *AppRunner) clickBounds(bounds image.Rectangle) {
 	this.tb.Helper()
 	center := bounds.Min.Add(bounds.Max).Div(2)

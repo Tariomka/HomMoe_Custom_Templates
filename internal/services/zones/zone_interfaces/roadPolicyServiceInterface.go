@@ -15,4 +15,8 @@ type IRoadPolicyService interface {
 	// RebuildCastleRoads reconciles only the zone's castle<->castle roads with
 	// its current main objects, regardless of the road setting.
 	RebuildCastleRoads(zone *template_model.Zone)
+
+	// StampConnectionRoad applies the road setting to a single connection,
+	// leaving an explicit Portal's own flag untouched.
+	StampConnectionRoad(connection *template_model.Connection, generateRoads bool)
 }

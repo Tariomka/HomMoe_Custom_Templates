@@ -63,6 +63,20 @@ func (this *ZoneEditorService) RebuildZoneConnectionRoads(
 	this.roadPolicy.RebuildZoneConnectionRoads(zones, connections)
 }
 
+func (this *ZoneEditorService) ApplyConnectionRoadPolicy(
+	connection *template_model.Connection,
+	generateRoads bool) {
+	this.roadPolicy.StampConnectionRoad(connection, generateRoads)
+}
+
+func (this *ZoneEditorService) ChangeConnectionType(
+	connection *template_model.Connection,
+	connectionType string,
+	generateRoads bool) {
+	connection.ConnectionType = connectionType
+	this.roadPolicy.StampConnectionRoad(connection, generateRoads)
+}
+
 func (this *ZoneEditorService) NextFreeZoneLabel(zones []template_model.Zone) string {
 	used := make(map[string]bool, len(zones))
 	for _, zone := range zones {

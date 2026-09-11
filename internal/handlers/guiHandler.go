@@ -88,6 +88,11 @@ func (this *GUIHandler) CreateZoneEditorConnection(
 	return this.zoneEditorHandler.CreateZoneEditorConnection(request)
 }
 
+func (this *GUIHandler) ChangeZoneEditorConnectionType(
+	request dtos.ZoneEditorConnectionTypeRequestDto) template_model.Connection {
+	return this.zoneEditorHandler.ChangeZoneEditorConnectionType(request)
+}
+
 func (this *GUIHandler) FindOpenZonePosition(occupied []data.Vec2[float64]) data.Vec2[float64] {
 	return this.zoneEditorHandler.FindOpenZonePosition(occupied)
 }

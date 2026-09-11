@@ -95,6 +95,33 @@ func TestWhenTheDraggedZoneIsTheOnlyZone_ItDoesNotHoldOntoItself(t *testing.T) {
 	assert.False(t, result.HasGuideY)
 }
 
+// The vertical guides run through the same 312 / 350 / 388 offsets as the
+// horizontal ones, and here the dragged zone's leading edge holds onto the
+// leftmost of them.
+func TestWhenADraggedZoneIsNearAnotherZonesVerticalGuide_ItsCoordinateIsReported(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	service, _ := newGeometryFixture(nil)
+
+	// Act
+	result := service.SnapPosition(data.NewVec2(351.0, 200.0), singleGuideZone(), fixtureZoneRadius, "B")
+
+	// Assert
+	assert.InDelta(t, 312.0, result.GuideX, 1e-9)
+}
+
+func TestWhenADraggedZoneIsNearAnotherZonesVerticalGuide_ItHoldsOntoIt(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	service, _ := newGeometryFixture(nil)
+
+	// Act
+	result := service.SnapPosition(data.NewVec2(351.0, 200.0), singleGuideZone(), fixtureZoneRadius, "B")
+
+	// Assert
+	assert.InDelta(t, 350.0, result.Position.X, 1e-9)
+}
+
 // singleGuideZone parks one zone whose horizontal guides (312 / 350 / 388) are
 // the only alignment lines a dragged zone can hold onto.
 func singleGuideZone() map[string]models.Position {

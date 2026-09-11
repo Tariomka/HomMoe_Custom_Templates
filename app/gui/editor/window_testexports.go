@@ -115,6 +115,7 @@ type IZoneEditorDialog interface {
 	SelectedConnection() string
 	EditedZones() []template_model.Zone
 	EditedConnectionNames() []string
+	EditedConnectionRecords() []template_model.Connection
 	AddConnectionModeActive() bool
 	AddZoneModeActive() bool
 	DraggingZone() string

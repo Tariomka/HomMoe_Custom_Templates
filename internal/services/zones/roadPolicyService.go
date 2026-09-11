@@ -90,6 +90,17 @@ func (this *RoadPolicyService) RebuildCastleRoads(zone *template_model.Zone) {
 	zone.Roads = roads
 }
 
+func (this *RoadPolicyService) StampConnectionRoad(
+	connection *template_model.Connection,
+	generateRoads bool) {
+	if connection.IsExplicitPortal() {
+		return
+	}
+
+	road := generateRoads
+	connection.Road = &road
+}
+
 func (this *RoadPolicyService) reconcile(
 	request models.RoadReconciliationRequest,
 	validateContent bool) {
@@ -107,12 +118,7 @@ func (this *RoadPolicyService) stampConnectionRoads(
 	connections []template_model.Connection,
 	generateRoads bool) {
 	for index := range connections {
-		if connections[index].IsExplicitPortal() {
-			continue
-		}
-
-		road := generateRoads
-		connections[index].Road = &road
+		this.StampConnectionRoad(&connections[index], generateRoads)
 	}
 }
 

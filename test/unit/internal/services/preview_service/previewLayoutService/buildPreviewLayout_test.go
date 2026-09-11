@@ -293,6 +293,119 @@ func TestWhenConnectionTypeIsPortal_MarksPreviewConnectionAsPortal(t *testing.T)
 	assert.True(t, layout.Connections[0].IsPortal())
 }
 
+// The projected road state is read from the declared type and road flag alone,
+// which is what the canvases colour their edges by.
+func TestWhenAConnectionIsFlaggedRoadless_TheProjectedEdgeCarriesNoRoad(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+
+	// Act
+	layout := service.BuildPreviewLayout(
+		roadTemplate("Direct", new(false)), config.TopologyRing, layoutSide)
+
+	// Assert
+	require.Len(t, layout.Connections, 1)
+	assert.False(t, layout.Connections[0].HasRoad)
+}
+
+func TestWhenAConnectionIsFlaggedRoaded_TheProjectedEdgeCarriesARoad(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+
+	// Act
+	layout := service.BuildPreviewLayout(
+		roadTemplate("Direct", new(true)), config.TopologyRing, layoutSide)
+
+	// Assert
+	require.Len(t, layout.Connections, 1)
+	assert.True(t, layout.Connections[0].HasRoad)
+}
+
+func TestWhenADirectConnectionCarriesNoRoadFlag_TheProjectedEdgeCarriesNoRoad(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+
+	// Act
+	layout := service.BuildPreviewLayout(roadTemplate("Direct", nil), config.TopologyRing, layoutSide)
+
+	// Assert
+	require.Len(t, layout.Connections, 1)
+	assert.False(t, layout.Connections[0].HasRoad)
+}
+
+func TestWhenAPortalCarriesNoRoadFlag_TheProjectedEdgeCarriesARoad(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+
+	// Act
+	layout := service.BuildPreviewLayout(roadTemplate("Portal", nil), config.TopologyRing, layoutSide)
+
+	// Assert
+	require.Len(t, layout.Connections, 1)
+	assert.True(t, layout.Connections[0].HasRoad)
+}
+
+func TestWhenAPortalIsFlaggedRoadless_TheProjectedEdgeIsARoadlessPortal(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+
+	// Act
+	layout := service.BuildPreviewLayout(
+		roadTemplate("Portal", new(false)), config.TopologyRing, layoutSide)
+
+	// Assert
+	require.Len(t, layout.Connections, 1)
+	assert.Equal(t,
+		[]bool{false, true},
+		[]bool{layout.Connections[0].HasRoad, layout.Connections[0].ExplicitPortal})
+}
+
+// The road classifier is case-insensitive even though the shape classifier is
+// not, so a lower-cased portal is a roaded portal drawn with the direct shape.
+func TestWhenAPortalTypeIsLowerCased_TheProjectedEdgeIsStillAnExplicitPortal(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+
+	// Act
+	layout := service.BuildPreviewLayout(roadTemplate("portal", nil), config.TopologyRing, layoutSide)
+
+	// Assert
+	require.Len(t, layout.Connections, 1)
+	assert.Equal(t,
+		[]bool{true, false},
+		[]bool{layout.Connections[0].ExplicitPortal, layout.Connections[0].IsPortal()})
+}
+
+// Portal placement rules make a connection portal-shaped without making it an
+// explicit portal, so its missing road flag still means roadless.
+func TestWhenADirectConnectionCarriesPortalRules_TheProjectedEdgeIsRoadlessAndNotAPortal(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	template := roadTemplate("Direct", nil)
+	template.Variants[0].Connections[0].PortalPlacementRulesFrom =
+		[]template_model.PlacementRule{{Type: "MainObject"}}
+
+	// Act
+	layout := service.BuildPreviewLayout(template, config.TopologyRing, layoutSide)
+
+	// Assert
+	require.Len(t, layout.Connections, 1)
+	assert.Equal(t,
+		[]bool{false, false, true},
+		[]bool{
+			layout.Connections[0].HasRoad,
+			layout.Connections[0].ExplicitPortal,
+			layout.Connections[0].IsPortal(),
+		})
+}
+
 func TestWhenZoneHasGladiatorArenaMainObject_MarksZoneAsArena(t *testing.T) {
 	t.Parallel()
 	// Arrange

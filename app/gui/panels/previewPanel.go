@@ -207,13 +207,12 @@ func renderPreviewCanvas(gtx layout.Context, canvasSize image.Point) {
 	}.Op())
 }
 
-// renderPreviewLegend draws the colour legend centered underneath the canvas.
 func (this *PreviewPanel) renderPreviewLegend(gtx layout.Context, theme *material.Theme, canvasSize image.Point) {
 	legendMacro := op.Record(gtx.Ops)
 	contextCopy := gtx
 	contextCopy.Constraints.Min = image.Point{}
 	contextCopy.Constraints.Max.X = canvasSize.X
-	legendWidget := this.getLegendWidget(theme)(contextCopy)
+	legendWidget := widgets.NewLegendWidget(theme, constants.LegendRows)(contextCopy)
 	legendCall := legendMacro.Stop()
 	legendOffset := op.Offset(image.Point{
 		X: (canvasSize.X - legendWidget.Size.X) / 2,
@@ -238,54 +237,5 @@ func renderPreviewTemplate(gtx layout.Context, theme *material.Theme, previewLay
 		if zone.Type == preview.ZoneTypePlayer {
 			utils.DrawPreviewZone(gtx, theme, zone, previewLayout.ZoneRadius)
 		}
-	}
-}
-
-func (this *PreviewPanel) getLegendWidget(theme *material.Theme) layout.Widget {
-	renderRow := func(items []constants.LegendItem) layout.Widget {
-		return func(gtx layout.Context) layout.Dimensions {
-			children := []layout.FlexChild{}
-			for i, item := range items {
-				if i > 0 {
-					children = append(children, widgets.NewDefaultComponentSpacer())
-				}
-				children = append(children, layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-					return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx,
-						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-							if item.Line {
-								width := gtx.Dp(constants.DefaultRoundnessOverlineText) * 2
-								height := gtx.Dp(unit.Dp(2))
-								rect := image.Rect(0, 0, width, height)
-								paint.FillShape(gtx.Ops, item.Color, clip.Rect(rect).Op())
-								return layout.Dimensions{Size: rect.Max}
-							}
-
-							side := gtx.Dp(constants.DefaultRoundnessOverlineText)
-							rect := image.Rect(0, 0, side, side)
-							paint.FillShape(gtx.Ops, item.Color, clip.UniformRRect(rect, side/2).Op(gtx.Ops))
-							return layout.Dimensions{Size: rect.Max}
-						}),
-						layout.Rigid(widgets.NewHorizontalSpacerWidget(4)),
-						layout.Rigid(func(gtx layout.Context) layout.Dimensions {
-							label := material.Overline(theme, item.Label)
-							label.Color = themes.ColorsBase.TextDim
-							return label.Layout(gtx)
-						}),
-					)
-				}))
-			}
-			return layout.Flex{Axis: layout.Horizontal, Alignment: layout.Middle}.Layout(gtx, children...)
-		}
-	}
-
-	return func(gtx layout.Context) layout.Dimensions {
-		rows := []layout.FlexChild{}
-		for i, row := range constants.LegendRows {
-			if i > 0 {
-				rows = append(rows, layout.Rigid(widgets.NewVerticalSpacerWidget(4)))
-			}
-			rows = append(rows, layout.Rigid(renderRow(row)))
-		}
-		return layout.Flex{Axis: layout.Vertical, Alignment: layout.Middle}.Layout(gtx, rows...)
 	}
 }

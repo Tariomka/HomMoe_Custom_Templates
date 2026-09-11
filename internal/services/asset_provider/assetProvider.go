@@ -139,7 +139,7 @@ func (this *AssetProvider) calculateBilinearInterpolation(asset image.Image, pos
 		return data.NewVec4(float64(red>>8), float64(green>>8), float64(blue>>8), float64(alpha>>8))
 	}
 
-	cornerPixel := data.Transform[float64, int](position)
+	cornerPixel := position.Transform[int]()
 	pixelOffset := data.NewVec2(position.X-float64(cornerPixel.X), position.Y-float64(cornerPixel.Y))
 	premultipliedColor := data.Vec4[float64]{}
 	pixelNeighbors := [4]struct {

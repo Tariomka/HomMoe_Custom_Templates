@@ -17,6 +17,7 @@ func TestWhenConnectionIsCreated_ReturnsServiceEquivalentConnection(t *testing.T
 		To:              "Spawn-B",
 		Zones:           []template_model.Zone{{Name: "Spawn-A"}, {Name: "Spawn-B"}},
 		PlayerZoneNames: map[string]bool{"Spawn-A": true, "Spawn-B": true},
+		GenerateRoads:   true,
 	}
 	expected := template_model.Connection{
 		From:                 "Spawn-A",
@@ -26,6 +27,7 @@ func TestWhenConnectionIsCreated_ReturnsServiceEquivalentConnection(t *testing.T
 		GuardZone:            "Spawn-A",
 		GuardMatchGroup:      "rnd_guard_A_B",
 		GuardWeeklyIncrement: 0.15,
+		Road:                 new(true),
 		IsUserAdded:          true,
 	}
 
@@ -34,4 +36,22 @@ func TestWhenConnectionIsCreated_ReturnsServiceEquivalentConnection(t *testing.T
 
 	// Assert
 	assert.Equal(t, expected, result)
+}
+
+func TestWhenConnectionIsCreatedWithRoadsOff_ReturnsARoadlessConnection(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	handler := newProductionGuiHandler()
+	request := dtos.ZoneEditorConnectionRequestDto{
+		From:            "Spawn-A",
+		To:              "Spawn-B",
+		Zones:           []template_model.Zone{{Name: "Spawn-A"}, {Name: "Spawn-B"}},
+		PlayerZoneNames: map[string]bool{"Spawn-A": true, "Spawn-B": true},
+	}
+
+	// Act
+	result := handler.CreateZoneEditorConnection(request)
+
+	// Assert
+	assert.Equal(t, new(false), result.Road)
 }

@@ -17,4 +17,8 @@ const (
 
 	DefaultPreviewWidthMinimum = 380
 	DefaultPreviewWidthMaximum = 440
+
+	DefaultConnectionLine      = unit.Dp(2)
+	DefaultConnectionLineLarge = unit.Dp(4)
+	DefaultConnectionLineSmall = unit.Dp(1.5)
 )
