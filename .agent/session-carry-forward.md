@@ -1,8 +1,22 @@
-# Carry-forward: Phase 3 complete, Phase 4 next
+# Carry-forward: Phase 4 complete, Phase 5 pending
 
 Date: 2026-09-11.
 
 ## 1. Session goal
+
+Implement approved Phase 4 PNG opacity only. Complete: reusable per-image half-alpha
+mask, one composite per roadless edge, opaque geometry/artwork preserved. Based on
+owner commit `a574a9e`, with clean tree/index at start; current work is uncommitted.
+Coverage **75.0% → 75.1%**, build/tests/lint/layout pass and independent review approves.
+Phase 5 batch closeout and owner visual/engine review remain pending. The editor
+legend stays absent; Preview legend stays unchanged.
+
+**Reading historical sections:** the retained Phase 3 inventories/evidence below
+are historical, not current pending edits. Section 8 is intentionally preserved
+verbatim by owner request; its old "Phase 4 unstarted" status is superseded by this
+section and the active plan. All later-scope decisions there remain in force.
+
+Previous session goal (historical):
 
 Complete Phase 3 closeout after the owner's review and commits through `cd2b4df`.
 Done: fresh coverage **75.0%** exceeds the **74.9%** baseline; formatting, lint,
@@ -11,6 +25,15 @@ removed the editor dialog legend as unnecessary; preserve that decision. Phase 4
 PNG opacity is next-session work, not implemented here. No Phase 3 blockers remain.
 
 ## 2. Fixes applied
+
+Phase 4:
+
+- [previewGeneratorService.go](../internal/services/preview_service/previewGeneratorService.go):
+  lazy local `image.Alpha` reused per render. Src stamps alpha 128, Over composite
+  once per roadless edge, clear only touched bounds. Opaque edges keep Src and exact
+  sampling/spacing/clipping/dash geometry; marker ordering and opacity stay unchanged.
+- Existing uniform brush allocation is shared across segments; no per-edge full-image
+  buffers, persistent/shared scratch, new policy, output-directory or GUI changes.
 
 Phase 3 implementation, owner-committed through `cd2b4df`:
 
@@ -65,6 +88,12 @@ Phase 2, committed at `abf0d36`:
 
 ## 3. Features added / changed
 
+Phase 4 now consumes projected `HasRoad`, independently of effective `Type` and
+`ExplicitPortal`. Repeated stamps in one edge cannot darken it; distinct crossing
+or retraced edges compound. The unchanged opaque path is pinned to pre-change
+fingerprints. Player/neutral/arena artwork remains fully opaque. References below
+to PNG as future Phase 4 work are historical.
+
 Implemented contract:
 
 - With settings present, `GenerateRoads` overwrites `Road` on every non-explicit-Portal
@@ -97,7 +126,21 @@ Phase 3 visual contract is now implemented; PNG remains Phase 4:
 
 ## 4. File modifications
 
-Current uncommitted closeout inventory:
+Current Phase 4 inventory (six tracked/untracked paths):
+
+- [previewGeneratorService.go](../internal/services/preview_service/previewGeneratorService.go): raster mask/compositing.
+- [previewRasterFixture.go](../test/test_helpers/previewRasterFixture.go): explicit opaque fixtures and copied roadless variants.
+- [createPreviewImage_test.go](../test/unit/internal/services/preview_service/previewGeneratorService/createPreviewImage_test.go): opaque baseline fingerprints and exact roadless/overlap/clipping/marker tests.
+- [preview_raster_test.go](../test/performance/preview_raster_test.go), new: untagged allocation benchmark, 0/1/32/128 edges.
+- [plan](plans/batch-c-road-policy-and-visuals.md): Phase 4 Complete with measured evidence; Phase 5 pending.
+- [handoff](session-carry-forward.md): current state; complete §8 retained verbatim.
+
+Ignored [visual comparison](tmp/phase4-visual.html) embeds four PNGs as data URIs in
+HTML, produced in memory via public raster APIs; no PNG files exported. Temporary
+hash/visual Go source was removed. Ignored coverage reports refreshed. No production
+assets, snapshots, dependencies, protected files, GUI or generated Wire changed.
+
+Historical Phase 3 closeout inventory (now committed by owner at `a574a9e`):
 
 - [plan](plans/batch-c-road-policy-and-visuals.md): Phase 3 Complete, owner legend
   decision, final verification and Phase 4 boundary.
@@ -239,6 +282,31 @@ implementation and snapshot changes are committed.
 
 ## 5. Tests added or updated
 
+Phase 4 verification, 2026-09-11:
+
+- Pre-change fingerprints: 20 connector footprints and two complete opaque canvases
+  captured at `a574a9e` through the public API; all unchanged after implementation.
+- Roadless tests observed red on original renderer, then green: exact half-alpha
+  pixels over real background; short/long/curved/clipped direct and portal, portal
+  shape without explicit Portal, gaps, overlapping stamps, crossings/retracing,
+  reused-mask clearing, mixed roaded ordering, degeneracies and opaque artwork.
+- Fresh pre/post full unit coverage tasks PASS; final cache-eligible rerun PASS,
+  **75.0% → 75.1%**. All changed raster functions 100%; unchanged constructor 75%.
+- Build, preview unit suites, default `go test ./test/...`, tagged integration,
+  tagged GUI task PASS (GUI 30.052 seconds). Layout/format/diff/diagnostics PASS;
+  report-only lint 0 issues, three existing unused-exclusion warnings.
+- Independent Claude Opus 5 review approved without blockers. Its missing clipped/
+  long-curved portal cases and misleading test comments were corrected; tests rerun.
+- Public API benchmark, Windows/amd64, 60 iterations: roadless 1/32/128 direct
+  edges ~10,286,600 B/op and 1,957,207 allocs/op, independent of edge count. Opaque
+  ~9,795,010 B/op and 1,957,205 allocs/op. Scratch costs ~492 KB +2 allocations per
+  render. Before, opaque direct 128 used 9,844,128 B/op, 1,960,275 allocs/op.
+  Post-change direct roadless 1/32/128 ~33.4/37.5/48.3 ms versus opaque 128 ~35.2 ms.
+  Background allocation floor intentionally untouched; full measurement in plan.
+- Browser visual evidence inspected: same geometry/dashes/markers, lighter strokes,
+  darker distinct-edge overlap. This is renderer validation, not engine validation.
+- Windows only: no Linux, race, deployment or in-game verification claimed.
+
 Final Phase 3 verification, after owner review, 2026-09-11:
 
 - `go build ./...`: PASS.
@@ -304,6 +372,14 @@ benchmark, or in-game validation is claimed.
 
 ## 6. Git status snapshot
 
+Current: branch `AD/road_and_graph_invariants`, HEAD `a574a9e`. The owner committed
+the entire Phase 3 closeout before this session. Tree/index were clean initially.
+Five modified files and one untracked benchmark listed in §4; no staged changes.
+No protected/GUI/Wire changes. No staging, unstaging, commit, push, stash or branch
+operation by the agent. Ignored visual HTML and coverage reports are scratch only.
+
+Historical Phase 3 snapshot:
+
 Branch `AD/road_and_graph_invariants`, HEAD `cd2b4df`; clean tree/index at closeout
 start. Owner committed implementation/review changes in `053d4fd`, `b6d4257`,
 `cd2b4df`. Current unstaged files: plan, handoff, visual test and seven line-ending-only
@@ -313,6 +389,17 @@ Phase 3 baseline `4923a5c`. Phase 1/2 commits remain `07ca8b6`/`abf0d36`.
 No staging, unstaging, commits, pushes, stashes or branch changes by this agent.
 
 ## 7. Rejections / things the user declined
+
+- Phase 4: an initial lowercase subagent model identifier was unavailable; corrected
+  to the exact listed name and retried successfully. One golines finding corrected
+  with an explicit edit; final lint zero. No unresolved tool failures.
+- Final §8 comparison initially failed because PowerShell 5.1 decoded Git/file text
+  differently; Python fallback was unavailable. Explicit UTF-8 for both Git stdout
+  (`ProcessStartInfo.StandardOutputEncoding`) and disk confirmed exact preservation.
+  No actual §8 content was changed and no tooling was installed.
+- Do not turn Phase 4 into optional GUI/export cleanup or broader Phase 5 work.
+  No global allocation thresholds, background optimization, output-path changes,
+  per-edge image allocation or engine-default claims introduced.
 
 - Owner on 2026-09-11: stop circling/overcomplicating; wrap up implemented Phase 3
   and record unresolved work. Do not continue unrelated coverage additions or start PNG.
@@ -381,34 +468,34 @@ Other pending decisions: arena/manual invalidation and effective-mode aliases (�
 ## 9. Next recommended actions
 
 1. Read [AGENTS.md](../AGENTS.md), this handoff, and [the active Batch C plan](plans/batch-c-road-policy-and-visuals.md).
-2. Inspect Git and preserve all changes. Phase 3 is complete; do not reopen its
-  closeout or restore the editor legend. No further policy approval questions.
-3. In the next session, implement only approved Phase 4: reusable per-edge PNG mask,
-  one 50% composite per roadless edge, unchanged opaque path and geometry/dashes/markers.
-  Reuse projected `HasRoad`; preserve effective shape classification separately.
-4. Start from verified **75.0%** coverage, obtain a fresh baseline, add focused raster
-  tests (stamp overlap, crossing edges, clipping, curves, opaque markers), and measure
-  scratch allocation behavior. Do not allocate a full-image buffer per edge.
-5. Then complete the remaining Batch C verification in Phase 5. Later scope in §8
-  remains unchanged; engine validation belongs to the owner.
+2. Inspect Git and preserve every current edit. Phase 4 implementation is complete;
+  don't reimplement it, reopen approval questions or restore the editor legend.
+3. Owner can review [the visual comparison](tmp/phase4-visual.html). It's ignored
+  local evidence, not a release artifact or an exported game template.
+4. Resume Phase 5 only: final batch-wide verification/review and record closeout,
+  reusing current evidence when applicable. Baseline is now **75.1%**. Owner validates
+  true/false/nil engine behavior and performs staging/commits; no agent Git mutations.
+5. Preserve complete later scope in §8 verbatim. Its original Phase 4 status is
+  intentionally historical and superseded above; all its later decisions remain.
 
-Deployment: no deployment performed. For owner review, the current Windows source
-build passes; no schema migration, dependency installation, Wire regeneration or
-output-path change is introduced by Phase 3. Formal release awaits remaining Batch C
-phases. The owner stages/commits the closeout changes if desired.
+Deployment: none performed. Windows source build passes; no schema migration,
+dependency installation, Wire regeneration or output-directory change required.
+Formal batch release awaits Phase 5 and owner engine review. Owner handles commits.
 
 ## 10. Carry-forward prompt
 
 > Read [AGENTS.md](../AGENTS.md) first, then [this handoff](session-carry-forward.md)
 > and [the active Batch C plan](plans/batch-c-road-policy-and-visuals.md). Owner approval
-> remains in force. Phase 1 (`07ca8b6`) and Phase 2 (`abf0d36`) are implemented and
-> committed. Phase 3 is complete and owner-reviewed through `cd2b4df` on
-> `AD/road_and_graph_invariants`; closeout has content changes in the visual test and
-> two docs, plus seven line-ending-only test/helper changes.
+> remains in force. Phase 1 (`07ca8b6`), Phase 2 (`abf0d36`) and Phase 3 (through
+> `a574a9e`) are owner-committed on `AD/road_and_graph_invariants`. Phase 4 is complete
+> and uncommitted: PNG per-edge opacity, focused tests/benchmark, plan and handoff.
 > Inspect and preserve every current edit. Build, full unit/default/integration/GUI,
-> layout, formatting and lint pass; independent review approved. Coverage **75.0%**.
-> Begin approved Phase 4 PNG per-edge opacity only; do not repeat approval questions.
-> The owner removed the editor dialog legend: preserve its absence, Preview legend stays.
+> layout, formatting and lint pass; independent review approved. Coverage **75.1%**,
+> all changed raster functions 100%. Mask costs ~492 KB +2 allocations per image,
+> not per edge. Before/after visual evidence is in ignored `.agent/tmp/phase4-visual.html`.
+> Resume Phase 5 final batch closeout only; do not reimplement Phase 4 or repeat
+> approval questions. Owner engine validation remains pending. Preserve the editor
+> legend's absence; Preview legend stays.
 >
 > Never modify protected `data/`, template schema, or registry trees. Keep all paths
 > cross-platform and never change or persist the game output directory. Test nontrivial
@@ -421,4 +508,5 @@ phases. The owner stages/commits the closeout changes if desired.
 > type. Phase 4 uses one reusable mask, 50% once per edge, with no compounding among
 > that edge's stamps; distinct crossing edges may compound. Preserve the opaque raster
 > path, sampling/spacing, clipping, curves, dashes and opaque markers. Full details and
-> historical decisions are in this handoff; Phase 4 has not yet been implemented.
+> historical decisions are in this handoff. Section 8 is verbatim historical text;
+> only its old Phase 4 status is superseded, not its later-scope decisions.

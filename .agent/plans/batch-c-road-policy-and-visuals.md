@@ -1,6 +1,6 @@
 # Batch C: road policy, connectivity and visual road status
 
-Implement review §1.4/§1.6/§1.10 with the owner's clarified between-zone road policy, plus road-state styling in the Preview panel, manual editor and exported PNG. **Scope and written-plan implementation approved on 2026-09-10**, owner: “looks good, please proceed”. Phase 1 is committed at `07ca8b6`; Phase 2 is committed at `abf0d36`. Phase 3 is complete, with owner-reviewed implementation committed through `cd2b4df` and final closeout recorded below. Phase 4 has not started and is next-session work.
+Implement review §1.4/§1.6/§1.10 with the owner's clarified between-zone road policy, plus road-state styling in the Preview panel, manual editor and exported PNG. **Scope and written-plan implementation approved on 2026-09-10**, owner: “looks good, please proceed”. Phase 1 is committed at `07ca8b6`; Phase 2 is committed at `abf0d36`. Phase 3 and its closeout are owner-committed through `a574a9e`. Phase 4 is complete and uncommitted; Phase 5 final batch closeout and owner engine validation remain pending.
 
 ## For Future Agents
 
@@ -376,15 +376,21 @@ Phase 4 starts in a new session; use [the current handoff](../session-carry-forw
 
 ## Phase 4: PNG per-edge opacity
 
-Status: Not started
+Status: Complete
 
-- [ ] Implement reusable per-edge mask compositing at 50%, keeping opaque raster path,
+Started 2026-09-11 at owner commit `a574a9e` on `AD/road_and_graph_invariants`.
+Working tree and index are clean; the inherited Phase 3 closeout is now committed.
+Fresh full unit coverage task passed: **75.0%**. No global GOFLAGS. Scope remains
+Phase 4 only, with existing opaque fixture pixels and allocation baselines captured
+before raster changes. No editor/legend, policy, output-path or protected-tree edits.
+
+- [x] Implement reusable per-edge mask compositing at 50%, keeping opaque raster path,
   ceiling sample counts, floating-point spacing, clipping and dash policy unchanged.
-- [ ] Cover opaque/roadless direct and portal short/long/curved/clipped paths, dash gaps,
+- [x] Cover opaque/roadless direct and portal short/long/curved/clipped paths, dash gaps,
   repeated overlapping stamps, two intersecting roadless edges and opaque markers.
-- [ ] Assert exact expected composite pixels against the actual background; absent
+- [x] Assert exact expected composite pixels against the actual background; absent
   strokes must fail. No environment-gated capture-only test or generated asset changes.
-- [ ] Provide focused before/after visual evidence for owner review without claiming
+- [x] Provide focused before/after visual evidence for owner review without claiming
   in-game validation. Prefer in-memory assertions and existing GUI/snapshot facilities.
 
 ### Verification Plan: Phase 4
@@ -395,7 +401,49 @@ Status: Not started
 
 ### Phase Summary: Phase 4
 
-Pending phase completion.
+Completed 2026-09-11, based on owner commit `a574a9e`:
+
+- `PreviewGeneratorService` consumes projected `HasRoad`, independently of effective
+  shape. A lazy local `image.Alpha` mask is reused for the whole render; Src stamps
+  set alpha 128, each edge composites once with Over, then only its painted bounds
+  are cleared. Opaque edges still stamp directly with Src. Arena markers remain
+  after each edge, and zone artwork remains after connections. No shared mutable
+  service scratch, per-edge full-image buffers or new dependencies.
+- Existing fixture constructors explicitly select the opaque path. Twenty recorded
+  connector-footprint hashes and two full-canvas hashes were captured against the
+  unchanged pre-Phase-4 renderer and still match. Roadless pixel matrices were red
+  before implementation and pass afterward: short/long/curved/clipped direct and
+  portal, effective-only Portal, dash gaps, overlapping stamps, crossing/retraced
+  edges, mask clearing, mixed opaque/roadless ordering, degeneracies and opaque
+  arena/player/neutral artwork. Reference opacity uses actual background pixels.
+- Added untagged public-API raster benchmarks (0/1/32/128 edges). Windows/amd64,
+  60 iterations: before direct 128 = 9,844,128 B/op, 1,960,275 allocs/op; afterward
+  opaque direct 128 = 9,795,010 B/op, 1,957,205 allocs/op. Roadless 1/32/128 =
+  10,286,684 / 10,286,596 / 10,286,590 B/op, all 1,957,207 allocs/op: approximately
+  492 KB and two allocations once per image, independent of edge count. Shared
+  uniform brushes remove prior per-segment allocation. Background boxing dominates
+  the common allocation floor and is intentionally untouched. Times: roadless
+  direct 1/32/128 = 33.4/37.5/48.3 ms; opaque direct 128 = 35.2 ms. These are local
+  measurements, not a cross-platform guarantee or global performance threshold.
+- Visual evidence: [.agent/tmp/phase4-visual.html](../tmp/phase4-visual.html), ignored
+  self-contained HTML with in-memory PNG data URIs. Two before/after scenes inspected
+  in the browser: unchanged geometry/dashes/artwork, lighter roadless strokes, darker
+  distinct-edge crossings. No PNG files or generated assets were written. Temporary
+  hash/visual Go programs were deleted. Owner engine validation remains pending.
+- Verification: `go build ./...`, fresh full unit coverage task (`-count=1`), final
+  cache-eligible full unit coverage, preview suites, default `go test ./test/...`,
+  tagged integration and tagged GUI task PASS (GUI 30.052 seconds). Coverage
+  **75.0% → 75.1%**; all changed raster functions 100%, unchanged constructor 75%.
+  HTML/LCOV refreshed. Test-layout, changed-file formatting, diagnostics and diff
+  whitespace PASS; report-only lint 0 issues (three existing exclusion warnings).
+- Independent Claude Opus 5 review approved, no blockers. Folded in its clipped/
+  long-curved portal rows and corrected mask-test comments. One golines report fixed
+  with an explicit edit; rerun clean. A lowercase model identifier initially failed;
+  exact available model name succeeded. No policy/scope approval reopened.
+- Index/branch untouched; no protected, GUI/legend, output-path or Wire changes.
+  Windows only; no Linux, race, deployment or in-game validation claimed. Phase 5
+  remains separate: owner visual/engine review, final batch-wide record closeout
+  and owner commit protocol are not implied by Phase 4 completion.
 
 ## Phase 5: Final verification and owner handoff
 
