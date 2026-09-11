@@ -1,18 +1,18 @@
-# Carry-forward: Phase 3 implemented, verification closeout deferred
+# Carry-forward: Phase 3 complete, Phase 4 next
 
 Date: 2026-09-11.
 
 ## 1. Session goal
 
-Implement approved Phase 3 pending-editor policy and GUI road styles. Implementation
-is done and uncommitted. The owner requested wrap-up rather than further iteration:
-record unresolved items and stop. Build/unit/layout checks pass, but coverage is
-74.8% against the 74.9% baseline and formatting/final review remain outstanding.
-Do not restart implementation, hunt unrelated coverage, or begin Phase 4 automatically.
+Complete Phase 3 closeout after the owner's review and commits through `cd2b4df`.
+Done: fresh coverage **75.0%** exceeds the **74.9%** baseline; formatting, lint,
+build, default/unit/integration/GUI tests and independent review pass. The owner
+removed the editor dialog legend as unnecessary; preserve that decision. Phase 4
+PNG opacity is next-session work, not implemented here. No Phase 3 blockers remain.
 
 ## 2. Fixes applied
 
-Phase 3, current uncommitted work:
+Phase 3 implementation, owner-committed through `cd2b4df`:
 
 - Pending connection creation and type changes obey the current road checkbox before
   Apply through [zoneEditorHandler.go](../internal/handlers/zoneEditorHandler.go) and
@@ -26,6 +26,11 @@ Phase 3, current uncommitted work:
   [connectionLineStyle.go](../app/gui/utils/connectionLineStyle.go),
   [draw.go](../app/gui/utils/draw.go) and
   [zoneEditorCanvas.go](../app/gui/dialogs/zoneEditorCanvas.go).
+
+Final closeout: removed the obsolete 60-pixel editor-legend exclusion from
+[roadStyleVisuals_integration_test.go](../test/integration/gui/roadStyleVisuals_integration_test.go).
+Canvas-wide color assertions now inspect the entire editor canvas. No production
+code or goldens changed during closeout; owner edits remain intact.
 
 Historical completed work follows; no reimplementation is needed.
 
@@ -82,8 +87,8 @@ Phase 3 visual contract is now implemented; PNG remains Phase 4:
   from effective preview `Type` and portal placement rules.
 - Preview and editor roadless colors are `#B0B0B0` for non-Portals and `#90EE90` for
   explicit Portals. Existing roaded colors stay. Selected editor edges retain the same
-  road-state color and use thicker width. Legends require `Road`, `No road`, `Portal`,
-  and `Portal without road`.
+  road-state color and use thicker width. Preview legend has `Road`, `No road`,
+  `Portal`, and `Portal without road`. The editor has no legend by owner decision.
 - Pending editor create/type changes must show checkbox policy before Apply through
   handler/service logic. Cancel must not mutate retained data. No per-edge checkbox.
 - PNG roadless strokes use the existing dark color at 50% once per edge, with a reusable
@@ -92,8 +97,33 @@ Phase 3 visual contract is now implemented; PNG remains Phase 4:
 
 ## 4. File modifications
 
-Current Phase 3 inventory (all existing work preserved; only plan/handoff edited
-during final wrap-up). Paths are relative to this handoff. New files are marked **new**.
+Current uncommitted closeout inventory:
+
+- [plan](plans/batch-c-road-policy-and-visuals.md): Phase 3 Complete, owner legend
+  decision, final verification and Phase 4 boundary.
+- [handoff](session-carry-forward.md): current evidence, minimal diff and next-session scope.
+- [roadStyleVisuals_integration_test.go](../test/integration/gui/roadStyleVisuals_integration_test.go):
+  delete obsolete editor-legend crop/helper; use the full canvas for both color censuses.
+
+Eight reported test/helper files were normalized using an explicit `gofmt -w` list.
+Besides the visual test above, these seven files remain modified in Git status but
+have no normalized content diff (line endings only):
+
+- [zoneEditorRoadPolicy_integration_test.go](../test/integration/gui/zoneEditorRoadPolicy_integration_test.go)
+- [appRunnerSemantics.go](../test/test_helpers/integration_common/appRunnerSemantics.go)
+- [color_test.go](../test/unit/app/gui/utils/connectionLineStyle/color_test.go)
+- [newEditorConnectionLineStyle_test.go](../test/unit/app/gui/utils/connectionLineStyle/newEditorConnectionLineStyle_test.go)
+- [newPreviewConnectionLineStyle_test.go](../test/unit/app/gui/utils/connectionLineStyle/newPreviewConnectionLineStyle_test.go)
+- [isRoadTypeCastle_test.go](../test/unit/internal/helpers/road_helpers/roadType/isRoadTypeCastle_test.go)
+- [isRoadTypeConnection_test.go](../test/unit/internal/helpers/road_helpers/roadType/isRoadTypeConnection_test.go)
+
+No goldens or production files changed during closeout. No files created or deleted.
+Index untouched. Ten paths total are shown modified, with content changes in three.
+
+Historical implementation inventory below (already owner-committed through `cd2b4df`,
+not a pending-work list). **new** means introduced during Phase 3, not untracked now.
+Any reference below to the editor legend describes the earlier implementation and
+is superseded by the owner's removal. Paths are relative to this handoff.
 
 Production and documentation:
 
@@ -203,12 +233,32 @@ Phase 2 committed files at `abf0d36`:
   [rebuildZoneConnectionRoads_test.go](../test/unit/internal/services/zones/roadPolicyService/rebuildZoneConnectionRoads_test.go),
   and [reconcile_test.go](../test/unit/internal/services/zones/roadPolicyService/reconcile_test.go).
 
-The preceding list is historical. Current uncommitted Phase 3 work is listed above;
-wrap-up changed only the plan and this handoff, preserving source/tests and the index.
+The preceding list is historical. Current uncommitted work is listed at the start of
+this section: three content edits plus seven line-ending-only files. The owner's
+implementation and snapshot changes are committed.
 
 ## 5. Tests added or updated
 
-Phase 3 verification at wrap-up, 2026-09-11:
+Final Phase 3 verification, after owner review, 2026-09-11:
+
+- `go build ./...`: PASS.
+- Fresh full unit coverage task (`-count=1`): PASS, **75.0%** before closeout.
+- Final cache-eligible full unit coverage rerun after formatting/test adjustment:
+  PASS, **75.0%**. HTML and LCOV regenerated. Baseline **74.9%**, no shortfall.
+- Shared line-style constructors/Color, `StampConnectionRoad`, pending-policy service
+  methods and type-change handlers: **100% statement coverage**.
+- `go test ./test/...`: PASS (default suite including units and untagged integration).
+- `go test -tags=integration_test ./test/integration/...`: PASS.
+- `go test -tags='integration_test,gui' ./test/integration/...`: PASS, including
+  actual GUI execution in **30.335 seconds**. Existing goldens passed unchanged.
+- Test-layout checker, editor diagnostics, changed-file `gofmt -l`, diff whitespace:
+  PASS. Report-only lint: **0 issues**, three existing unused-exclusion warnings.
+- Independent Claude Opus 5 current-source review: approved, no blockers. Review
+  prompted removal of the stale crop, verified by the full tagged GUI run. Optional
+  cleanup/pre-existing observations are recorded in §8, not Phase 3 blockers.
+- Windows only. No Linux, race, benchmark, deployment or in-game validation claimed.
+
+Historical first-wrap-up results below are superseded by the final checks above:
 
 - `go build ./...`: PASS.
 - `go test ./test/unit/...`: PASS (cache-eligible final run; the preceding implementation
@@ -254,20 +304,24 @@ benchmark, or in-game validation is claimed.
 
 ## 6. Git status snapshot
 
-Branch `AD/road_and_graph_invariants`, HEAD `4923a5c`. Index empty at wrap-up.
-Working tree contains the modified/new files above plus 280 modified tracked goldens.
-New production files and tests remain untracked; tracked edits remain unstaged.
-Protected data/schema/registry paths have no diff. Phase 1/2 owner commits remain
-`07ca8b6`/`abf0d36`. No staging, unstaging, commits, pushes, stashes or branch changes.
+Branch `AD/road_and_graph_invariants`, HEAD `cd2b4df`; clean tree/index at closeout
+start. Owner committed implementation/review changes in `053d4fd`, `b6d4257`,
+`cd2b4df`. Current unstaged files: plan, handoff, visual test and seven line-ending-only
+test/helper files listed in §4 (ten paths total, three normalized content diffs).
+No untracked files or staged changes. No protected-tree or PNG raster changes since
+Phase 3 baseline `4923a5c`. Phase 1/2 commits remain `07ca8b6`/`abf0d36`.
+No staging, unstaging, commits, pushes, stashes or branch changes by this agent.
 
 ## 7. Rejections / things the user declined
 
 - Owner on 2026-09-11: stop circling/overcomplicating; wrap up implemented Phase 3
   and record unresolved work. Do not continue unrelated coverage additions or start PNG.
-- Implementation is complete, but do not label the phase fully verified while the
-  coverage shortfall, formatting and final review checks remain unresolved.
-- All supplemental tests and snapshot changes are preserved, not reverted or cleaned
-  up without owner direction. No new implementation work during this wrap-up.
+- The owner subsequently reviewed/committed changes and requested bounded Phase 3
+  closeout before a new Phase 4 session. That closeout is complete, not deferred.
+- Owner explicitly removed the editor legend as useless. Do not restore it or the
+  deleted legend test. Preview keeps its four-entry legend.
+- Supplemental tests and owner snapshot changes are preserved. No unrelated coverage
+  additions, optional export cleanup, new production work or Phase 4 implementation.
 
 - Never skip cleanup because final content is nil or empty: it is authoritative during
   `Reconcile`. The settings-free legacy `RebuildZoneConnectionRoads` explicitly uses
@@ -290,28 +344,19 @@ Protected data/schema/registry paths have no diff. Phase 1/2 owner commits remai
 
 ## 8. Open questions and confirmed later scope
 
-Batch C policy/scope approval remains settled. **Phase 3 implementation is complete;
-verification closeout is deferred at owner request.** No new policy questions needed.
+Batch C policy/scope approval remains settled. **Phase 3 is complete with no blockers.**
 Owner Phase 3 authorization, 2026-09-10: "Changes reviewed, you can proceed".
-Remaining closeout: coverage 74.8% < 74.9%, formatting, final report-only lint/review,
-and final-tree default/tagged integration checks. Phase 4 remains unstarted.
+Phase 4 remains unstarted and belongs to a new session. Do not repeat settled questions.
 
-Remaining formatting files (`gofmt -l` at wrap-up; format only an explicit rechecked list):
+Non-blocking review observations, outside closeout scope:
 
-- [appRunnerSemantics.go](../test/test_helpers/integration_common/appRunnerSemantics.go)
-- [connectionLineStyle.go](../app/gui/utils/connectionLineStyle.go)
-- [legendWidget.go](../app/gui/widgets/legendWidget.go)
-- [roadStyleVisuals_integration_test.go](../test/integration/gui/roadStyleVisuals_integration_test.go)
-- [zoneEditorRoadPolicy_integration_test.go](../test/integration/gui/zoneEditorRoadPolicy_integration_test.go)
-- [close_test.go](../test/unit/app/gui/drivers/dialogHost/close_test.go)
-- [color_test.go](../test/unit/app/gui/utils/connectionLineStyle/color_test.go)
-- [newEditorConnectionLineStyle_test.go](../test/unit/app/gui/utils/connectionLineStyle/newEditorConnectionLineStyle_test.go)
-- [newPreviewConnectionLineStyle_test.go](../test/unit/app/gui/utils/connectionLineStyle/newPreviewConnectionLineStyle_test.go)
-- [toF32Point_test.go](../test/unit/app/gui/utils/math/toF32Point_test.go)
-- [toVec2_test.go](../test/unit/app/gui/utils/math/toVec2_test.go)
-- [cloneZoneContentRows_test.go](../test/unit/internal/helpers/editor_state_helpers/zoneContentRow/cloneZoneContentRows_test.go)
-- [isRoadTypeCastle_test.go](../test/unit/internal/helpers/road_helpers/roadType/isRoadTypeCastle_test.go)
-- [isRoadTypeConnection_test.go](../test/unit/internal/helpers/road_helpers/roadType/isRoadTypeConnection_test.go)
+- `ConnectionLegendRow` remains an export used only by `LegendRows` after editor legend
+  removal. No behavior issue; optional simplification is not required for Phase 4.
+- Pre-existing editor dropdown normalization: its non-`WasUpdated` writeback can turn
+  types not offered by the Direct/Portal dropdown (for example Proximity) into Direct
+  on selection. This predates Phase 3; road policy still stamps correctly. Investigate
+  separately if requested, do not fix opportunistically in PNG work. See
+  [writebackProps](../app/gui/dialogs/zoneEditorConnectionProps.go#L105-L119).
 
 The owner will validate true/false/nil engine behavior after changes. Existing engine
 evidence is inconclusive: schema is optional bool; shipped examples use both values
@@ -336,31 +381,34 @@ Other pending decisions: arena/manual invalidation and effective-mode aliases (�
 ## 9. Next recommended actions
 
 1. Read [AGENTS.md](../AGENTS.md), this handoff, and [the active Batch C plan](plans/batch-c-road-policy-and-visuals.md).
-2. Inspect Git and preserve all changes. Review the completed Phase 3 implementation;
-  do not rebuild it or repeat settled approval questions.
-3. Only if asked to resume closeout: apply bounded formatting, rerun report-only lint,
-  resolve or explicitly accept the 0.1 percentage-point coverage shortfall, and run
-  the final default/tagged integration verification. Do not hunt unrelated coverage.
-4. Complete independent review and mark the phase fully verified only with evidence.
-5. Phase 4 PNG opacity is separate, unstarted work. Do not start automatically.
-  Later scope in §8 remains unchanged; engine validation belongs to the owner.
+2. Inspect Git and preserve all changes. Phase 3 is complete; do not reopen its
+  closeout or restore the editor legend. No further policy approval questions.
+3. In the next session, implement only approved Phase 4: reusable per-edge PNG mask,
+  one 50% composite per roadless edge, unchanged opaque path and geometry/dashes/markers.
+  Reuse projected `HasRoad`; preserve effective shape classification separately.
+4. Start from verified **75.0%** coverage, obtain a fresh baseline, add focused raster
+  tests (stamp overlap, crossing edges, clipping, curves, opaque markers), and measure
+  scratch allocation behavior. Do not allocate a full-image buffer per edge.
+5. Then complete the remaining Batch C verification in Phase 5. Later scope in §8
+  remains unchanged; engine validation belongs to the owner.
 
 Deployment: no deployment performed. For owner review, the current Windows source
 build passes; no schema migration, dependency installation, Wire regeneration or
-output-path change is introduced by Phase 3. Formal release awaits the recorded
-closeout and remaining Batch C phases.
+output-path change is introduced by Phase 3. Formal release awaits remaining Batch C
+phases. The owner stages/commits the closeout changes if desired.
 
 ## 10. Carry-forward prompt
 
 > Read [AGENTS.md](../AGENTS.md) first, then [this handoff](session-carry-forward.md)
 > and [the active Batch C plan](plans/batch-c-road-policy-and-visuals.md). Owner approval
 > remains in force. Phase 1 (`07ca8b6`) and Phase 2 (`abf0d36`) are implemented and
-> committed. Phase 3 GUI/pending-edit implementation is done, unstaged/untracked on
-> `AD/road_and_graph_invariants` at `4923a5c`. Inspect and preserve every current edit.
-> The owner requested wrap-up, not more implementation. Build/unit/layout checks pass;
-> coverage is 74.8% versus 74.9% baseline. Formatting, final lint/review and final-tree
-> default/tagged integration verification remain recorded, not silently passed.
-> Resume only requested bounded closeout; no unrelated coverage hunt or automatic Phase 4.
+> committed. Phase 3 is complete and owner-reviewed through `cd2b4df` on
+> `AD/road_and_graph_invariants`; closeout has content changes in the visual test and
+> two docs, plus seven line-ending-only test/helper changes.
+> Inspect and preserve every current edit. Build, full unit/default/integration/GUI,
+> layout, formatting and lint pass; independent review approved. Coverage **75.0%**.
+> Begin approved Phase 4 PNG per-edge opacity only; do not repeat approval questions.
+> The owner removed the editor dialog legend: preserve its absence, Preview legend stays.
 >
 > Never modify protected `data/`, template schema, or registry trees. Keep all paths
 > cross-platform and never change or persist the game output directory. Test nontrivial
@@ -369,5 +417,8 @@ closeout and remaining Batch C phases.
 > `integration_test`, `gui`, or `wireinject` tags, and never add fake unit seams.
 > Keep multi-session plans durable and resumable; read the plan before changing scope.
 > Preserve the complete later scope in §8 verbatim. Keep business policy in the
-> handler/service layer, carry road display state separately from effective preview
-> type, and leave Phase 4 PNG work untouched.
+> handler/service layer and carry road display state separately from effective preview
+> type. Phase 4 uses one reusable mask, 50% once per edge, with no compounding among
+> that edge's stamps; distinct crossing edges may compound. Preserve the opaque raster
+> path, sampling/spacing, clipping, curves, dashes and opaque markers. Full details and
+> historical decisions are in this handoff; Phase 4 has not yet been implemented.

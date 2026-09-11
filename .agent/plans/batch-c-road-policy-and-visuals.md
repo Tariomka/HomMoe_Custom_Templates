@@ -1,6 +1,6 @@
 # Batch C: road policy, connectivity and visual road status
 
-Implement review §1.4/§1.6/§1.10 with the owner's clarified between-zone road policy, plus road-state styling in the Preview panel, manual editor and exported PNG. **Scope and written-plan implementation approved on 2026-09-10**, owner: “looks good, please proceed”. Phase 1 is committed at `07ca8b6`; Phase 2 is committed at `abf0d36`. Phase 3 implementation is done and uncommitted; verification closeout remains explicitly outstanding below. On 2026-09-11 the owner requested wrap-up rather than further implementation or coverage expansion. Phase 4 has not started.
+Implement review §1.4/§1.6/§1.10 with the owner's clarified between-zone road policy, plus road-state styling in the Preview panel, manual editor and exported PNG. **Scope and written-plan implementation approved on 2026-09-10**, owner: “looks good, please proceed”. Phase 1 is committed at `07ca8b6`; Phase 2 is committed at `abf0d36`. Phase 3 is complete, with owner-reviewed implementation committed through `cd2b4df` and final closeout recorded below. Phase 4 has not started and is next-session work.
 
 ## For Future Agents
 
@@ -67,8 +67,8 @@ never edited. No global test tags, fake test seams, output-path changes or persi
   portals `#90EE90`, opaque. Existing roaded colors and normal widths stay unchanged.
 - Selected editor edges keep their road-state color, **including roaded edges**;
   use the existing thicker selected width without the orange color override.
-- GUI legend entries: `Road`, `No road`, `Portal`, `Portal without road`. Expose the
-  key where each canvas needs it without redesigning the panels/dialog.
+- Preview legend entries: `Road`, `No road`, `Portal`, `Portal without road`.
+  Owner removed the editor dialog legend on 2026-09-11 as unnecessary; do not restore it.
 - PNG: roadless strokes use the existing dark stroke color composited once at 50%
   per edge. Individual brush stamps of one edge must not compound opacity; distinct
   intersecting edges may compound. Keep PNG portal dashes, curve geometry, spacing,
@@ -291,14 +291,22 @@ in that handoff remains unchanged. No extra approval question is needed for Phas
 
 ## Phase 3: Pending editor policy and GUI road styles
 
-Status: In progress (implementation complete; verification closeout deferred at owner request)
+Status: Complete
+
+Owner update, 2026-09-11: the editor dialog legend was deliberately removed as
+unnecessary. Preserve that removal; the four-entry legend is Preview-only. This
+supersedes all earlier requirements in this plan to show a legend on both canvases.
+Current owner commits end at `cd2b4df`; the working tree and index were clean at
+closeout start. Fresh coverage is **75.0%**. Closeout is limited to formatting,
+removing the obsolete legend exclusion from visual assertions, final tests/review,
+and documentation. No unrelated coverage additions or Phase 4 implementation.
 
 - [x] Thread the current checkbox through existing CreateZoneEditorConnection. Add
   a handler/service operation for type-change policy (currently direct GUI writeback),
   with interface, real mocks and mirrored public-method tests. Show pending output
   before Apply; cancel must not mutate retained data.
 - [x] Carry road display state in preview data; keep effective Type for shape unchanged.
-- [x] Add approved theme colors and four legend entries; apply to both GUI canvases.
+- [x] Add approved theme colors to both GUI canvases and four legend entries to Preview only.
 - [x] Selected editor edge uses thicker width and retains its road color for every state.
 - [x] Cover changes to road flags/types without stale preview/editor styles, including
   off→on regeneration and selection/unselection. Do not widen geometry/cache refactors.
@@ -308,7 +316,7 @@ Status: In progress (implementation complete; verification closeout deferred at 
 - Model/service/handler and preview projection unit matrices, including explicit false
   portal, nil Direct, nil Portal and Direct with portal rules.
 - Tagged GUI tests driving real pending create/type-change, Apply/cancel and both canvases.
-- Focused image assertions/snapshots for four styles, selected edges and legends.
+- Focused image assertions/snapshots for four styles, selected edges and Preview legend.
   Inspect only intentional changed/new goldens; do not bulk-update unrelated snapshots.
 
 ### Phase Summary: Phase 3
@@ -321,8 +329,8 @@ on 2026-09-11. No further source changes were made during wrap-up.
   DTO/handler/service contracts. Type changes clone input; Cancel isolation is tested.
 - Preview projection carries `HasRoad` and `ExplicitPortal` independently of effective
   `Type`. Shared GUI styling preserves roaded colors and adds the approved roadless
-  gray/green. Both canvases show the four-entry road legend; selected editor edges
-  retain their color with thicker width.
+  gray/green. Preview shows the four-entry road legend; selected editor edges retain
+  their color with thicker width. The owner subsequently removed the editor legend.
 - Added service/handler/projection/style unit matrices and 25 GUI tests for pending
   creation/type changes, Apply/Cancel, colors, legends, selection and regeneration.
 - 280 existing GUI goldens changed for shared legend/edge rendering. The preceding
@@ -336,23 +344,35 @@ on 2026-09-11. No further source changes were made during wrap-up.
   (earlier intermediate result was 74.6%). Pending policy and handler entry points
   are 100% statement-covered. This was a report read, not a fresh coverage run.
 
-### Outstanding Phase 3 closeout
+### Completed Phase 3 closeout, 2026-09-11
 
-- [ ] Resolve or explicitly accept the total-coverage shortfall, then regenerate the
-  full report. Do not keep adding unrelated tests merely to move the total; existing
-  supplemental tests are preserved for owner review.
-- [ ] Format the explicit changed-file list reported by `gofmt -l`; the handoff lists
-  all 14 remaining files. No bulk repository formatting or source rewrite.
-- [ ] Run final report-only lint and confirm remaining review findings are resolved.
-  Earlier independent review found formatting/coverage issues; no final approval
-  is claimed for the current tree.
-- [ ] Verify the final tree with the tagged integration/GUI suites and default
-  `go test ./test/...`; prior passing results are not a fresh final-tree run.
+- [x] Regenerated full coverage before and after closeout: **75.0%**, above the
+  original Phase 3 **74.9%** baseline. No additional coverage tests or production
+  changes needed. Policy entry points and shared line-style functions are 100%.
+- [x] Formatted the explicit eight-file `gofmt -l` result. Apart from the visual-test
+  assertion change, these were line-ending normalization only; seven files remain
+  reported modified by Git status but have no normalized content diff. No bulk formatting.
+- [x] Report-only lint: **0 issues**, three existing unused-exclusion warnings.
+  Independent Claude Opus 5 current-source review approved with no blockers.
+- [x] `go build ./...`, fresh full unit coverage task (`-count=1`), final cache-eligible
+  full unit coverage rerun, `go test ./test/...`, `go test -tags=integration_test
+  ./test/integration/...`, and `go test -tags='integration_test,gui'
+  ./test/integration/...`: PASS. Actual final GUI run took 30.335 seconds.
+- [x] Test-layout checker, editor diagnostics and `git diff --check`: PASS.
 
-The implementation checklist is complete, but the phase is not marked fully verified.
-Resume only these bounded closeout items if requested; no further policy approval
-questions, unrelated coverage hunt, or automatic Phase 4 work. See
-[the current handoff](../session-carry-forward.md) for inventory and later scope.
+Only functional closeout change is to visual tests: removed the obsolete 60-pixel
+editor-legend crop and assert over the entire canvas. Owner removal is preserved;
+no production code or goldens changed during closeout. Review's optional unused
+`ConnectionLegendRow` export cleanup is deferred as unnecessary. Its observation
+about pre-existing dropdown normalization of non-Direct/Portal types is recorded
+in the handoff, outside Phase 3; do not turn it into new closeout scope.
+
+Owner commits are `053d4fd`, `b6d4257`, `cd2b4df`; current branch remains
+`AD/road_and_graph_invariants`. Final closeout leaves the visual test, two documents
+and seven line-ending-normalized test/helper files unstaged; index unchanged.
+Protected trees and PNG raster code unchanged.
+No Linux, race, benchmark, or in-game validation claimed. No Phase 3 blockers remain.
+Phase 4 starts in a new session; use [the current handoff](../session-carry-forward.md).
 
 ## Phase 4: PNG per-edge opacity
 

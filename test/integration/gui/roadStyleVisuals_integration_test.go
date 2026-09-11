@@ -33,10 +33,6 @@ const (
 // keep their own colours whatever the setting says.
 const squareLayoutName = "Square"
 
-// editorLegendStripPx is how much of the bottom of the editor canvas the road
-// key occupies, cut away when the assertion is about the edges.
-const editorLegendStripPx = 60
-
 // styleColorTolerance absorbs the one-step difference between the two paths a
 // translucent colour composites through - a stroked curve and the legend's
 // filled swatch land on 0x4D and 0x4E red.
@@ -92,13 +88,6 @@ func withinTolerance(actual uint8, want uint8) bool {
 	}
 
 	return int(want)-int(actual) <= styleColorTolerance
-}
-
-// editorEdgeArea is the part of the editor canvas the connections are drawn in,
-// with the road key at the bottom cut away.
-func editorEdgeArea(zoneEditor *integration_common.ZoneEditorHandler) image.Rectangle {
-	canvas := zoneEditor.CanvasRect()
-	return image.Rect(canvas.Min.X, canvas.Min.Y, canvas.Max.X, canvas.Max.Y-editorLegendStripPx)
 }
 
 // canvasEdge finds the laid-out curve between two zones, whichever way round
@@ -270,7 +259,7 @@ func TestWhenTheEditorHoldsRoadlessConnections_TheCanvasPaintsBothRoadlessStyles
 			roadedPortalStyle:   false,
 			roadlessPortalStyle: true,
 		},
-		styleCensus(frame, editorEdgeArea(zoneEditor)))
+		styleCensus(frame, zoneEditor.CanvasRect()))
 }
 
 //nolint:paralleltest // Driving the window needs exclusive access to the single headless GPU window.
@@ -289,7 +278,7 @@ func TestWhenTheEditorHoldsRoadedConnections_TheCanvasKeepsBothRoadedStyles(t *t
 			roadedPortalStyle:   true,
 			roadlessPortalStyle: false,
 		},
-		styleCensus(frame, editorEdgeArea(zoneEditor)))
+		styleCensus(frame, zoneEditor.CanvasRect()))
 }
 
 // A selected edge is the one place the canvas used to override the colour, so
