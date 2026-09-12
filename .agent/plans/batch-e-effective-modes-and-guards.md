@@ -6,15 +6,15 @@ Fix review findings §1.5, §1.11 and §1.12 only: invalidate incompatible manua
 
 ## Authority and approval gate
 
-- **Current closeout, 2026-09-12:** Phase 3 COMPLETE. Phase 4 Windows gates and independent Claude Opus 5 review PASS; native Linux verification and owner acceptance/commit remain outstanding. The owner explicitly accepted unit coverage decreasing from 75.1% to 74.9% for integration-covered GUI helpers. Earlier phase status/unstaged statements below are historical; Phase 2 is committed at `f80f7ca`.
+- **Current status, 2026-09-12: ALL FOUR PHASES COMPLETE.** The combined cross-phase flow is covered by six new real-input GUI tests, every Windows gate passes, and independent Claude Opus 5 reviews approved the plan, Phase 2, the Phase 3 implementation and the Phase 4 tests. Native Linux execution is recorded **UNAVAILABLE**, which Phase 4's verification plan explicitly permits. The owner accepted the implementation: *"Changes reviewed, all seems fine, you can finish up with Phase 4 and update Session Carry Forward"*, and separately accepted unit coverage moving from 75.1% to 74.9% for integration-covered GUI helpers. Phase 3 and partial Phase 4 are committed at `1b4658c` on `AD/modes_and_guard_propagation`; the only code change left in the worktree is one unstaged GUI test file. **No review finding is marked fixed yet** - that happens only after the owner commits this final verification and documentation work, per the surviving review's protocol. Every dated phase-status statement below is historical evidence, not current status.
 - Date: 2026-09-12. Owner confirmed the product decisions and full scope below through three question rounds.
-- **Written plan APPROVED; Phases 1 and 2 COMPLETE.** The owner committed the plan in `b9dd616` on `AD/modes_and_guard_propagation` and asked for Phase 1 completion, then for Phase 2 implementation in the following session. Phase 2 is implemented, fully verified and independently approved; its changes are unstaged/untracked and await the owner's review. **Phases 3 and 4 remain unstarted.**
+- *Historical, Phase 2 era:* **Written plan APPROVED; Phases 1 and 2 COMPLETE.** The owner committed the plan in `b9dd616` on `AD/modes_and_guard_propagation` and asked for Phase 1 completion, then for Phase 2 implementation in the following session. Phase 2 was implemented, fully verified and independently approved, and the owner has since committed it. Phases 3 and 4 were unstarted at that point; both are complete now.
 - Read [AGENTS.md](../../AGENTS.md), the [current handoff](../session-carry-forward.md) and the [surviving review](../backlog/review-gpt-6-astra-09-07.md). This plan becomes the working record for Batch E after approval.
 - Batches A/D, B and C are closed. Accept the owner's commit/engine record; do not retrieve retired documents, re-review those batches, or schedule a separate closed-batch verification. Normal regression suites for actual Batch E changes are required.
 - The handoff's §8 is verbatim historical text. Do not edit it. Its later-scope decisions remain binding, but its Batch C phase/engine wording is superseded.
-- Approval record, 2026-09-12: owner selected **"Approve the plan for subsequent implementation"** after reading the written-plan approval question and independent-review result. This is explicit approval of this plan, beyond prior scope confirmation. Subsequent instructions: **"the plan is commited, proceed with finishing Phase 1 and update carry forward"**, then **resume and finish Phase 2**. Phases 1 and 2 are now complete. The next session starts at **Phase 3**; do not repeat settled product questions, the approved plan review or any closed phase's work.
+- Approval record, 2026-09-12: owner selected **"Approve the plan for subsequent implementation"** after reading the written-plan approval question and independent-review result. This is explicit approval of this plan, beyond prior scope confirmation. Subsequent instructions: **"the plan is commited, proceed with finishing Phase 1 and update carry forward"**, then **resume and finish Phase 2**. All four phases are now complete; do not repeat settled product questions, the approved plan review or any closed phase's work.
 - Independent plan review: **APPROVED by Claude Opus 5, 2026-09-12**, after one revision. All five initial blockers resolved: remove unapproved direct-generator rejection; separate count validation from visible discard outcomes; invalidate before generation failure can consume transitions; rebind working/selected pointers; specify ordered Default matching.
-- Independent Phase 2 implementation review: **APPROVED by Claude Opus 5, 2026-09-12**, scoped to Phase 2 and its regression interactions, after one blocker was resolved (see the Phase 2 summary). The batch-wide implementation review in Phase 4 is still owed and covers Phase 3 as well.
+- Independent Phase 2 implementation review: **APPROVED by Claude Opus 5, 2026-09-12**, scoped to Phase 2 and its regression interactions, after one blocker was resolved (see the Phase 2 summary). The Phase 3 implementation review and the Phase 4 review of the combined-flow tests were also **APPROVED by Claude Opus 5** on 2026-09-12.
 
 ## For Future Agents
 
@@ -265,15 +265,15 @@ defensive and source-reviewed, not claimed as directly exercised by GUI inputs.
 
 ## Phase 4: Whole Batch E verification and owner handback
 
-Status: In progress (Windows gates complete; Linux and owner acceptance outstanding)
+Status: Complete
 
-- [ ] Verify the combined real flow: manual edits -> arena/tournament change -> new generated graph; invalid tournament load -> correction -> frame/save/reload; pending quality edits -> Apply/Cancel -> regeneration/persistence.
+- [x] Verify the combined real flow: manual edits -> arena/tournament change -> new generated graph; invalid tournament load -> correction -> frame/save/reload; pending quality edits -> Apply/Cancel -> regeneration/persistence.
 - [x] Run final build, fresh unit tests, comparable coverage, default/integration/GUI suites, test-layout checker and report-only lint. No blanket snapshot updates or auto-fix across the repository.
 - [x] Compare before/after total coverage and changed-function coverage. Cover every reachable changed branch/logical unit; record genuine GUI-only/unreachable limitations instead of fake unit seams.
 - [x] Obtain independent Claude Opus 5 implementation review limited to Batch E and its regression interactions. Address blockers and rerun affected checks.
 - [x] Inspect diff scope and owner's index read-only; protected trees/output path/opaque raster/retired topology work remain untouched except generated Wire produced by its generator as required.
-- [ ] Present owner-facing behavior and verification results. Owner performs all staging/commits and acceptance. Do not mark review findings fixed before the owner's commit protocol is satisfied.
-- [ ] Complete Final Recap and Deployment Plan, and update this plan with remaining blockers if work stops partway.
+- [x] Present owner-facing behavior and verification results. Owner performs all staging/commits and acceptance. Do not mark review findings fixed before the owner's commit protocol is satisfied.
+- [x] Complete Final Recap and Deployment Plan, and update this plan with remaining blockers if work stops partway.
 
 ### Verification Plan
 
@@ -292,53 +292,131 @@ Status: In progress (Windows gates complete; Linux and owner acceptance outstand
 
 ### Phase Summary
 
-Pending.
+Completed 2026-09-12. Phase 4 added the combined cross-phase coverage the earlier phases
+deliberately left open, reran every Windows gate over the whole batch, and closed the
+owner handback.
+
+**Combined flow.** Six real-input tests were added to the single changed code file,
+[zoneEditorProperties_integration_test.go](../../test/integration/gui/zoneEditorProperties_integration_test.go)
+(+171 lines). They Apply a remapped Silver Medium to Gold Medium incident edge and then
+switch into Guardian Arena or Tournament through the General victory selector, across
+idle frames and a dialog reopen. They assert positive outcomes, not merely absence: the
+arena main object exists on the regenerated Hub graph, the old Neutral-C zone and its
+remapped edge are gone, the discard notice survives the generation status that follows,
+and the tournament transition replaces both the Hub layout and the manual zone. The
+existing load-correction, frame, save/reload and Apply/Cancel persistence suites already
+cover their own halves and were not duplicated. The dirty-flag side is unit-covered;
+these GUI tests check the visible warning.
+
+**Gates.** Build, fresh unit run with coverage, the untagged default suite, the tagged
+integration plus GPU GUI suite, the test-layout checker, `gofmt -l` on the changed file
+and report-only lint at `--issues-exit-code=1` all pass. Exact commands and results are
+in the verification ledger below. No constructor or provider changed, so the committed
+generated Wire is already current and was deliberately not regenerated.
+
+**Coverage.** 74.9% total statements against the 75.1% baseline. This is the owner's
+explicitly accepted exception for integration-covered GUI helpers, not a restored
+baseline. All three new service functions and both quality handler/facade methods are
+100.0%.
+
+**Linux.** Recorded **UNAVAILABLE**, exactly as this phase's verification plan allows.
+The WSL Ubuntu probe run this turn produced empty output and exit code 1 for both `go`
+and `pkg-config`. Nothing was installed, and no native Linux, Steam Deck or in-game
+result is claimed.
+
+**Review and handback.** Claude Opus 5 approved the six new tests independently, after
+earlier approvals of the plan, Phase 2 and the Phase 3 implementation. The owner reviewed
+and accepted the implementation. No finding is marked fixed yet: the surviving review's
+protocol requires the owner's commit of this final work first, and this session performed
+no Git mutation of any kind.
 
 ## Verification ledger
 
-### Final Windows results, 2026-09-12
+### Batch-final results, 2026-09-12
 
-- Go 1.27.0, Windows/amd64, empty GOFLAGS; `go build ./...` PASS.
-- Fresh full unit/coverage PASS: `go test -p=2 -count=1 '-coverpkg=./internal/...,./app/...' '-coverprofile=coverage.txt' ./test/unit/...`. Bounded compile parallelism followed interrupted Windows linkers (`0xc000013a`); that incomplete profile was discarded.
-- **74.9%** total vs recorded 75.1%; **owner explicitly accepted** the GUI-only decrease on 2026-09-12. All three new service functions and both quality handler/facade methods are 100.0%. The three new GUI helpers are 0.0% in unit coverage and integration-covered, with the defensive pointer branch noted above.
-- Final profile SHA-256: `23B78F2CF15B73902398D8A21A755FD684D3668486E56D8CFA770BE2BE7F9F31`. HTML/LCOV refreshed. The transient 75.2% reading had a different delegated coverage scope and is not a comparable full baseline.
-- `go test ./test/...`, `go test -tags=integration_test ./test/integration/...`, and `go test -tags='integration_test,gui' ./test/integration/...`: PASS.
-- `go run ./cmd/testlayoutcheck .`: PASS. `golangci-lint-v2 run ./... --issues-exit-code=1`: PASS, zero issues after wrapping two test literals. No bulk auto-fix. Whitespace and touched-code diagnostics PASS.
-- Independent Claude Opus 5 review and follow-up review APPROVED, including the simplified index map and additional GUI tests.
-- Native Linux/Steam Deck: UNRUN. Prior inspection found no Go/pkg-config in WSL; nothing installed, no native result claimed. No new platform-specific code.
-- Clean start at owner commit `f80f7ca` on `AD/modes_and_guard_propagation`; new work unstaged/untracked. No protected/output/topology/schema writes, dependencies, snapshots, owner-findings edits or Git mutations.
+Windows/amd64, Go 1.27.0, empty `GOFLAGS`. Clean start at owner commit `1b4658c`
+("Phase 3 and partial 4") on `AD/modes_and_guard_propagation`, branch in sync with
+origin. The only code change in the worktree is the one unstaged GUI test file.
 
-The Phase 2 column is scoped to Phase 2's changes; the batch-final column stays open until Phase 4 reruns everything over Phase 3's work as well.
+- `go build ./...` — PASS.
+- `go test -p=2 -count=1 '-coverpkg=./internal/...,./app/...' '-coverprofile=coverage.txt' ./test/unit/...` — PASS. Bounded compile parallelism stays because unbounded Windows linkers were interrupted (`0xc000013a`) previously; that incomplete profile was discarded then and is not reused. This is the baseline over the reviewed production code, which has not changed since.
+- `go tool cover '-func=coverage.txt'` — **74.9%** total statements against the recorded 75.1% baseline. The owner explicitly accepted this decrease; it is an accepted exception, not a restored baseline. All three new service functions and both quality handler/facade methods report 100.0%. The three new GUI helpers report 0.0% here and are integration-covered, with the defensive pointer branch noted in Phase 3.
+- `go test ./test/...` — PASS, untagged default run.
+- `go test -tags='integration_test,gui' ./test/integration/...` — PASS; root integration 3.297s, GUI integration 28.558s. The single invocation covers both the root suite and the GPU-backed GUI suite.
+- `go run ./cmd/testlayoutcheck .` — PASS. `gofmt -l` over the changed file — clean.
+- `golangci-lint-v2 run ./... --issues-exit-code=1` — PASS, zero issues.
+- Wire: no constructor or provider changed, so the committed generated output is already current and was deliberately not regenerated.
+- Independent Claude Opus 5 review of the six new combined tests: **APPROVED**; earlier plan, Phase 2 and Phase 3 implementation reviews were also approved.
+- **Native Linux / Steam Deck: UNAVAILABLE.** The probe `wsl.exe -d Ubuntu -- sh -lc 'command -v go; command -v pkg-config'` returned empty output and exit code 1 this turn. Nothing was installed, and no native Linux, Steam Deck or engine result is claimed. Cross-platform correctness rests on source review, which this phase's verification plan explicitly permits recording as an unavailable environment.
+- **No coverage profile fingerprint is claimed for this run.** The reports were regenerated but their SHA-256 was not measured. The Phase 3 value `23B78F2CF15B73902398D8A21A755FD684D3668486E56D8CFA770BE2BE7F9F31` is historical and no longer describes the current file.
+- No protected/output/topology/schema writes, no dependency, snapshot or golden changes, no owner-findings edits, and no Git mutations of any kind.
+
+Historical: Phase 3's closeout recorded the same 74.9% at owner commit `f80f7ca`, with
+lint clean after wrapping two test literals and the same Linux outcome. The transient
+75.2% reading had a different delegated coverage scope and was never a comparable
+full baseline.
+
+The Phase 2 column is scoped to Phase 2's changes; the batch-final column is the Phase 4
+rerun over the whole batch, Phase 3 included.
 
 | Check | Baseline | Phase 2 result | Batch final (Phase 4) |
 | --- | --- | --- | --- |
-| Build | Not run in Phase 1 | PASS, `go build ./...` | Pending |
-| Fresh unit / coverage | PASS, 186 packages, 75.1%; Windows/amd64 Go 1.27.0 at `b9dd616`, 2026-09-12 | PASS, 187 packages, 75.1% unchanged; profile SHA-256 `34DD6075...C7C7187` | Pending |
-| Focused domain / handler / GUI / persistence | Source inspected only | PASS; new/extended unit folders plus two tagged integration files | Pending |
-| Default / tagged integration / GUI | Not run | PASS, `go test ./test/...` and `-tags='integration_test,gui' ./test/integration/...` | Pending |
-| Layout / report-only lint / formatting / Wire | Not run | PASS layout checker; lint zero issues at `--issues-exit-code=1`; explicit `gofmt -l` list only; no Wire change required | Pending |
-| Native Linux execution | Not run | UNRUN; WSL Ubuntu lacks `go`/`pkg-config`, nothing installed | Pending or explicitly unavailable |
+| Build | Not run in Phase 1 | PASS, `go build ./...` | PASS |
+| Fresh unit / coverage | PASS, 186 packages, 75.1%; Windows/amd64 Go 1.27.0 at `b9dd616`, 2026-09-12 | PASS, 187 packages, 75.1% unchanged; profile SHA-256 `34DD6075...C7C7187` | PASS at **74.9%**, owner-accepted exception; no fingerprint measured this run |
+| Focused domain / handler / GUI / persistence | Source inspected only | PASS; new/extended unit folders plus two tagged integration files | PASS; six added combined real-input GUI regressions |
+| Default / tagged integration / GUI | Not run | PASS, `go test ./test/...` and `-tags='integration_test,gui' ./test/integration/...` | PASS; root 3.297s, GUI 28.558s |
+| Layout / report-only lint / formatting / Wire | Not run | PASS layout checker; lint zero issues at `--issues-exit-code=1`; explicit `gofmt -l` list only; no Wire change required | PASS layout checker; lint zero issues; `gofmt -l` clean; no Wire change required |
+| Native Linux execution | Not run | UNRUN; WSL Ubuntu lacks `go`/`pkg-config`, nothing installed | **UNAVAILABLE**; probe empty, exit 1; nothing installed, nothing claimed |
 | Independent plan review | Claude Opus 5 APPROVED revised plan, 2026-09-12 | N/A | N/A |
-| Independent implementation review | N/A | Claude Opus 5 APPROVED Phase 2 after the notice idle-frame fix, 2026-09-12 | Pending, batch-wide |
+| Independent implementation review | N/A | Claude Opus 5 APPROVED Phase 2 after the notice idle-frame fix, 2026-09-12 | APPROVED, batch-wide, including the six new tests |
 
 Discovery tooling notes: initial subagent requests used unsupported lowercase model IDs; retrying with exact display name `GPT-5.6 Terra (copilot)` succeeded. Two guessed source paths did not exist; confirmed source/search results, not those guesses, inform this plan. No repository changes resulted from those failed reads/calls. Existing tooling memory already documents exact model-name requirements.
 
 ## Final Recap
 
-Current outcome: Phase 3 complete; all Batch E findings now have implementations,
-but none is marked fixed pending owner acceptance/commit. Windows checks and review
-are complete with the accepted coverage exception. Phase 4 remains open for native
-Linux verification and a dedicated combined cross-phase flow (existing component
-lifecycle/GUI suites pass; no new monolithic combined-flow test was added).
+Batch E is complete. Findings §1.5, §1.11 and §1.12 all have implemented, tested and
+independently reviewed behavior, and the owner accepted the implementation on 2026-09-12.
 
-No in-game outcome is claimed. Do not reopen accepted product decisions or reimplement Phase 3; remaining work is verification and owner acceptance only.
+- **§1.5** — effective tournament and effective arena booleans drive layout comparison. A
+  transition in either clears the entire manual snapshot before any generation can observe
+  it, warns on an actual discard, marks the document unsaved and re-arms Exit. Alias-only
+  representation changes preserve edits. No arena reconciliation pass was added.
+- **§1.12** — effective tournament forces and locks two players, and leaving it keeps two
+  with no remembered count. Invalid tournament loads correct to two, clear incompatible
+  snapshots, warn, become unsaved and re-arm Exit without rewriting the file, and the
+  warning survives the automatic regeneration that follows.
+- **§1.11** — an actual neutral-quality change remaps exact preset guard values on every
+  incident edge through the old and new stronger-endpoint tables, carrying the named tier
+  including Default. Unmatched numbers stay put and display an explicit Custom entry
+  derived from the number, never persisted.
+
+Phase 4 supplied the combined cross-phase GUI regressions, reran every Windows gate green
+and closed the handback. Coverage sits at the owner-accepted 74.9%. Native Linux is
+unavailable and unrun. The three findings remain **unmarked** in the surviving review
+until the owner commits this final verification and documentation work; only then are
+§1.5, §1.11 and §1.12 marked per that review's protocol.
+
+No in-game outcome is claimed. Do not reopen accepted product decisions, reimplement any
+phase, or extend into Batch K, topology retirement, direct GeneratorConfig rejection,
+geometry consolidation, DTO cleanup, schema or package work.
 
 ## Deployment Plan
 
-No deployment is authorized or performed. Phase 2's code is written and verified but sits unstaged; the owner alone reviews, stages, commits and releases. After Phases 3 and 4 and their successful verification:
+Nothing is deployed and the assistant made no Git change. Phase 3 and partial Phase 4 are
+committed at `1b4658c`; what remains is one unstaged GUI test file plus this plan and the
+handoff.
 
-1. Owner reviews the scoped changes, warnings and UI behavior; performs staging/commits and any release steps.
-2. Build/package through the existing platform workflow. No dependency installation, saved-schema migration or output-directory change is planned; Wire regeneration is build-time only if required.
-3. On application launch, retain per-machine game-directory detection. Existing invalid tournament settings are corrected in memory with warning/dirty state; the file changes only on explicit Save.
-4. Communicate that mode transitions discard manual edits and exiting tournament leaves two players. Guard Custom values remain numeric and are not given hidden persistent preset identities.
-5. Record platform-specific verification and unresolved acceptance items honestly. Do not infer new engine results from Batch C's completed owner report.
+1. Owner reviews the remaining unstaged changes, then stages and commits them. Only after
+   that commit are review findings §1.5, §1.11 and §1.12 marked fixed, following the
+   surviving review's protocol.
+2. Owner builds and packages through the existing platform workflow. No dependency
+   installation, saved-schema migration, output-directory change or Wire regeneration is
+   required; the committed generated wiring is current.
+3. On launch, per-machine game-directory detection is unchanged. Existing invalid
+   tournament settings are corrected in memory with a warning and unsaved state; the file
+   changes only on explicit Save.
+4. Communicate that mode transitions discard manual edits, that leaving tournament leaves
+   two players, and that unmatched guard numbers display as Custom without acquiring any
+   hidden persistent preset identity.
+5. Record platform verification honestly: Windows verified, native Linux and Steam Deck
+   unavailable and unrun. Do not infer engine results from Batch C's owner report.

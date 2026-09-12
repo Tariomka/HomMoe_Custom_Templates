@@ -9,6 +9,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
+	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers/integration_common"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -58,6 +59,19 @@ const (
 	// editedGuardValue is typed after a quality change, to prove the edit lands
 	// in the connection the editor kept rather than in a discarded copy.
 	editedGuardValue = 51000
+)
+
+// The two victory conditions the combined-flow tests switch to, as
+// app/gui/constants spells them, and the notice the discard they cause writes.
+// Guardian Arena is the victory that turns the effective arena on; Tournament is
+// the one that turns the effective tournament on.
+const (
+	guardianArenaVictoryLabel = "Guardian Arena"
+	tournamentVictoryLabel    = "Tournament"
+
+	discardedLayoutNotice = "The manual zone layout was discarded because " +
+		"the game mode change regenerates the map."
+	generatedStatusFragment = "generated with latest changes"
 )
 
 // The zone name is a read-only material label, not an editor: zonePropertyRows
@@ -834,4 +848,161 @@ func TestWhenAQualityChangeIsCancelled_TheCommittedManualZoneSurvives(t *testing
 
 	// Assert
 	assert.Contains(t, manualZoneNames(runner), placedZoneName)
+}
+
+// applyRemappedGuardThenSelectVictory drives the whole flow the mode contract is
+// about, in one go and through real input: a pending quality edit remaps the
+// drawn edge's guard onto the Gold table, Apply commits that as the document's
+// manual layout, and a victory condition picked on the General tab turns an
+// effective mode on. It returns the runner and the zone editor reopened over
+// whatever the editor regenerated in place of the discarded layout.
+func applyRemappedGuardThenSelectVictory(t *testing.T, victoryLabel string) (
+	*integration_common.AppRunner, *integration_common.ZoneEditorHandler) {
+	t.Helper()
+	runner, zoneEditor := openEditorWithNeutralEdge(t)
+	editorTabs := zoneEditor.SelectConnectionGuardPreset(silverMediumGuardPresetLabel).
+		ClickZone(placedZoneName).
+		SelectZoneQuality(goldZoneQualityLabel).
+		ClickApply()
+	require.Equal(t, goldMediumGuardValue,
+		manualConnectionSaveBetween(t, runner, placedZoneName, spawnAZoneName).Connection.GuardValue,
+		"precondition: Apply commits the remapped guard, so the mode change has real work to discard")
+	require.Contains(t, manualZoneNames(runner), placedZoneName,
+		"precondition: Apply commits the placed zone too")
+
+	general := editorTabs.ClickGeneralTab()
+	// The tab click is applied during the layout it is polled on, so the General
+	// panel has not been drawn yet and its victory selector has no input area.
+	runner.NextFrame()
+	general.SelectVictoryCondition(victoryLabel)
+	idleFrames(runner)
+
+	return runner, general.ClickLayoutAndZonesTab().OpenZoneEditor()
+}
+
+// editedMainObjectTypes reports the main object types a zone the editor is
+// holding carries.
+func editedMainObjectTypes(zone template_model.Zone) []string {
+	types := make([]string, 0)
+	for _, mainObject := range zone.MainObjects {
+		types = append(types, mainObject.Type)
+	}
+
+	return types
+}
+
+// editedEdgeEndpoints reports every edge the editor is holding, as an
+// order-independent "From|To" pair, which is how a user-drawn edge is told apart
+// from the generated ones.
+func editedEdgeEndpoints(zoneEditor *integration_common.ZoneEditorHandler) []string {
+	endpoints := make([]string, 0)
+	for _, connection := range zoneEditor.Dialog().EditedConnectionRecords() {
+		from, to := connection.From, connection.To
+		if from > to {
+			from, to = to, from
+		}
+		endpoints = append(endpoints, from+"|"+to)
+	}
+
+	return endpoints
+}
+
+// Turning the arena on is a layout-defining change, so the map is rebuilt for
+// that mode. On a hub layout the arena is a main object inside the Hub, which is
+// the visible proof that the graph now on screen is the one the new mode asked
+// for rather than the one the discarded edits described.
+//
+//nolint:paralleltest // Driving the window needs exclusive access to the single headless GPU window.
+func TestWhenArenaModeFollowsAnAppliedQualityEdit_TheRegeneratedHubCarriesTheArena(t *testing.T) {
+	// Arrange
+	_, reopened := applyRemappedGuardThenSelectVictory(t, guardianArenaVictoryLabel)
+
+	// Act
+	hub := editedZone(t, reopened, hubZoneName)
+
+	// Assert
+	assert.Contains(t, editedMainObjectTypes(hub), registry.GetMainObjectTypeValues().GladiatorArena)
+}
+
+// The zone the user placed and applied belonged to the discarded layout, so the
+// regenerated map must not carry it back.
+//
+//nolint:paralleltest // Driving the window needs exclusive access to the single headless GPU window.
+func TestWhenArenaModeFollowsAnAppliedQualityEdit_ThePlacedZoneIsNotReapplied(t *testing.T) {
+	// Arrange
+	_, reopened := applyRemappedGuardThenSelectVictory(t, guardianArenaVictoryLabel)
+
+	// Act
+	names := editedZoneNames(reopened)
+
+	// Assert
+	assert.NotContains(t, names, placedZoneName)
+}
+
+// Neither is the edge that carried the remapped guard: it was drawn by hand
+// between the placed zone and a spawn, and nothing in a generated hub layout
+// joins those two.
+//
+//nolint:paralleltest // Driving the window needs exclusive access to the single headless GPU window.
+func TestWhenArenaModeFollowsAnAppliedQualityEdit_TheRemappedEdgeIsNotReapplied(t *testing.T) {
+	// Arrange
+	_, reopened := applyRemappedGuardThenSelectVictory(t, guardianArenaVictoryLabel)
+
+	// Act
+	endpoints := editedEdgeEndpoints(reopened)
+
+	// Assert
+	assert.NotContains(t, endpoints, placedZoneName+"|"+spawnAZoneName)
+}
+
+// The discard is announced, and the regeneration it triggers writes its own
+// status straight afterwards. The notice has to survive that, or the user would
+// never learn their layout is gone.
+//
+//nolint:paralleltest // Driving the window needs exclusive access to the single headless GPU window.
+func TestWhenArenaModeFollowsAnAppliedQualityEdit_TheDiscardIsStillReported(t *testing.T) {
+	// Arrange
+	runner, _ := applyRemappedGuardThenSelectVictory(t, guardianArenaVictoryLabel)
+
+	// Act
+	message, _ := runner.Status()
+
+	// Assert
+	require.Contains(t, message, generatedStatusFragment,
+		"precondition: the mode change regenerated, so the notice had a status to survive")
+	assert.Contains(t, message, discardedLayoutNotice)
+}
+
+// The other effective mode goes through the same contract. Tournament replaces
+// the chosen topology outright, so the Hub the Geometric Hub layout is built
+// around is not in the map that mode generates.
+//
+//nolint:paralleltest // Driving the window needs exclusive access to the single headless GPU window.
+func TestWhenTournamentModeFollowsAnAppliedQualityEdit_TheHubLayoutIsReplaced(t *testing.T) {
+	// Arrange
+	_, reopened := applyRemappedGuardThenSelectVictory(t, tournamentVictoryLabel)
+	require.NotEmpty(t, editedZoneNames(reopened),
+		"precondition: the reopened editor is holding the regenerated map, not an empty canvas")
+
+	// Act
+	names := editedZoneNames(reopened)
+
+	// Assert
+	assert.NotContains(t, names, hubZoneName)
+}
+
+// And the zone the user placed and applied is not carried into it either.
+//
+//nolint:paralleltest // Driving the window needs exclusive access to the single headless GPU window.
+func TestWhenTournamentModeFollowsAnAppliedQualityEdit_ThePlacedZoneIsNotReapplied(t *testing.T) {
+	// Arrange
+	_, reopened := applyRemappedGuardThenSelectVictory(t, tournamentVictoryLabel)
+	require.NotEmpty(t, editedZoneNames(reopened),
+		"precondition: the reopened editor is holding the regenerated map, not an empty canvas")
+
+	// Act
+	names := editedZoneNames(reopened)
+
+	// Assert
+	assert.NotContains(t, names, placedZoneName)
 }
