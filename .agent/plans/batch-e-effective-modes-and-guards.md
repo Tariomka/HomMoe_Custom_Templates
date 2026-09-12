@@ -7,12 +7,13 @@ Fix review findings §1.5, §1.11 and §1.12 only: invalidate incompatible manua
 ## Authority and approval gate
 
 - Date: 2026-09-12. Owner confirmed the product decisions and full scope below through three question rounds.
-- **Written plan APPROVED; Phase 1 COMPLETE.** The owner committed the plan in `b9dd616` on `AD/modes_and_guard_propagation`, then requested Phase 1 completion and handoff on 2026-09-12. Fresh unit coverage passed and reports were regenerated. No production code, tests, configuration or generated Wire changed. Phases 2-4 remain unstarted; this closeout does not begin implementation.
+- **Written plan APPROVED; Phases 1 and 2 COMPLETE.** The owner committed the plan in `b9dd616` on `AD/modes_and_guard_propagation` and asked for Phase 1 completion, then for Phase 2 implementation in the following session. Phase 2 is implemented, fully verified and independently approved; its changes are unstaged/untracked and await the owner's review. **Phases 3 and 4 remain unstarted.**
 - Read [AGENTS.md](../../AGENTS.md), the [current handoff](../session-carry-forward.md) and the [surviving review](../backlog/review-gpt-6-astra-09-07.md). This plan becomes the working record for Batch E after approval.
 - Batches A/D, B and C are closed. Accept the owner's commit/engine record; do not retrieve retired documents, re-review those batches, or schedule a separate closed-batch verification. Normal regression suites for actual Batch E changes are required.
 - The handoff's §8 is verbatim historical text. Do not edit it. Its later-scope decisions remain binding, but its Batch C phase/engine wording is superseded.
-- Approval record, 2026-09-12: owner selected **"Approve the plan for subsequent implementation"** after reading the written-plan approval question and independent-review result. This is explicit approval of this plan, beyond prior scope confirmation. Subsequent instruction: **"the plan is commited, proceed with finishing Phase 1 and update carry forward"**. Phase 1 is now complete. Next implementation session starts at Phase 2, after checking that the source still matches the baseline; do not repeat settled product questions or the approved plan review.
-- Independent plan review: **APPROVED by Claude Opus 5, 2026-09-12**, after one revision. All five initial blockers resolved: remove unapproved direct-generator rejection; separate count validation from visible discard outcomes; invalidate before generation failure can consume transitions; rebind working/selected pointers; specify ordered Default matching. No implementation review has occurred.
+- Approval record, 2026-09-12: owner selected **"Approve the plan for subsequent implementation"** after reading the written-plan approval question and independent-review result. This is explicit approval of this plan, beyond prior scope confirmation. Subsequent instructions: **"the plan is commited, proceed with finishing Phase 1 and update carry forward"**, then **resume and finish Phase 2**. Phases 1 and 2 are now complete. The next session starts at **Phase 3**; do not repeat settled product questions, the approved plan review or any closed phase's work.
+- Independent plan review: **APPROVED by Claude Opus 5, 2026-09-12**, after one revision. All five initial blockers resolved: remove unapproved direct-generator rejection; separate count validation from visible discard outcomes; invalidate before generation failure can consume transitions; rebind working/selected pointers; specify ordered Default matching.
+- Independent Phase 2 implementation review: **APPROVED by Claude Opus 5, 2026-09-12**, scoped to Phase 2 and its regression interactions, after one blocker was resolved (see the Phase 2 summary). The batch-wide implementation review in Phase 4 is still owed and covers Phase 3 as well.
 
 ## For Future Agents
 
@@ -138,17 +139,23 @@ Closeout checks passed: full index unchanged; handoff §8 exact UTF-8 text inclu
 
 ## Phase 2: Effective modes and two-player state lifecycle
 
-Status: Not started
+Status: Complete
 
-- [ ] Add effective editor-state predicates and include boolean transitions in layout comparison. Keep config behavior equivalent, aliases intact and unrelated rules non-layout-defining.
-- [ ] Implement tournament-count validation/correction only, including fix ordering and report-only behavior. Implement snapshot clearing and its structured outcome in the domain transition/load operation, not the validator fix.
-- [ ] Apply live invalidation during state update, before any generation attempt: compare stored versus validated effective modes, and raw requested versus validated tournament count. Clear on the validated clone, then assign state and deliver actual discard/correction to the driver. Thus a failed generation cannot consume the invalidation; no change to generation's snapshot-on-failure policy is needed. Cover before-first-generation and failure/retry explicitly.
-- [ ] Explicitly mark an actual manual discard dirty/re-arm Exit using its outcome, independently of `WasStateChanged` and its intentional manual-field exclusion.
-- [ ] Update load to inspect original structured state after the single disk read: the existing non-fixing load validation is followed by one fixing validation pass, whose warnings are used. Set dirty/re-arm Exit only for tournament count corrections and retain atomic failed-load behavior.
-- [ ] Carry a small session-only notification outcome through automatic regeneration so new discard/correction warnings remain visible. Clear pending notices on document replacement/reset; do not redesign global status history or suppress generation errors. Test failed generation/retry and subsequent-document isolation.
-- [ ] Fix/disable the player slider for both effective tournament aliases; leaving mode retains two. Preserve selector reset behavior and non-tournament range behavior. Test several idle save/render frames: no stale 3-8 value is repeatedly submitted and no repeated correction warning is queued.
-- [ ] Verify the application generation invariant through the existing validate-before-map handler. Leave direct GeneratorConfig generation, provider fallbacks and topology implementations unchanged.
-- [ ] Add focused unit and integration tests in lockstep with changes.
+Resume check, 2026-09-12: clean worktree/index on `AD/modes_and_guard_propagation`,
+HEAD `8f852be0218180d8f5629e2580f61669af3bdb2a`. No Go/module/VS Code input
+differences from `b9dd616`; Windows/amd64 Go 1.27.0, empty GOFLAGS and the recorded
+coverage SHA-256 still match. Reuse Phase 1's 75.1% baseline without rerunning it.
+No inherited source changes. Implementation and verification now underway.
+
+- [x] Add effective editor-state predicates and include boolean transitions in layout comparison. Keep config behavior equivalent, aliases intact and unrelated rules non-layout-defining.
+- [x] Implement tournament-count validation/correction only, including fix ordering and report-only behavior. Implement snapshot clearing and its structured outcome in the domain transition/load operation, not the validator fix.
+- [x] Apply live invalidation during state update, before any generation attempt: compare stored versus validated effective modes, and raw requested versus validated tournament count. Clear on the validated clone, then assign state and deliver actual discard/correction to the driver. Thus a failed generation cannot consume the invalidation; no change to generation's snapshot-on-failure policy is needed. Cover before-first-generation and failure/retry explicitly.
+- [x] Explicitly mark an actual manual discard dirty/re-arm Exit using its outcome, independently of `WasStateChanged` and its intentional manual-field exclusion.
+- [x] Update load to inspect original structured state after the single disk read: the existing non-fixing load validation is followed by one fixing validation pass, whose warnings are used. Set dirty/re-arm Exit only for tournament count corrections and retain atomic failed-load behavior.
+- [x] Carry a small session-only notification outcome through automatic regeneration so new discard/correction warnings remain visible. Clear pending notices on document replacement/reset; do not redesign global status history or suppress generation errors. Test failed generation/retry and subsequent-document isolation.
+- [x] Fix/disable the player slider for both effective tournament aliases; leaving mode retains two. Preserve selector reset behavior and non-tournament range behavior. Test several idle save/render frames: no stale 3-8 value is repeatedly submitted and no repeated correction warning is queued.
+- [x] Verify the application generation invariant through the existing validate-before-map handler. Leave direct GeneratorConfig generation, provider fallbacks and topology implementations unchanged.
+- [x] Add focused unit and integration tests in lockstep with changes.
 
 ### Verification Plan
 
@@ -160,9 +167,42 @@ Status: Not started
 - Exercise General UI via real frame/input integration: checkbox-origin loaded state, victory-selector alias, fixed/disabled player control, uncheck while a selector still activates tournament, leaving tournament then changing count, and next-frame writeback. Use existing gated GUI harness, no global tags or new fake unit exports.
 - Run focused unit/integration/GUI suites and `go build ./...`; record exact results. Verify required state warnings are visible, not merely produced by an unused return value.
 
+### Phase 2 verification results
+
+All commands below are the final post-fix run on **Windows/amd64, Go 1.27.0, empty `GOFLAGS`**, 2026-09-12:
+
+- `go build ./...` — **PASS**.
+- `go test ./test/unit/... -count=1` — **PASS, 187 packages**. The count rose from the 186-package baseline because `ModeTransitionOutcome` brought its own mirrored test folder.
+- `go test ./test/...` — **PASS** (untagged default run).
+- `go test -tags='integration_test,gui' ./test/integration/...` — **PASS**, covering both the root integration suite and the GPU-backed GUI suite.
+- `go run ./cmd/testlayoutcheck .` — **PASS**.
+- Coverage equivalent of the existing task: `go test '-coverpkg=./internal/...,./app/...' '-coverprofile=coverage.txt' ./test/unit/...` then `go tool cover '-func=coverage.txt'` — **PASS at 75.1% total statements, unchanged from the Phase 1 baseline** despite the new code. HTML and LCOV reports were refreshed. New profile SHA-256: `34DD607508B5BE7F21C8BC466580C9722AAD061C6E273E0D338013B52C7C7187`.
+- Report-only lint, `golangci-lint-v2 run ./... --issues-exit-code=1` — **PASS with zero issues**, after reordering the two new unexported `EditorState` methods below the exported ones (`funcorder`) and formatting an explicit `gofmt -l` file list. No auto-fix sibling task and no bulk rewrite were used.
+- **Native Linux execution: UNRUN.** A WSL Ubuntu environment exists, but `go` and `pkg-config` are unavailable inside it and installing toolchains is out of scope. Cross-platform correctness rests on source review only; Phase 4 still owes a real Linux run.
+
+Changed-function coverage against the Phase 1 table: `IsEffectiveTournament`, `IsEffectiveGladiatorArena`, `ApplyModeTransition`, `ModeTransitionOutcome.MergedWith`, `validateTournamentPlayerCount`, `UpdateCurrentState`, `OverrideStateFromLoad`, `UpdateState` and the three notice functions in [stateNotices.go](../../app/gui/drivers/stateNotices.go) all report **100.0%**. [handleLoadState](../../app/gui/drivers/stateFiles.go) and its new `describeLoadedState` helper remain **0.0% in the unit profile** — they are driver callbacks reached only through the integration harness, where they are now exercised directly. The General panel still contributes no entries to this profile; its new locking behavior is proven by integration frames only.
+
 ### Phase Summary
 
-Written plan approved and Phase 1 baseline recorded above; implementation deferred to the next session.
+Completed on 2026-09-12; findings §1.5 and §1.12 are implemented, §1.11 remains Phase 3 work.
+
+**Domain.** [EditorState](../../internal/models/editor_state_model/editorState.go) gained `IsEffectiveTournament`, `IsEffectiveGladiatorArena`, the `TournamentPlayerCount` constant and `ApplyModeTransition`, with private `effectiveModesChanged`/`tournamentCountCorrected` helpers; `LayoutDefiningOptionsChanged` now compares the two resolved booleans rather than the checkbox/selector fields, so alias-only changes keep the layout. The transient result type lives in the new [modeTransitionOutcome.go](../../internal/models/editor_state_model/modeTransitionOutcome.go) with `ManualEditsDiscarded`, `TournamentCountCorrected` and `MergedWith`. `ApplyModeTransition` takes the previous document (nil on load) and the raw requested state, clears the snapshot on an actual transition or correction, and reports only what the user can see.
+
+**Validation.** [EditorStateValidator](../../internal/validators/editorStateValidator.go) appends `validateTournamentPlayerCount` **last** in `Validate`, so the general range fix cannot clamp back over the two players tournament mode requires. Its fix changes the count and nothing else; snapshot clearing stays with the domain transition.
+
+**State lifecycle.** [UpdateCurrentState](../../app/gui/models/editorState.go) now validates the edited clone, applies the transition to it and returns the outcome before storing it, so no generation attempt can ever observe an incompatible snapshot. The new `OverrideStateFromLoad` compares the raw file state against its corrected result, which is the only place a corrected count is still visible. [UpdateState](../../app/gui/drivers/state.go) flags the document unsaved when `WasStateChanged` is false but a discard or correction happened, and holds the outcome in a new `pendingOutcome` field that `Reset` clears.
+
+**Notices.** The new [stateNotices.go](../../app/gui/drivers/stateNotices.go) owns `stateTransitionNotice`, `noteStateTransition` and `takePendingNotice`. A notice is shown immediately, kept pending across the automatic regeneration that follows, and consumed exactly once by a **successful** generation in [handleGenerateTemplate](../../app/gui/drivers/stateGeneration.go); a failed generation leaves it for the retry.
+
+**Load.** [handleLoadState](../../app/gui/drivers/stateFiles.go) reads once through the existing `LoadState(path, false)`, then runs `ValidateEditorState(raw, true)` and uses only its warnings. It marks the document unsaved solely for a tournament count correction, leaves the file on disk untouched and composes its status through the new `describeLoadedState`. Failed loads still leave the current document alone.
+
+**Player control.** [GeneralPanel](../../app/gui/panels/generalPanel.go) gained `getAllowedPlayerCount`, `isPlayerCountLocked` and `getPlayerCountRowWidget`, which renders the existing slider row through `gtx.Disabled()` under either alias. `SaveToState` moves the slider itself back to two rather than only the outgoing value, so idle frames cannot resubmit a stale 3-8 count or re-announce the same correction.
+
+**Review blocker and fix.** Claude Opus 5's implementation review rejected the first cut: a no-op `UpdateState` merged an empty outcome and rewrote the status, wiping a generation error or a just-saved message on the very next idle frame. `noteStateTransition` now returns before merging when the incoming outcome is empty. The regression is pinned end to end - load, failed generation, idle frames, save, idle frames, retry - including the error flag itself. The review approved after that fix.
+
+**Tests.** New unit folders cover `IsEffectiveTournament`, `IsEffectiveGladiatorArena`, `ApplyModeTransition`, `MergedWith` and `OverrideStateFromLoad`; existing suites for layout comparison, both regeneration decisions, `UpdateCurrentState`, `UpdateState`, the validator and both state-handler entry points were extended. Two new tagged integration files carry the behavior the unit profile cannot reach: [effectiveModes_integration_test.go](../../test/integration/effectiveModes_integration_test.go) (invalid and valid tournament loads under both aliases, discard, dirty/Exit, unchanged file bytes, save/reload, notice survival across regeneration, failure/save/retry ordering, document isolation, and two-player generation through the application handler) and [generalPanelTournament_integration_test.go](../../test/integration/generalPanelTournament_integration_test.go) (real slider drags, both aliases, disabled control, unchecking the rule under a tournament victory, leaving tournament, and idle-frame stability). Shared helpers gained `AppRunner.SetStatus` plus `DragPlayerCountToMaximum`, `SelectVictoryCondition` and `ToggleConditionRule` on the General tab handler. No new build tags, global tags or unit-test seams were introduced.
+
+**Untouched, as required.** Protected data/schema/registry trees, the output path, the opaque raster path, generated Wire, topology implementations and the direct `GeneratorConfig` contract are unchanged. No dependencies, snapshots or goldens changed. All Phase 2 work is unstaged/untracked and awaits the owner.
 
 ## Phase 3: Quality propagation and explicit Custom display
 
@@ -223,26 +263,28 @@ Pending.
 
 ## Verification ledger
 
-| Check | Baseline | Final |
-| --- | --- | --- |
-| Build | Not run in Phase 1 | Pending |
-| Fresh unit / coverage | PASS, 186 packages, 75.1%; Windows/amd64 Go 1.27.0 at `b9dd616`, 2026-09-12 | Pending |
-| Focused domain / handler / GUI / persistence | Source inspected only | Pending |
-| Default / tagged integration / GUI | Not run | Pending |
-| Layout / report-only lint / formatting / Wire | Not run | Pending |
-| Native Linux execution | Not run | Pending or explicitly unavailable |
-| Independent plan review | Claude Opus 5 APPROVED revised plan, 2026-09-12 | N/A |
-| Independent implementation review | N/A | Pending |
+The Phase 2 column is scoped to Phase 2's changes; the batch-final column stays open until Phase 4 reruns everything over Phase 3's work as well.
+
+| Check | Baseline | Phase 2 result | Batch final (Phase 4) |
+| --- | --- | --- | --- |
+| Build | Not run in Phase 1 | PASS, `go build ./...` | Pending |
+| Fresh unit / coverage | PASS, 186 packages, 75.1%; Windows/amd64 Go 1.27.0 at `b9dd616`, 2026-09-12 | PASS, 187 packages, 75.1% unchanged; profile SHA-256 `34DD6075...C7C7187` | Pending |
+| Focused domain / handler / GUI / persistence | Source inspected only | PASS; new/extended unit folders plus two tagged integration files | Pending |
+| Default / tagged integration / GUI | Not run | PASS, `go test ./test/...` and `-tags='integration_test,gui' ./test/integration/...` | Pending |
+| Layout / report-only lint / formatting / Wire | Not run | PASS layout checker; lint zero issues at `--issues-exit-code=1`; explicit `gofmt -l` list only; no Wire change required | Pending |
+| Native Linux execution | Not run | UNRUN; WSL Ubuntu lacks `go`/`pkg-config`, nothing installed | Pending or explicitly unavailable |
+| Independent plan review | Claude Opus 5 APPROVED revised plan, 2026-09-12 | N/A | N/A |
+| Independent implementation review | N/A | Claude Opus 5 APPROVED Phase 2 after the notice idle-frame fix, 2026-09-12 | Pending, batch-wide |
 
 Discovery tooling notes: initial subagent requests used unsupported lowercase model IDs; retrying with exact display name `GPT-5.6 Terra (copilot)` succeeded. Two guessed source paths did not exist; confirmed source/search results, not those guesses, inform this plan. No repository changes resulted from those failed reads/calls. Existing tooling memory already documents exact model-name requirements.
 
 ## Final Recap
 
-Implementation and final verification remain pending. Discovery resolved all requested product choices; the revised plan passed independent review and the owner approved/committed it. Phase 1 is complete with a fresh passing unit baseline at 75.1%. Only documentation and ignored coverage reports changed during closeout. No Batch E finding is fixed yet; no new behavior or in-game outcome is claimed.
+Still pending: it is written once Phases 3 and 4 are done. Phases 1 and 2 are complete. Discovery resolved all requested product choices, the revised plan passed independent review and the owner committed it, and the effective-mode/two-player lifecycle is implemented, verified and independently approved in isolation. Findings §1.5 and §1.12 have working implementations; **no Batch E finding is marked fixed**, because the owner's review and commit protocol has not run and §1.11 is untouched. Guard propagation, explicit Custom display, the combined cross-phase flow, the coverage comparison over the whole batch and the batch-wide implementation review all remain outstanding. No in-game outcome is claimed.
 
 ## Deployment Plan
 
-No deployment is authorized or performed in this planning/baseline session. Implementation approval is recorded; after implementation and successful verification:
+No deployment is authorized or performed. Phase 2's code is written and verified but sits unstaged; the owner alone reviews, stages, commits and releases. After Phases 3 and 4 and their successful verification:
 
 1. Owner reviews the scoped changes, warnings and UI behavior; performs staging/commits and any release steps.
 2. Build/package through the existing platform workflow. No dependency installation, saved-schema migration or output-directory change is planned; Wire regeneration is build-time only if required.

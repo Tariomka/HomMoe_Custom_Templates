@@ -93,35 +93,41 @@ func (this *State) handleSaveState(path string) {
 }
 
 func (this *State) handleLoadState(path string) bool {
-	loaded, err := this.handler.LoadState(path, true)
+	loaded, err := this.handler.LoadState(path, false)
 	if err != nil {
 		this.SetStatus(fmt.Sprintf("Load failed: %v.", err), true)
 		return false
 	}
 
-	this.innerState.OverrideState(loaded.State)
+	validation := this.handler.ValidateEditorState(loaded.State, true)
+	outcome := this.innerState.OverrideStateFromLoad(loaded.State, validation.State)
 	this.currentPath = path
 	this.unsaved = false
 	this.clearGeneratedState()
-	if len(loaded.Warnings) > 0 {
-		this.SetStatus(
-			fmt.Sprintf("Loaded %s (adjusted: %s)", path, strings.Join(loaded.Warnings, "; ")),
-			false)
-		return true
+
+	this.pendingOutcome = outcome
+	if outcome.TournamentCountCorrected {
+		this.flagAsUnsaved()
 	}
 
-	this.SetStatus("Loaded "+path, false)
+	this.SetStatus(this.describeLoadedState(path, validation.Warnings), false)
 	return true
 }
 
-// getWorkingDirectory returns the directory a file dialog should open at: the
-// one holding the file currently being edited, so a second Load or Save To
-// lands where the user last worked, falling back to the process working
-// directory before anything has been opened or saved. Resolution goes through
-// the filesystem handler so the driver performs no path arithmetic of its own -
-// ResolveStartDirectory climbs from a file path to its containing directory and
-// always yields an existing one, so unlike the raw [os.Getwd] it never needs a
-// caller-side fallback.
+func (this *State) describeLoadedState(path string, warnings []string) string {
+	status := "Loaded " + path
+	if len(warnings) > 0 {
+		status = fmt.Sprintf("Loaded %s (adjusted: %s)", path, strings.Join(warnings, "; "))
+	}
+
+	notice := stateTransitionNotice(this.pendingOutcome)
+	if notice == "" {
+		return status
+	}
+
+	return status + " " + notice
+}
+
 func (this *State) getWorkingDirectory() string {
 	if this.currentPath != "" {
 		return this.fileSystem.ResolveStartDirectory(this.currentPath)

@@ -1,12 +1,13 @@
-# Carry-forward: Batch E Phase 1 complete, Phase 2 next
+# Carry-forward: Batch E Phase 2 complete, Phase 3 next
 
 Date: 2026-09-12.
 
 **Current authority:** the owner-approved [Batch E plan](plans/batch-e-effective-modes-and-guards.md).
-The owner committed it in `b9dd616` on `AD/modes_and_guard_propagation`, then asked to
-finish Phase 1 and update this handoff. Phase 1 is now complete; Phases 2-4 have not
-started. Product decisions and implementation-plan approval are settled. Do not repeat
-discovery or approval questions unless a concrete scope change is needed.
+The owner committed it in `b9dd616` on `AD/modes_and_guard_propagation`, asked to finish
+Phase 1, then asked to resume and finish **Phase 2**. Phase 2 is now complete, fully
+verified and independently approved; **Phases 3 and 4 have not started.** Product
+decisions and implementation-plan approval are settled. Do not repeat discovery,
+approval questions or any closed phase's work unless a concrete scope change is needed.
 
 **Supersession note.** Batches A/D, B and C remain fully closed: no revisit, separate
 re-verification or lookup of retired documents. Batch C's engine gate closed on the
@@ -18,37 +19,54 @@ later-scope decisions remain binding. Do not edit §8.
 
 ## 1. Session goal
 
-Discover Batch E, settle product questions, write/review the durable plan, then complete
-Phase 1 after the owner committed it. Latest instruction: "the plan is commited,
-proceed with finishing Phase 1 and update carry forward".
+Resume Batch E at Phase 2 and finish it: effective mode predicates, manual-snapshot
+invalidation, tournament player-count correction, load behavior, notice survival and
+the locked player slider, with tests in lockstep.
 
-**No production code, tests, snapshots or generated Wire changed.** Phase 1 closeout
-ran fresh unit coverage and regenerated ignored reports, then updated the plan and
-this handoff. Phase 2 implementation was deliberately not started.
+**Phase 2 is complete.** Implementation landed, every verification command passed, and
+an independent Claude Opus 5 implementation review approved it after one blocker was
+fixed. Phase 3 (guard propagation and explicit Custom display) was deliberately not
+started; this handoff exists because the session neared its message budget.
 
 ## 2. Fixes applied
 
-No application fixes yet. Review findings §1.5, §1.11 and §1.12 remain unimplemented.
+Findings **§1.5** (effective-mode invalidation) and **§1.12** (tournament player count and
+loading) now have working, verified implementations. **§1.11** (guard propagation and
+Custom display) is untouched and belongs to Phase 3. **No Batch E finding is marked
+fixed:** that waits on Phase 4 and the owner's own review and commit protocol.
 
-- [Batch E plan](plans/batch-e-effective-modes-and-guards.md): approved product contract,
-  implementation seams, tests, independent review and owner authorization recorded;
-  Phase 1 completed with fresh per-target coverage.
-- [This handoff](session-carry-forward.md): next-session entry point moved to Phase 2;
-  historical §8 retained unchanged.
+- Effective tournament and effective arena are now resolved booleans on the domain
+  state, and layout comparison judges those booleans instead of the checkbox/selector
+  fields behind them. A transition in either clears the whole manual snapshot before
+  anything - a generation attempt included - can observe the new state.
+- Tournament states are pinned to two players by the validator, in the correct fix
+  order, and the slider itself is locked and moved back rather than only its outgoing
+  value, so idle frames stop resubmitting a stale count.
+- Loading a tournament file with any other count corrects it, drops the incompatible
+  layout, warns, marks the document unsaved and re-arms Exit, without rewriting the file.
+- A notice about a correction the editor made on the user's behalf now survives the
+  automatic regeneration that follows it, and a failed generation keeps it for the retry.
 
 ## 3. Features added / changed
 
-### Approved Batch E behavior, not yet implemented
+### Implemented in Phase 2
 
 - Either effective tournament or effective arena boolean changing clears the entire
   manual snapshot and regenerates immediately. Warn on actual discard, mark dirty and
   re-arm Exit; no confirmation dialog. Alias-only changes preserve edits. Effective
   tournament is checkbox OR Tournament victory; effective arena is checkbox OR
-  FinalBattle (Guardian Arena in UI). Preserve existing selector reset behavior.
-- Clear during state update before generation can fail or consume the transition.
-  Validator count fixes do not silently own snapshot clearing; a domain operation
-  supplies the driver with an actual discard/correction outcome. Keep warnings visible
-  through automatic regeneration. No arena reconciliation or retrospective repair.
+  FinalBattle (Guardian Arena in UI). Existing selector reset behavior is preserved.
+- Clearing happens during state update, before generation can fail or consume the
+  transition. The validator's count fix does not own snapshot clearing; a domain
+  operation returns a discard/correction outcome that the driver acts on and shows.
+  Warnings stay visible through automatic regeneration. No arena reconciliation.
+- Effective tournament forces and locks two players. Turning it off leaves two, with no
+  previous-count memory. Invalid tournament loads (any count other than two) correct
+  to two, clear manual snapshots, warn, become unsaved and re-arm Exit. No file rewrite
+  until Save. Valid two-player loads retain edits; unrelated load policy is unchanged.
+
+### Approved Phase 3 behavior, not yet implemented
+
 - Actual neutral-quality changes recalculate every incident edge type. Match its old
   numeric value against the old stronger-endpoint table in order; carry that named
   preset to the new stronger-endpoint table. Default is a named preset too. GuardZone
@@ -57,10 +75,6 @@ No application fixes yet. Review findings §1.5, §1.11 and §1.12 remain unimpl
   presets, even after reload. Keep existing Plastic/Bronze tables, including the
   generated Plastic 10,000 value remaining Custom. No hidden preset metadata. Preserve
   unrelated edges, other fields, source ownership and pending Apply/Cancel isolation.
-- Effective tournament forces/locks two players. Turning it off leaves two, with no
-  previous-count memory. Invalid tournament loads (any count other than two) correct
-  to two, clear manual snapshots, warn, become unsaved and re-arm Exit. No file rewrite
-  until Save. Valid two-player loads retain edits; unrelated load policy is unchanged.
 
 ### Settled behavior to preserve
 
@@ -90,60 +104,134 @@ No application fixes yet. Review findings §1.5, §1.11 and §1.12 remain unimpl
 
 ## 4. File modifications
 
-After the owner's plan commit, this closeout edited only:
+All Phase 2 work is **unstaged or untracked**. Nothing was staged or committed by the
+assistant.
 
-- [Batch E plan](plans/batch-e-effective-modes-and-guards.md): Phase 1 complete, branch/
-  commit evidence, measured total and target-function baseline, Phase 2 next.
-- [Handoff](session-carry-forward.md): this resumable record, with §8 preserved verbatim.
+New production files:
+
+- [internal/models/editor_state_model/modeTransitionOutcome.go](../internal/models/editor_state_model/modeTransitionOutcome.go):
+  `ModeTransitionOutcome` with `ManualEditsDiscarded`, `TournamentCountCorrected` and
+  `MergedWith`. Transient, never persisted.
+- [app/gui/drivers/stateNotices.go](../app/gui/drivers/stateNotices.go):
+  `stateTransitionNotice`, `noteStateTransition`, `takePendingNotice`.
+
+Changed production files:
+
+- [internal/models/editor_state_model/editorState.go](../internal/models/editor_state_model/editorState.go):
+  `IsEffectiveTournament`, `IsEffectiveGladiatorArena`, `ApplyModeTransition`, the
+  `TournamentPlayerCount` constant, private `effectiveModesChanged`/
+  `tournamentCountCorrected`, and `LayoutDefiningOptionsChanged` comparing both
+  effective booleans.
+- [internal/validators/editorStateValidator.go](../internal/validators/editorStateValidator.go):
+  `validateTournamentPlayerCount`, appended last in `Validate` so the range fix cannot
+  clamp back over two.
+- [app/gui/models/editorState.go](../app/gui/models/editorState.go): `UpdateCurrentState`
+  applies the transition to the validated clone and returns the outcome; new
+  `OverrideStateFromLoad` compares raw against corrected load state.
+- [app/gui/drivers/state.go](../app/gui/drivers/state.go): `pendingOutcome` field,
+  `UpdateState` flagging unsaved on discard/correction independently of
+  `WasStateChanged`, `Reset` clearing the pending notice.
+- [app/gui/drivers/stateFiles.go](../app/gui/drivers/stateFiles.go): `handleLoadState`
+  loads with `fixIssues=false`, then validates with fixes and uses only those warnings;
+  new `describeLoadedState`.
+- [app/gui/drivers/stateGeneration.go](../app/gui/drivers/stateGeneration.go):
+  `handleGenerateTemplate` appends the pending notice to a **successful** status only.
+- [app/gui/panels/generalPanel.go](../app/gui/panels/generalPanel.go):
+  `getAllowedPlayerCount`, `isPlayerCountLocked`, `getPlayerCountRowWidget` rendering the
+  slider row through `gtx.Disabled()`; `LoadFromState`/`SaveToState` pin the widget value.
+
+Documentation, the only tracked-and-intended-for-review docs touched in this closeout:
+
+- [Batch E plan](plans/batch-e-effective-modes-and-guards.md): Phase 2 marked complete
+  with its verification results and summary, phase-specific ledger, Phase 3/4 untouched.
+- [Handoff](session-carry-forward.md): this record, with §8 preserved verbatim.
 - Ignored [coverage.txt](../coverage.txt), [coverage.html](../coverage.html) and
-  [lcov.info](../lcov.info): regenerated by the existing coverage task.
+  [lcov.info](../lcov.info): regenerated by the coverage run.
 
-No Go files, tests, snapshots, goldens, assets, dependencies, generated Wire, protected
-trees or surviving review were edited. No additional memory/summary files were created.
+No protected data, template schema, registry, output path, opaque raster path, generated
+Wire, topology code, dependencies, snapshots or goldens were touched. No extra memory or
+summary files were created.
 
 ## 5. Tests added or updated
 
-No tests added or modified. Fresh Batch E pre-change evidence, **Windows/amd64,
-Go 1.27.0, 2026-09-12, source at `b9dd616`**, with empty `GOFLAGS`:
+New unit test folders, mirroring their implementation files:
 
-- Existing coverage task: `go test -count=1 '-coverpkg=./internal/...,./app/...' '-coverprofile=coverage.txt' ./test/unit/...`
-  **PASS, 186 unit packages**, followed by HTML/LCOV generation.
-- `go tool cover '-func=coverage.txt'`: **PASS, 75.1% total statements**. This is the
-  measured Batch E baseline, not a copied historical total. Plan Phase 1 records the
-  target-function table and profile SHA-256.
-- Target domain/model/validator/handler functions: 100.0% statement coverage. Existing
-  driver `handleGenerateTemplate`: 81.0%; load callback and targeted dialog functions:
-  0.0% in unit coverage, requiring planned integration tests. General panel has no
-  entries in this profile, not a measured 0% or 100%. These numbers do not prove the
-  missing Batch E contracts or authorize fake unit seams.
-- The full `go test ./test/...` suite was **not rerun** in this closeout. Its last
-  recorded result remains PASS on 2026-09-11 from the prior handoff, not current-session
-  evidence. Build, tagged integration/GUI, lint, layout checker, Wire generation and
-  Linux execution likewise were not run in this Phase 1 closeout.
-- Independent Claude Opus 5 **plan** review: revised plan APPROVED on 2026-09-12.
-  No Batch E implementation exists to review yet.
+- `test/unit/internal/models/editor_state_model/editorState/`:
+  [isEffectiveTournament_test.go](../test/unit/internal/models/editor_state_model/editorState/isEffectiveTournament_test.go),
+  [isEffectiveGladiatorArena_test.go](../test/unit/internal/models/editor_state_model/editorState/isEffectiveGladiatorArena_test.go)
+  (each including an equivalence test against the config predicates) and
+  [applyModeTransition_test.go](../test/unit/internal/models/editor_state_model/editorState/applyModeTransition_test.go)
+  (both directions, zone-only/connection-only snapshots, two-player tournament entry,
+  alias-only representation changes, load correction, input isolation).
+- [test/unit/internal/models/editor_state_model/modeTransitionOutcome/mergedWith_test.go](../test/unit/internal/models/editor_state_model/modeTransitionOutcome/mergedWith_test.go)
+  — the new package that takes the unit suite from 186 to **187** packages.
+- [test/unit/app/gui/models/editorState/overrideStateFromLoad_test.go](../test/unit/app/gui/models/editorState/overrideStateFromLoad_test.go).
 
-Before implementation, check that source/toolchain/coverage inputs still match this
-baseline. Refresh only if inputs changed or evidence is unavailable. No separate
-closed-batch verification is requested. No assistant in-game or native Linux/Steam
-Deck execution is claimed; the historical owner report covers road values only.
+Extended unit suites: layout comparison, both regeneration decisions,
+`UpdateCurrentState`, driver `UpdateState`, `EditorStateValidator.Validate` and both
+`stateHandler` entry points.
+
+New tagged integration files (`//go:build integration_test`, no global tags):
+
+- [test/integration/effectiveModes_integration_test.go](../test/integration/effectiveModes_integration_test.go):
+  invalid/valid tournament loads under both aliases, discard, dirty/Exit, unchanged file
+  bytes, save/reload staying clean at two, notice survival through the first
+  regeneration, document isolation, the load→failure→idle→save→idle→retry ordering
+  including the error flag, failed-load atomicity, and two-player zones/labels/rules
+  through the application handler.
+- [test/integration/generalPanelTournament_integration_test.go](../test/integration/generalPanelTournament_integration_test.go):
+  real slider drags, both aliases locking the control, unchecking the rule while the
+  victory selector still activates tournament, leaving tournament, and idle frames
+  neither resubmitting a stale count nor re-announcing the correction.
+
+Helpers gained `AppRunner.SetStatus` plus `DragPlayerCountToMaximum`,
+`SelectVictoryCondition` and `ToggleConditionRule` on the General tab handler, with
+matching coordinates. No fake unit seams and no new `*_testexports.go` were added.
+
+**Final verification, Windows/amd64, Go 1.27.0, empty `GOFLAGS`, 2026-09-12, all after
+the review fix:**
+
+- `go build ./...` — **PASS**.
+- `go test ./test/unit/... -count=1` — **PASS, 187 packages**.
+- `go test ./test/...` — **PASS**.
+- `go test -tags='integration_test,gui' ./test/integration/...` — **PASS**, root and GUI.
+- `go run ./cmd/testlayoutcheck .` — **PASS**.
+- Coverage equivalent of the existing task, then `go tool cover '-func=coverage.txt'` —
+  **PASS at 75.1%, unchanged from the baseline**; HTML/LCOV refreshed. Profile SHA-256
+  `34DD607508B5BE7F21C8BC466580C9722AAD061C6E273E0D338013B52C7C7187`.
+- `golangci-lint-v2 run ./... --issues-exit-code=1` — **PASS, zero issues**, after
+  reordering the two new unexported `EditorState` methods (`funcorder`) and formatting an
+  explicit `gofmt -l` list. No auto-fix task, no bulk rewrite.
+- Every new domain predicate, the transition, `MergedWith`, the validator helper, the GUI
+  model update/load methods and the driver notice functions report **100.0%** statement
+  coverage. The load driver callbacks stay **0.0%** in the unit profile and are covered by
+  integration instead; the General panel has no entries in that profile and is proven by
+  integration frames only.
+- **Native Linux: UNRUN.** WSL Ubuntu exists but has no `go` and no `pkg-config`; nothing
+  was installed. Do not claim a Linux run.
+- Independent **Claude Opus 5 implementation review of Phase 2: APPROVED**, after the
+  notice idle-frame blocker below was fixed and retested.
 
 ## 6. Git status snapshot
 
-Branch **`AD/modes_and_guard_propagation`**, HEAD **`b9dd616` (`Init`)**. Read-only plan
-history confirmed that same commit contains the approved plan, with no plan diff at
-the start of Phase 1 closeout. The owner created/committed the branch; the agent did
-not switch branches or commit anything.
+Branch **`AD/modes_and_guard_propagation`**. Session start: HEAD
+**`8f852be` (`docs`)**, clean worktree, nothing staged, same baseline inputs as
+`b9dd616`.
 
-Initial worktree: clean. Initial staged paths: none. Final status has exactly two
-unstaged modified files: the plan and handoff listed in §4; coverage reports are ignored.
-No source changes are inherited. The complete `git ls-files --stage` snapshot was
-compared before/after, alongside the original UTF-8 §8 text.
+**During the session the owner committed `892cb19` ("Owner backlog finding"), touching
+only `.agent/backlog/owner_findings.md`.** That document was deliberately not read,
+reviewed or modified, and it must stay that way unless the owner asks. Because of it,
+the full `git ls-files --stage` fingerprint differs from the session-start snapshot at
+exactly that one path: **do not claim the index is unchanged.** The staged diff is
+currently empty, and the assistant performed no Git mutation of any kind - no staging,
+unstaging, commit, push, stash, branch switch or worktree change. The owner's change is
+preserved as found.
 
-No staging, unstaging, commit, push, stash, branch or worktree mutation was performed.
-No tooling was installed. Final checks PASS: entire index unchanged; §8 exact text
-and line endings unchanged; only these two tracked documents modified; local links
-resolve; `git diff --check` clean; both documents have no editor diagnostics.
+Everything from Phase 2 is unstaged or untracked: nine production/test-helper files
+modified, two new production files, two new integration files and five new/extended unit
+test paths, plus the two documents in §4. `git diff --check` is clean and neither
+document has editor diagnostics. External temporary golden-diff module diagnostics were
+observed, are unrelated to this repository and were not touched.
 
 ## 7. Rejections / things the user declined
 
@@ -172,6 +260,15 @@ resolve; `git diff --check` clean; both documents have no editor diagnostics.
   Default matching. Revised plan was approved; do not undo those safeguards.
 - Discovery initially used unsupported lowercase model names and two nonexistent guessed
   paths; corrected display names/searches succeeded. These failures changed no files.
+- Phase 2's independent review **rejected the first implementation**: a no-op
+  `UpdateState` merged an empty outcome and rewrote the status, wiping a generation error
+  or a just-saved message on the next idle frame. `noteStateTransition` now returns
+  before merging when the incoming outcome is empty, and the load→failure→idle→save→
+  idle→retry sequence is pinned by tests including the error flag. Do not undo it.
+- Tooling friction worth knowing, not work to redo: one patch attempt was rejected for a
+  duplicate path and was corrected on the retry; delegated exploration returned silently
+  and its results were re-verified by hand against the source. No files were harmed by
+  either, and nothing needs replaying.
 
 ## 8. Open questions and confirmed later scope
 
@@ -211,60 +308,72 @@ Other pending decisions: arena/manual invalidation and effective-mode aliases (�
 
 ## 9. Next recommended actions
 
-**No unresolved Batch E product questions or Phase 1 blockers.** Written implementation
-approval is recorded; the owner committed the plan. Findings §1.5/§1.11/§1.12 remain
-open until implementation, verification and owner commit. This phase did not fix them.
+**No unresolved Batch E product questions and no Phase 2 blockers.** Phase 2 is complete,
+verified and independently approved. Findings §1.5/§1.12 have implementations but stay
+open until Phase 4 and the owner's commit protocol; §1.11 is still unimplemented.
 
 1. Read [AGENTS.md](../AGENTS.md), this handoff, the approved
-  [Batch E plan](plans/batch-e-effective-modes-and-guards.md) and relevant findings in
-  the [surviving review](backlog/review-gpt-6-astra-09-07.md).
-2. Inspect current worktree/index read-only, respecting any owner changes made since
-  this snapshot. Confirm source/toolchain still matches the recorded 75.1% baseline.
-  Do not rerun discovery/plan review or refresh unchanged evidence without cause.
-3. Begin **Phase 2: effective modes and two-player state lifecycle**. Mark it In progress
-  before editing. Read targets and callers; implement/tests together. Invalidation
-  occurs before generation; count correction alone must not silently discard edits.
-  Load reads once through the existing non-fixing path, followed by fixing validation
-  and a model-based correction outcome; warnings must survive the next frame.
-4. Complete/verify Phase 2 and record its summary before starting Phase 3 guard
-  propagation/Custom UI. Preserve pointer ownership and Apply/Cancel boundaries.
-  Phase 4 requires combined verification, coverage comparison and independent review.
-5. Do not pull in Batch K, GUI/PNG geometry, DTO cleanup, schema or package work. Only
-  narrow functional quality-request/response plumbing is approved. Regenerate Wire
-  when constructor/provider changes require it, never by hand.
-6. Preserve §8 verbatim; apply the supersession note above. Carry the plan's remaining
-  work forward rather than marking the batch complete after one phase.
+  [Batch E plan](plans/batch-e-effective-modes-and-guards.md) and finding §1.11 in the
+  [surviving review](backlog/review-gpt-6-astra-09-07.md).
+2. Inspect the worktree/index read-only. Expect Phase 2's unstaged and untracked changes
+  plus the owner's `892cb19`; leave all of it alone. Do not re-verify, re-review or
+  re-run Phase 2, and do not touch `.agent/backlog/owner_findings.md`.
+3. Begin **Phase 3: quality propagation and explicit Custom display**. Mark it In
+  progress before editing. Extend the quality-edit request narrowly with zone/connection
+  context and reuse the existing mutation response; update interfaces, facade, mocks and
+  callers together. Capture old effective quality and its preset before reprofile,
+  resolve the new stronger endpoint after, and change only matching incident guard
+  values on an actual quality change.
+4. Consume the mutation with the index-preserving pointer replacement the plan
+  specifies: capture the selected working index, rebuild pointers from returned values,
+  re-point selected by index, set `syncedFor = nil` and `geometryDirty = true`, and
+  reassign zones only after the last use of the old zone pointer. Add explicit Custom as
+  a nonnumeric item appended last, which must not change the guard number when chosen.
+5. Regenerate Wire through its task if a constructor changes, never by hand. Then run
+  **Phase 4**: combined flow, full suites, coverage comparison against 75.1%, layout
+  checker, report-only lint, and the batch-wide independent implementation review.
+6. Do not pull in Batch K, GUI/PNG geometry, DTO cleanup, schema or package work. Only
+  the narrow quality request/response plumbing is approved.
+7. Preserve §8 verbatim; apply the supersession note above. The batch is not complete
+  until Phases 3 and 4 are done and the owner accepts.
 
-**Deployment plan.** Nothing deployed. Phase 1 is a pre-change baseline and documentation
-closeout. Future implementation follows the approved plan's verification/deployment
-sections; the owner alone stages, commits and releases. No schema migration, dependency
-installation or output-directory change is planned. Native Linux/Steam Deck execution
-remains unmeasured in this session.
+**Deployment plan.** Nothing deployed. Phase 2's code exists but is unstaged and awaits
+owner review; the owner alone stages, commits and releases. No schema migration,
+dependency installation or output-directory change is planned. Native Linux/Steam Deck
+execution remains unmeasured.
 
 ## 10. Carry-forward prompt
 
 > Read [AGENTS.md](../AGENTS.md) first, then [this handoff](session-carry-forward.md),
-> the approved [Batch E plan](plans/batch-e-effective-modes-and-guards.md) and relevant
-> findings §1.5/§1.11/§1.12 in the
-> [surviving review](backlog/review-gpt-6-astra-09-07.md).
+> the approved [Batch E plan](plans/batch-e-effective-modes-and-guards.md) and finding
+> §1.11 in the [surviving review](backlog/review-gpt-6-astra-09-07.md).
 >
-> **Resume Batch E at Phase 2.** Scope and written plan are owner-approved; the plan
-> was committed at `b9dd616` on `AD/modes_and_guard_propagation`. Phase 1 is complete:
-> initially clean worktree/index, fresh 186-package unit PASS, Windows Go 1.27.0,
-> total statement coverage 75.1%, with target baselines in the plan. No Batch E code
-> has been implemented. Check current source/toolchain and inherited changes read-only
-> before using that baseline; refresh only if inputs changed or evidence is unavailable.
-> Do not repeat settled questions or the approved plan review. Mark Phase 2 In progress,
-> implement its tests and behavior, verify it, and record its summary before moving on.
+> **Resume Batch E at Phase 3.** Scope and plan are owner-approved and committed at
+> `b9dd616` on `AD/modes_and_guard_propagation`. **Phases 1 and 2 are complete**: the
+> baseline is 187-package unit PASS at 75.1% total statement coverage, Windows Go
+> 1.27.0, and Phase 2 passed build, unit, default, tagged integration/GUI, layout
+> checker and zero-issue report-only lint, then an independent Claude Opus 5 review.
+> Do not re-verify, re-review or redo any closed phase, and do not repeat settled
+> questions. Mark Phase 3 In progress, implement it with tests in lockstep, verify it
+> and record its summary before Phase 4.
 >
-> **Settled scope:** effective tournament/arena transitions clear the full manual
-> snapshot before generation, warn and dirty/re-arm Exit; alias-only changes preserve
-> edits. No arena reconciliation. Quality changes carry exact-matched old-table guard
-> presets to the new stronger-endpoint table on all incident edge types; unmatched
-> numbers stay Custom. Keep Plastic/Bronze tables unchanged. Tournament forces/locks
-> two players and off stays two; invalid tournament loads correct to two, discard
-> snapshots, warn and become unsaved without rewriting the file. Valid two-player
-> loads retain edits. Preserve warnings through regeneration and GUI pointer ownership.
+> **Inherited state:** Phase 2's changes are unstaged/untracked - new
+> `internal/models/editor_state_model/modeTransitionOutcome.go` and
+> `app/gui/drivers/stateNotices.go`, changes across the domain editor state, validator,
+> GUI state model, state/load/generation drivers and the General panel, plus new unit
+> folders and two tagged integration files. The owner committed `892cb19` mid-session
+> touching only `.agent/backlog/owner_findings.md`; do not read, review or modify it,
+> and do not claim the index is unchanged. Leave every owner change alone.
+>
+> **Phase 3 scope:** an actual neutral-quality change recalculates incident guards on
+> every edge type, matching the old numeric value in order against the old
+> stronger-endpoint table and carrying that named preset - Default included - to the new
+> stronger-endpoint table. GuardZone does not pick the table. Same-quality and
+> castle-only edits recalculate nothing. Unmatched numbers stay put and display Custom;
+> exact typed matches are presets, even after reload. Keep the Plastic/Bronze tables as
+> they are, generated Plastic 10,000 included. Preserve pointer ownership, connection
+> order and Apply/Cancel isolation. Phase 4 then does combined verification, coverage
+> comparison and the batch-wide implementation review.
 >
 > Batches A/D, B and C are closed, with Batch C's road engine acceptance reported by
 > the owner. Do not retrieve retired documents or reopen/re-verify those batches.

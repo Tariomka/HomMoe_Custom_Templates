@@ -108,6 +108,9 @@ func (this *State) handleGenerateTemplate(createStateSnapshotOnFailure bool) {
 	if manualEdits.ReapplyWithCastleChanges != nil {
 		status += " (Manual zone edits reapplied.)"
 	}
+	if notice := this.takePendingNotice(); notice != "" {
+		status += " " + notice
+	}
 	status += fmt.Sprintf("\n%s", time.Now().Format("15:04:05"))
 	this.SetStatus(status, false)
 }

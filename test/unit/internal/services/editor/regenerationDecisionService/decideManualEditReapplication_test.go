@@ -108,6 +108,36 @@ func TestWhenCastleOptionsUnchangedSinceGeneration_ReportsNoCastleChange(t *test
 	assert.Equal(t, &editor_state_model.CastleSettingChanges{}, decision.ReapplyWithCastleChanges)
 }
 
+// Manual edits that survived into the generation of an effective-mode change
+// belong to the map that mode replaced, so they are not reapplied.
+func TestWhenManualEditsExistButTournamentModeWasEntered_DoesNotReapply(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	service := editor.NewRegenerationDecisionService()
+	current := tournamentState()
+	current.ManualZones = manualZones()
+
+	// Act
+	decision := service.DecideManualEditReapplication(defaultState(), current)
+
+	// Assert
+	assert.Nil(t, decision.ReapplyWithCastleChanges)
+}
+
+func TestWhenManualEditsExistButArenaModeWasEntered_DoesNotReapply(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	service := editor.NewRegenerationDecisionService()
+	current := arenaState()
+	current.ManualZones = manualZones()
+
+	// Act
+	decision := service.DecideManualEditReapplication(defaultState(), current)
+
+	// Assert
+	assert.Nil(t, decision.ReapplyWithCastleChanges)
+}
+
 func manualZones() []template_model.Zone {
 	return []template_model.Zone{{Name: gofakeit.Word()}}
 }

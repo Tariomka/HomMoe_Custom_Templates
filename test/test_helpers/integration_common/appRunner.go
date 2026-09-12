@@ -382,6 +382,15 @@ func (this *AppRunner) Status() (string, bool) {
 	return this.App.GetStateDriver().GetStatus()
 }
 
+// SetStatus overwrites the status message, so a test can tell a message the
+// editor writes later apart from the one it is already showing (lock-guarded).
+func (this *AppRunner) SetStatus(message string, isError bool) {
+	this.tb.Helper()
+	this.mu.Lock()
+	this.App.GetStateDriver().SetStatus(message, isError)
+	this.mu.Unlock()
+}
+
 // OutputPath returns the directory templates would be exported to, which is
 // empty until detection or the folder picker supplies one (lock-guarded).
 func (this *AppRunner) OutputPath() string {

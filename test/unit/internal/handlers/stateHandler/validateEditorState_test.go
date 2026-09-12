@@ -5,6 +5,8 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
+	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/Tariomka/hommoe_custom_templates/internal/validators"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
@@ -185,6 +187,77 @@ func TestWhenStateIsValidated_LeavesTheCallersStateUntouched(t *testing.T) {
 
 	// Assert
 	assert.Equal(t, expected, tierCountsOf(state))
+}
+
+func TestWhenTournamentPlayerCountIsFixed_ReturnsTwoPlayers(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	state := editor_state_model.NewDefaultEditorStateModel()
+	state.Tournament = true
+	state.PlayerCount = gofakeit.IntRange(3, 8)
+	handler := handlers.NewStateHandler(
+		&test_helpers.FileServiceMock{},
+		validators.NewEditorStateValidator())
+
+	// Act
+	validation := handler.ValidateEditorState(state, true)
+
+	// Assert
+	assert.Equal(t, 2, validation.State.PlayerCount)
+}
+
+func TestWhenTournamentPlayerCountIsFixed_ReportsTheCorrection(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	state := editor_state_model.NewDefaultEditorStateModel()
+	state.VictoryCondition = registry.GetWinningConditionValues().Tournament
+	state.PlayerCount = 6
+	handler := handlers.NewStateHandler(
+		&test_helpers.FileServiceMock{},
+		validators.NewEditorStateValidator())
+
+	// Act
+	validation := handler.ValidateEditorState(state, true)
+
+	// Assert
+	assert.Contains(t, validation.Warnings, "playerCount 6 is not the 2 players tournament mode requires")
+}
+
+// Correcting the count is the validator's whole job here; the manual layout is
+// dropped by the mode transition the caller applies afterwards.
+func TestWhenTournamentPlayerCountIsFixed_ManualEditsAreLeftAlone(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	state := editor_state_model.NewDefaultEditorStateModel()
+	state.Tournament = true
+	state.PlayerCount = 6
+	state.ManualZones = []template_model.Zone{{Name: "Zone A"}}
+	handler := handlers.NewStateHandler(
+		&test_helpers.FileServiceMock{},
+		validators.NewEditorStateValidator())
+
+	// Act
+	validation := handler.ValidateEditorState(state, true)
+
+	// Assert
+	assert.True(t, validation.State.HasManualEdits())
+}
+
+func TestWhenTournamentPlayerCountIsNotFixed_ReturnsTheRequestedCount(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	state := editor_state_model.NewDefaultEditorStateModel()
+	state.Tournament = true
+	state.PlayerCount = 6
+	handler := handlers.NewStateHandler(
+		&test_helpers.FileServiceMock{},
+		validators.NewEditorStateValidator())
+
+	// Act
+	validation := handler.ValidateEditorState(state, false)
+
+	// Assert
+	assert.Equal(t, 6, validation.State.PlayerCount)
 }
 
 // advancedTierCountsState returns a state whose eight per-tier neutral counts

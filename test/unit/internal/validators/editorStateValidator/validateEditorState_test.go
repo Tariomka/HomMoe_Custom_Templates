@@ -6,6 +6,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
+	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/Tariomka/hommoe_custom_templates/internal/validators"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
@@ -331,6 +332,133 @@ func TestWhenVictoryConditionIsUnknown_ReturnsIssue(t *testing.T) {
 	// Assert
 	assert.Contains(t, issueMessages(issues),
 		`victoryCondition "NotARealCondition" is not a known victory condition`)
+}
+
+// The tournament rules only run at two players, whichever alias switches them
+// on.
+func TestWhenTournamentPlayerCountIsWrong_ReturnsIssue(t *testing.T) {
+	t.Parallel()
+	testCases := []struct {
+		subtestName string
+		mutate      func(state *editor_state_model.EditorState)
+	}{
+		{
+			"WhenTheTournamentCheckboxIsSet_ReturnsIssue",
+			func(state *editor_state_model.EditorState) { state.Tournament = true },
+		},
+		{
+			"WhenTheTournamentVictoryConditionIsChosen_ReturnsIssue",
+			func(state *editor_state_model.EditorState) {
+				state.VictoryCondition = registry.GetWinningConditionValues().Tournament
+			},
+		},
+	}
+	for _, testCase := range testCases {
+		for playerCount := 3; playerCount <= 8; playerCount++ {
+			t.Run(fmt.Sprintf("%s_At%dPlayers", testCase.subtestName, playerCount), func(t *testing.T) {
+				t.Parallel()
+				// Arrange
+				state := editor_state_model.NewDefaultEditorStateModel()
+				testCase.mutate(&state)
+				state.PlayerCount = playerCount
+
+				// Act
+				issues := validate(&state)
+
+				// Assert
+				assert.Contains(t, issueMessages(issues),
+					fmt.Sprintf("playerCount %d is not the 2 players tournament mode requires", playerCount))
+			})
+		}
+	}
+}
+
+func TestWhenTournamentPlayerCountIsTwo_ReturnsNoIssue(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	state := editor_state_model.NewDefaultEditorStateModel()
+	state.Tournament = true
+	state.PlayerCount = 2
+
+	// Act
+	issues := validate(&state)
+
+	// Assert
+	assert.Empty(t, issues)
+}
+
+func TestWhenPlayerCountIsWrongWithoutTournament_ReturnsNoTournamentIssue(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	state := editor_state_model.NewDefaultEditorStateModel()
+	state.PlayerCount = gofakeit.Number(3, 8)
+
+	// Act
+	issues := validate(&state)
+
+	// Assert
+	assert.Empty(t, issues)
+}
+
+func TestWhenTournamentPlayerCountIsWrong_FixCorrectsToTwo(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	state := editor_state_model.NewDefaultEditorStateModel()
+	state.Tournament = true
+	state.PlayerCount = gofakeit.Number(3, 8)
+
+	// Act
+	for _, issue := range validate(&state) {
+		issue.Fix(&state)
+	}
+
+	// Assert
+	assert.Equal(t, 2, state.PlayerCount)
+}
+
+// The range fix runs first and would otherwise clamp an absurd count to eight,
+// so the tournament correction has to have the last word.
+func TestWhenTournamentPlayerCountIsAlsoOutOfRange_FixStillCorrectsToTwo(t *testing.T) {
+	t.Parallel()
+	testCases := []struct {
+		subtestName string
+		playerCount int
+	}{
+		{"WhenTheCountIsFarAboveTheRange_FixCorrectsToTwo", gofakeit.Number(9, 1000)},
+		{"WhenTheCountIsBelowTheRange_FixCorrectsToTwo", gofakeit.Number(-1000, 1)},
+	}
+	for _, testCase := range testCases {
+		t.Run(testCase.subtestName, func(t *testing.T) {
+			t.Parallel()
+			// Arrange
+			state := editor_state_model.NewDefaultEditorStateModel()
+			state.VictoryCondition = registry.GetWinningConditionValues().Tournament
+			state.PlayerCount = testCase.playerCount
+
+			// Act
+			for _, issue := range validate(&state) {
+				issue.Fix(&state)
+			}
+
+			// Assert
+			assert.Equal(t, 2, state.PlayerCount)
+		})
+	}
+}
+
+func TestWhenTournamentPlayerCountIsWrong_ValidationDoesNotModifyState(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	state := editor_state_model.NewDefaultEditorStateModel()
+	state.Tournament = true
+	state.PlayerCount = gofakeit.Number(3, 8)
+	original := state
+
+	// Act
+	validate(&state)
+
+	// Assert
+	assert.Equal(t, original, state)
 }
 
 type countFieldCase struct {
