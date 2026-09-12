@@ -137,3 +137,9 @@ Check all of the places where `data.Vec2` is used and update the code to use Vec
 of making calculations manually, like `positionAngle` and `FindOpenPosition`.
 
 ---
+
+## New Backlog items
+
+Need to check this repo [Olden Era Maps](https://github.com/embrisa/OldenEraMaps/tree/main) to
+import exact or similar template validation system with details listed for users to understand
+in a separate (forth) `Validation` tab.
