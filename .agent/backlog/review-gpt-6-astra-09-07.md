@@ -175,7 +175,18 @@ evidence and original suggested fix below are superseded by this approved contra
 
 **Owner decision.** Define `UpdateTemplate` behavior when its optional `EditorState` is nil; do not guess a default that destroys imported roads.
 
-### 1.5 🔴 Tournament/arena changes can be overwritten by stale manual snapshots
+### 1.5 ✅ FIXED — Tournament/arena changes can be overwritten by stale manual snapshots
+
+**Progress (2026-09-12).** Owner-committed Batch E implementation (`1b4658c`)
+and final combined-flow verification (`2062932`) are complete and independently
+approved. Effective tournament/arena transitions clear the entire manual snapshot
+before generation, warn on actual discard, mark dirty and re-arm Exit; alias-only
+changes retain edits. No arena reconciliation or unrelated victory invalidation.
+Real-input tests prove an applied quality edit is discarded on mode change, the new
+arena graph survives and the warning remains visible after regeneration. Windows
+build/unit/default/integration/GUI/layout/lint gates passed. Final coverage 74.9%
+is the owner's accepted GUI-only decrease from 75.1%; native Linux was unavailable,
+and no Batch E in-game result is claimed.
 
 **Evidence.** [LayoutDefiningOptionsChanged](../../internal/models/editor_state_model/editorState.go#L98-L106) compares players, topology, roads, portals and zone counts, but not `Tournament`, `VictoryCondition`, or `GladiatorArena`. [TopologyProvider](../../internal/services/template_generator/providers/topologyProvider.go#L24-L30) switches the whole graph for tournament mode. [Generate](../../internal/services/template_generator/templateGenerator.go#L88-L91) places the arena before returning; [UpdateTemplate](../../internal/handlers/templateHandler.go#L83-L90) later replaces the variant zones/connections without reapplying that placement. [DecideManualEditReapplication](../../internal/services/editor/regenerationDecisionService.go#L72-L91) relies on the incomplete predicate.
 
@@ -283,7 +294,18 @@ are 100% covered. Final independent review approved; owner engine acceptance is 
 
 **Owner decision.** Distinguish generated foothold policy from imported/custom roads. Coordinate with §1.4 rather than adding a second inconsistent filter.
 
-### 1.11 🟠 Neutral-quality edits cannot update incident connection guard presets
+### 1.11 ✅ FIXED — Neutral-quality edits cannot update incident connection guard presets
+
+**Progress (2026-09-12).** Owner commits `1b4658c` and `2062932` deliver and
+verify cloned zone-plus-connection quality edits. Exact numeric matches carry the
+ordered named preset, including Default, from the old stronger-endpoint table to
+the new one. Same-quality/castle-only edits and unmatched Custom values retain
+their numbers; Plastic 10,000 deliberately remains Custom. All incident edge types,
+road tri-states, unrelated fields and source ownership are preserved. The dialog
+rebinds working pointers and infers explicit Custom/preset display after typing,
+reselect, reopen and save/load, with Apply/Cancel isolation. Dedicated service,
+handler, persistence and real-input GUI tests pass; new service/handler functions
+are 100% statement-covered. Batch verification and caveats are recorded under §1.5.
 
 **Evidence.** [ApplyZoneEditorQuality](../../internal/handlers/zoneEditorHandler.go#L76-L83) receives/returns one zone and calls `ApplyNeutralZoneQuality` without any connections. [service](../../internal/services/connection_editor/zoneEditorService.go#L193-L226) changes zone pools, values, castles, and roads, not incident connection guards. The owner explicitly requested preservation of the selected preset tier while recomputing its value.
 
@@ -293,7 +315,17 @@ are 100% covered. Final independent review approved; owner engine acceptance is 
 
 **Owner decision.** Confirm custom guard-value and preset identity behavior; do not add fields to protected connections.
 
-### 1.12 🟠 Tournament remains selectable with more than two players
+### 1.12 ✅ FIXED — Tournament remains selectable with more than two players
+
+**Progress (2026-09-12).** Owner commits `1b4658c` and `2062932` complete
+two-player enforcement for both effective tournament aliases at editor validation
+and application generation. The slider is locked at two; leaving tournament keeps
+two with no remembered count. Invalid tournament loads correct the count, discard
+incompatible snapshots, warn and become unsaved without rewriting the file until
+Save. Valid two-player loads retain edits; failed loads remain atomic. Unit and
+real-input tests cover alias transitions, idle frames, correction/regeneration,
+save/reload and notice survival through failure/retry. Direct GeneratorConfig and
+topology fallback behavior remain unchanged. Verification caveats are under §1.5.
 
 **Evidence.** [Players control/writeback](../../app/gui/panels/generalPanel.go#L150-L195) always permits 2–8. [TopologyProvider](../../internal/services/template_generator/providers/topologyProvider.go#L24-L30) only uses tournament topology when `configuration.IsTournamentMode() && len(playerLabels) == 2`; [game rules](../../internal/services/template_generator/providers/gameRulesProvider.go#L114-L117) enable tournament independently of player count.
 
@@ -575,7 +607,7 @@ The configured run includes existing exclusions (protected registry duplication,
 | B: PNG and value contract | §1.3, §1.7 | Independent small fixes with public-API pixel and tournament-value tests. Confirm game's omitted-false semantics. |
 | C: road and graph invariants | §1.4, §1.6, §1.10 | Complete: owner-committed code, automated verification/review and owner Steam Deck engine acceptance, 2026-09-11. No reimplementation or further closeout. |
 | D: manual state lifecycle | §1.8, §1.9 | Complete in Batch A. Retain compare-before-mutation tests if C changes road rebuilding. |
-| E: effective modes and guard propagation | §1.5, §1.11, §1.12 | Owner decisions on edit invalidation, custom guard values, player-count restoration. Do not include topology deletion/redesign automatically. |
+| E: effective modes and guard propagation | §1.5, §1.11, §1.12 | Complete: owner commits `1b4658c` and `2062932`, Windows verification and independent review; findings marked fixed 2026-09-12. Accepted 74.9% coverage; native Linux unavailable. |
 | F: editor geometry | §1.13, §1.14, §1.15; optionally §2.1 | Determinism first; batched real-input tests; shared classification; owner approval before visual-policy consolidation. |
 | G: measured performance | §3.1 | Establish public-API/GUI baseline before caching; no flaky global allocation threshold. |
 | H: CI/tooling hardening | §6.2, §6.3, §6.5 | Independent configuration changes: linter alignment, Windows/Linux EOL checks, and safe release-tag validation. |

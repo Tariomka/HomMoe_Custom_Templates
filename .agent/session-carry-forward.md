@@ -1,34 +1,40 @@
-# Carry-forward: Batch E complete, awaiting the owner's commit
+# Carry-forward: Batch E closed, Batch F not started
 
-Date: 2026-09-12. Authority: the owner-approved
-[Batch E plan](plans/batch-e-effective-modes-and-guards.md), which carries the full
-product contract, implementation map and verification ledger. This handoff is the current
-status record; it replaces every earlier status statement this file used to carry.
+Date: 2026-09-12. Batch E is **closed**. The owner committed the work as **`2062932`
+("Phase 4")**, findings §1.5, §1.11 and §1.12 are now marked **FIXED** in the surviving
+[review](backlog/review-gpt-6-astra-09-07.md), and its §9 execution-order table records
+batch **E as complete**. Nothing in Batch E is re-reviewed, re-verified or reimplemented.
+
+The Batch E plan was **retired by the owner** and its deletion is staged. Do not restore
+it, do not read it, do not re-index it or link to it. This handoff is deliberately
+self-contained: every fact a fresh session needs is written out here, and no statement
+below depends on that retired document.
 
 **Section 8 is preserved verbatim**, contradictions and all. Its Batch C phase/engine
 wording and its closing "pending Batch E questions (§1.5/§1.11/§1.12)" wording are
-**superseded** - those questions were settled by the approved plan and are now
-implemented. Everything else §8 retains as later scope remains **binding**. Do not edit §8.
+**superseded** - those questions were settled, implemented and are now marked fixed.
+Everything else §8 retains as later scope remains **binding**, and it governs scope
+decisions past Batch F. Do not edit §8.
 
-Batches A/D, B and C are closed. Batch C's engine gate closed on the owner's 2026-09-11
+Batches A/D, B, C and E are closed. Batch C's engine gate closed on the owner's 2026-09-11
 report: "Everything in-game looks good, the road values are correct in engine." Do not
 revisit, re-verify or retrieve retired documents from those batches.
 
 ## 1. Session goal
 
-Finish Batch E **Phase 4** and update this handoff.
+Documentation only: mark the Batch E findings fixed and hand this file forward to Batch F.
 
-Phase 4 is complete, so **the whole batch is complete**. The combined cross-phase flow is
-now covered by six real-input GUI tests, every Windows gate passes, native Linux is
-recorded unavailable, and the owner accepted the implementation on 2026-09-12:
-*"Changes reviewed, all seems fine, you can finish up with Phase 4 and update Session
-Carry Forward"*. The assistant made no Git change; the batch closes on the owner's commit.
+The owner's authorization was *"Mark this batch items fixed and update carry forward for
+the next batch"*, following the earlier acceptance *"Changes reviewed, all seems fine, you
+can finish up with Phase 4 and update Session Carry Forward"* and the commit that closed
+the batch. No code, test, data or Git change belongs to this turn, and nothing executable
+changed, so nothing was rerun.
 
 ## 2. Fixes applied
 
-All three Batch E findings now have implemented, tested and independently reviewed
-behavior. **None is marked fixed in the surviving review** - the review's protocol
-requires the owner's commit of this final verification and documentation work first.
+All three Batch E findings have implemented, tested and independently reviewed behavior,
+and all three are now **marked FIXED in the surviving review** - the owner's commit
+`2062932` satisfied the review's marking protocol. They are closed; do not reopen them.
 
 - **§1.5, effective-mode invalidation.** Effective tournament and effective arena are
   resolved booleans on the domain state, and layout comparison judges those booleans
@@ -99,33 +105,34 @@ requires the owner's commit of this final verification and documentation work fi
 
 ## 4. File modifications
 
-Exactly **three** files differ from owner commit `1b4658c`, and all three are unstaged.
-Nothing was staged or committed by the assistant.
+**This turn is documentation only - exactly two files:**
 
-- [test/integration/gui/zoneEditorProperties_integration_test.go](../test/integration/gui/zoneEditorProperties_integration_test.go),
-  **+171 lines**: six combined cross-phase tests, described in §5. The only code change.
-- [Batch E plan](plans/batch-e-effective-modes-and-guards.md): authority block updated to
-  all four phases complete, Phase 4 status/checkboxes/summary written, the batch-final
-  ledger column filled with measured results, Final Recap and Deployment Plan completed.
-  Phase 1/2/3 evidence is preserved as historical.
-- [Handoff](session-carry-forward.md): this record, with §8 preserved verbatim.
+- [Surviving review](backlog/review-gpt-6-astra-09-07.md): findings §1.5, §1.11 and §1.12
+  marked `FIXED` in place following that document's own protocol, and the §9
+  execution-order row for batch `E` set to complete. Numbering was not altered.
+- [Handoff](session-carry-forward.md): this record, rewritten to the post-commit state,
+  with §8 preserved byte-for-byte.
 
-Ignored [coverage.txt](../coverage.txt), [coverage.html](../coverage.html) and
-[lcov.info](../lcov.info) were regenerated by the coverage run. They are local artifacts,
-not tracked files.
+**Owner-owned working-tree state, left exactly as found:** the Batch E plan under
+`.agent/plans/` is **staged for deletion** by the owner, who retired it. That deletion was
+neither made nor reversed here, the retired file was not read, and nothing links to it.
 
-**Nothing else was touched:** no production code, no protected data, template schema or
-registry, no output path, no opaque raster path, no generated Wire, no topology code, no
-dependencies, snapshots or goldens, and no `.agent/backlog/` review or owner-findings
-document. No new memory or summary files were created.
+**Nothing else was touched:** no production code, no tests, no protected data, template
+schema or registry, no output path, no opaque raster path, no generated Wire, no topology
+code, no dependencies, snapshots or goldens, and never `.agent/backlog/owner_findings.md`.
+No new memory, plan or summary files were created, and no state-mutating Git command was
+run.
 
-The production files delivered by earlier phases are already committed at `1b4658c` and
-are inventoried in the plan's implementation map and phase summaries. That inventory is
-not repeated here.
+All Batch E production and test code is committed at `2062932` and its predecessors. That
+inventory is not repeated here and is not needed again.
 
 ## 5. Tests added or updated
 
-**This turn:** six combined real-input tests in
+**This turn added no tests and reran nothing** - it changed documentation only. The
+verification recorded below belongs to the code committed at `2062932` and stands as the
+current evidence of record.
+
+Batch E's final test contribution was six combined real-input tests in
 [zoneEditorProperties_integration_test.go](../test/integration/gui/zoneEditorProperties_integration_test.go).
 Each applies a remapped Silver Medium to Gold Medium incident edge, then switches into
 Guardian Arena or Tournament through the General victory selector, across idle frames and
@@ -141,10 +148,11 @@ dirty-flag side is unit-covered, so these GUI tests check the visible warning in
 Earlier phases contributed the unit folders for the effective predicates, the transition
 and its outcome, the load override and the new service method, the tagged
 `effectiveModes` and `generalPanelTournament` integration files, 46 focused service cases,
-21 real-input GUI cases and two persistence regressions. Those are catalogued in the plan
-and are not repeated here. No fake unit seams, no new `*_testexports.go`, no global tags.
+21 real-input GUI cases and two persistence regressions. No fake unit seams, no new
+`*_testexports.go`, no global tags.
 
-**Measured this turn, Windows/amd64, Go 1.27.0, empty `GOFLAGS`:**
+**Recorded verification, Windows/amd64, Go 1.27.0, empty `GOFLAGS`. Historical - measured
+against the committed Batch E code, deliberately not rerun this turn:**
 
 - `go build ./...` — PASS.
 - `go test -p=2 -count=1 '-coverpkg=./internal/...,./app/...' '-coverprofile=coverage.txt' ./test/unit/...`
@@ -163,32 +171,35 @@ and are not repeated here. No fake unit seams, no new `*_testexports.go`, no glo
   current and was deliberately not regenerated.
 - **Native Linux: UNAVAILABLE.** The probe
   `wsl.exe -d Ubuntu -- sh -lc 'command -v go; command -v pkg-config'` returned empty
-  output and exit code 1 this turn. Nothing was installed; no native Linux, Steam Deck or
-  engine result is claimed.
-- **No coverage profile fingerprint is claimed.** The reports were regenerated but their
-  SHA-256 was not measured this turn. The Phase 3 value
+  output and exit code 1 when it was run. Nothing was installed; no native Linux, Steam
+  Deck or engine result is claimed, then or now.
+- **No coverage profile fingerprint is claimed.** The reports were regenerated at
+  verification time but their SHA-256 was never measured. The Phase 3 value
   `23B78F2CF15B73902398D8A21A755FD684D3668486E56D8CFA770BE2BE7F9F31` is historical.
 - Independent **Claude Opus 5 review of the six new tests: APPROVED**. The plan, Phase 2
   and Phase 3 implementation reviews were approved earlier.
 
 ## 6. Git status snapshot
 
-Branch **`AD/modes_and_guard_propagation`**, in sync with
-`origin/AD/modes_and_guard_propagation`. HEAD is the owner's commit **`1b4658c`
-("Phase 3 and partial 4")**. The turn started clean.
+Branch **`AD/modes_and_guard_propagation`**, **one commit ahead of**
+`origin/AD/modes_and_guard_propagation`. HEAD is the owner's commit **`2062932`
+("Phase 4")**, which supersedes `1b4658c` ("Phase 3 and partial 4") and carries all Batch
+E code.
 
-`git status --short` currently reports a single entry:
+`git status --short` currently reports two entries:
 
 ```text
- M test/integration/gui/zoneEditorProperties_integration_test.go
+ M .agent/backlog/review-gpt-6-astra-09-07.md
+D  .agent/plans/batch-e-effective-modes-and-guards.md
 ```
 
-Plus the two untracked-to-review documents in §4, which live under `.agent/` and are
-modified in place. Nothing is staged; the staged diff is empty. **The assistant performed
-no Git mutation of any kind** - no staging, unstaging, commit, push, stash, branch switch
-or worktree change - and every owner change is preserved exactly as found.
-`.agent/backlog/owner_findings.md` and the surviving review were not read, edited or
-re-indexed.
+The modified review is this turn's documentation edit. The staged deletion is the
+**owner's** - they retired the Batch E plan. Preserve it exactly: do not restore the file,
+do not unstage the deletion, do not read the retired document.
+
+**The assistant performed no Git mutation of any kind** - no staging, unstaging, commit,
+push, stash, branch switch or worktree change - and every owner change is preserved as
+found. `.agent/backlog/owner_findings.md` was not read, edited or re-indexed.
 
 ## 7. Rejections / things the user declined
 
@@ -207,9 +218,12 @@ re-indexed.
   `noteStateTransition` returning before merging an empty outcome so a no-op
   `UpdateState` cannot wipe a generation error or a just-saved message on the next idle
   frame. The load→failure→idle→save→idle→retry sequence is pinned by tests.
-- Topology retirement/redesign (Batch K, review §2.3) is explicitly out of scope. No
-  opportunistic work either: no GUI/PNG geometry consolidation, no DTO removal, no schema
-  changes, no package renames, no allocation tuning, no output-path changes.
+- Topology retirement/redesign (Batch K, review §2.3) remains explicitly out of scope. No
+  opportunistic work either: no DTO removal, no schema changes, no package renames, no
+  allocation tuning, no output-path changes. The GUI/PNG geometry-consolidation ban
+  recorded here was a **Batch E exclusion**, not a permanent prohibition: review §2.1 is an
+  *optional* Batch F item that may be worked only if the owner explicitly approves it into
+  scope. It never becomes automatic.
 - Do not claim engine defaults or in-game outcomes nobody observed. The only positive
   engine result is the owner's report, and it covers road values only.
 - When verifying §8, use explicit UTF-8 for Git stdout
@@ -268,56 +282,117 @@ Other pending decisions: arena/manual invalidation and effective-mode aliases (�
 
 ## 9. Next recommended actions
 
-**Batch E is complete, with no open product questions and no blockers.** What remains is
-the owner's own commit protocol.
+**Batch E is closed, with no open Batch E questions and no blockers.** The next unit of
+work is **Batch F, editor geometry**, taken from the surviving review's §9
+execution-order table — *not* from §8, whose retained decisions govern later scope.
+Nothing has been planned or implemented for Batch F, and no code may be written before the
+gates below are cleared.
 
-1. **Owner:** review the three unstaged changes listed in §4, then stage and commit them.
-2. **Only after that commit exists**, mark findings §1.5, §1.11 and §1.12 in the
-   [surviving review](backlog/review-gpt-6-astra-09-07.md), following that document's own
-   marking protocol. Do not edit the review before the commit, and never read, edit or
-   re-index `.agent/backlog/owner_findings.md`.
-3. Anything past that is a new batch. Take the next item from §8's retained later-scope
-   list and plan it separately; do not fold it into Batch E.
-4. If Batch E ever needs re-verification, rerun the batch-final command list in the plan's
-   verification ledger. Native Linux stays unavailable until a machine with `go` and
-   `pkg-config` exists; record it as unavailable, never as passing.
+Batch F scope, from the review's `F` row:
+
+- **§1.13, deterministic obstacle ties.** The obstacle-bulge selection in the editor
+  geometry service takes a winner only on strictly greater magnitude, so two
+  equal-magnitude obstacles on opposite sides resolve by map iteration order and identical
+  input yields two different curves. Determinism comes first in the batch.
+- **§1.14, stale indices from batched pointer events.** The zone-editor canvas drains
+  every queued pointer event before rebuilding geometry, while edge lookup indexes the
+  live connection slice by a cached index that deletion compacts. Geometry-to-object
+  identity must survive input batching. Real input routing only, never unit-only exports.
+- **§1.15, effective portal classification mismatch.** The editor recognizes only a
+  literal `Portal` connection type, while the preview additionally treats
+  `PortalPlacementRules` From/To connections as portals. Classification belongs in one
+  model-level place, fed through the existing geometry/handler seam.
+- **§2.1, shared curve geometry — OPTIONAL.** Editor and preview build parallel-edge
+  curves twice, with different spacing and obstacle deflection in only one of them. This
+  is **not automatically in scope**: it enters Batch F only on the owner's explicit
+  approval, and the intentional visual differences must be decided before anything moves.
+
+Routing for the next session, in order:
+
+1. Read [AGENTS.md](../AGENTS.md), this handoff, then the surviving review's §1.13, §1.14,
+   §1.15, optional §2.1, and its §9 `F` row.
+2. **Inspect the controlling code and tests locally before trusting any of it.** The
+   review's evidence is historical; line numbers and behavior must be re-confirmed against
+   current source. The files are
+   [zoneEditorGeometryService.go](../internal/services/connection_editor/zoneEditorGeometryService.go),
+   [zoneEditorCanvas.go](../app/gui/dialogs/zoneEditorCanvas.go),
+   [zoneEditorDialog.go](../app/gui/dialogs/zoneEditorDialog.go),
+   [previewLayoutService.go](../internal/services/preview_service/previewLayoutService.go),
+   [buildGeometry_test.go](../test/unit/internal/services/connection_editor/zoneEditorGeometryService/buildGeometry_test.go),
+   [buildPreviewLayout_test.go](../test/unit/internal/services/preview_service/previewLayoutService/buildPreviewLayout_test.go)
+   and [zoneEditorPointer_integration_test.go](../test/integration/gui/zoneEditorPointer_integration_test.go).
+3. **Ask the owner** the genuinely undecided product questions: the preferred tie-break
+   direction for §1.13; for §1.15, whether changing a connection type should clear the old
+   placement rules or merely display the effective type; whether exact editor/PNG curve
+   agreement is a requirement; and whether optional §2.1 is in scope at all. Do not guess
+   any of these.
+4. Summarize the resulting scope back to the owner and obtain approval.
+5. Only then write a **new durable Batch F plan** under `.agent/plans/`, have it
+   independently reviewed by Claude Opus 5, obtain explicit plan approval, and capture a
+   fresh build/unit/coverage/lint baseline before the first edit.
+
+Constraints Batch F inherits and must not quietly break: the settled road tri-state
+display contract stays as is — explicit `false` roadless, explicit `true` roaded, `nil`
+roaded only for explicit Portals — and that `nil` rule does **not** widen automatically
+just because classification becomes "effective". Intentional editor/preview geometry
+differences stay until consolidation is separately approved. Coverage must hold at or
+above the review's comparable Windows floor with zero lint issues.
 
 **Deployment.** Nothing is deployed and nothing is authorized to be. The owner alone
 stages, commits and releases. No schema migration, dependency installation, Wire
-regeneration or output-directory change is required. Native Linux and Steam Deck
-execution remains unmeasured.
+regeneration or output-directory change is required or pending. Native Linux and Steam
+Deck execution remains unmeasured.
 
 ## 10. Carry-forward prompt
 
-> Read [AGENTS.md](../AGENTS.md) first, then [this handoff](session-carry-forward.md) and
-> the approved [Batch E plan](plans/batch-e-effective-modes-and-guards.md).
+> Read [AGENTS.md](../AGENTS.md) first, then [this handoff](session-carry-forward.md). It
+> is self-contained; there is no plan to open.
 >
-> **Batch E is COMPLETE.** All four phases are done, the owner accepted the implementation
-> on 2026-09-12, and findings §1.5, §1.11 and §1.12 all have implemented, tested and
-> independently reviewed behavior. Do not reimplement, re-verify or re-review any phase,
-> and do not repeat settled product questions.
+> **Batch E is CLOSED.** All four phases are done, the owner accepted the implementation
+> and committed it, and findings §1.5, §1.11 and §1.12 are marked **FIXED** in the
+> [surviving review](backlog/review-gpt-6-astra-09-07.md), whose §9 table shows batch `E`
+> complete. Do not reimplement, re-verify or re-review any of it, and do not reopen settled
+> product questions. The Batch E plan was retired by the owner and its deletion is staged:
+> never restore, read or relink it.
 >
-> **State:** branch `AD/modes_and_guard_propagation`, in sync with origin, HEAD at the
-> owner's `1b4658c` ("Phase 3 and partial 4"). Exactly three files are unstaged: the GUI
-> test `test/integration/gui/zoneEditorProperties_integration_test.go` (+171 lines, six
-> combined cross-phase tests), plus the plan and this handoff. Nothing is staged and the
-> assistant performed no Git mutation.
+> **State:** branch `AD/modes_and_guard_propagation`, **one commit ahead of origin**, HEAD
+> at the owner's `2062932` ("Phase 4"). The working tree holds the owner's staged deletion
+> of the retired plan plus the review edit from the closing turn. The assistant performed
+> no Git mutation; preserve owner state exactly.
 >
-> **Next action:** the owner commits those three files. Only then mark §1.5, §1.11 and
-> §1.12 in the [surviving review](backlog/review-gpt-6-astra-09-07.md) per its protocol.
-> Never touch `.agent/backlog/owner_findings.md`.
+> **Next work is Batch F, editor geometry**, per review §9's `F` row: §1.13 deterministic
+> obstacle tie-breaking, §1.14 stale edge indices from batched pointer events, §1.15
+> editor-versus-preview portal classification, and **optionally** §2.1 shared curve
+> geometry — optional means it enters scope only with the owner's explicit approval, never
+> automatically. **No Batch F plan or implementation exists yet, and none may be written
+> before the gates below.**
 >
-> **Verification on record, Windows/amd64, Go 1.27.0, empty `GOFLAGS`:** `go build ./...`;
-> `go test -p=2 -count=1` unit run with `-coverpkg=./internal/...,./app/...`;
-> `go tool cover -func` at **74.9%**, an owner-accepted exception rather than a restored
-> 75.1% baseline; `go test ./test/...`; `go test -tags='integration_test,gui'
-> ./test/integration/...` with root 3.297s and GUI 28.558s; `go run ./cmd/testlayoutcheck .`;
-> clean `gofmt -l` on the changed file; and zero-issue
-> `golangci-lint-v2 run ./... --issues-exit-code=1`. Generated Wire is already current
-> because no constructor changed - do not rerun the generator needlessly. **Native
-> Linux/Steam Deck is UNAVAILABLE:** the WSL probe found no `go` and no `pkg-config`,
-> nothing was installed, and no native or in-game result may be claimed. No coverage
-> profile fingerprint was measured this turn.
+> **Do this in order:** read review §1.13, §1.14, §1.15, optional §2.1 and §9; then
+> **inspect the current source and tests yourself**, because the review's evidence is
+> historical and its line numbers may have moved —
+> `internal/services/connection_editor/zoneEditorGeometryService.go`,
+> `app/gui/dialogs/zoneEditorCanvas.go`, `app/gui/dialogs/zoneEditorDialog.go`,
+> `internal/services/preview_service/previewLayoutService.go`, and the tests
+> `test/unit/internal/services/connection_editor/zoneEditorGeometryService/buildGeometry_test.go`,
+> `test/unit/internal/services/preview_service/previewLayoutService/buildPreviewLayout_test.go`,
+> `test/integration/gui/zoneEditorPointer_integration_test.go`. Then **ask the owner**: the
+> preferred tie direction; whether a type change clears old placement rules or only
+> displays the effective type; whether exact GUI/PNG curve agreement is required; and
+> whether §2.1 is in scope. Summarize the scope, get approval, write a **new durable Batch
+> F plan**, get an independent Opus 5 review and explicit plan approval, and capture a fresh
+> baseline before the first edit.
+>
+> **Verification on record, Windows/amd64, Go 1.27.0, empty `GOFLAGS`** (historical, for
+> the committed Batch E code — not rerun): `go build ./...`; `go test -p=2 -count=1` unit
+> run with `-coverpkg=./internal/...,./app/...`; `go tool cover -func` at **74.9%**, an
+> owner-accepted GUI-only decrease against the 75.1% baseline rather than a restored one;
+> `go test ./test/...`; `go test -tags='integration_test,gui' ./test/integration/...` with
+> root 3.297s and GUI 28.558s; `go run ./cmd/testlayoutcheck .`; clean `gofmt -l` on changed
+> files; and zero-issue `golangci-lint-v2 run ./... --issues-exit-code=1`. Generated Wire is
+> already current because no constructor changed — do not rerun the generator needlessly.
+> **Native Linux/Steam Deck is UNAVAILABLE:** the WSL probe found no `go` and no
+> `pkg-config`, nothing was installed, and no native or in-game result may be claimed. No
+> coverage profile fingerprint was ever measured.
 >
 > **Hard rules:** never modify protected data, the template schema or the registry. Keep
 > Windows/Linux compatibility. Never change or persist the machine-detected output
@@ -327,13 +402,14 @@ execution remains unmeasured.
 > `gui` or `wireinject` tags, and never introduce fake unit seams. Keep plans durable and
 > resumable.
 >
-> **Out of scope:** Batch K topology retirement, direct `GeneratorConfig` rejection,
-> geometry consolidation, DTO cleanup, schema and package work, and every settled
-> alternative in §7. §8 stays verbatim: its Batch C phase/engine wording and its closing
-> "pending Batch E questions" wording are superseded, while its retained later-scope
-> decisions remain binding and are the source for the next batch.
+> **Out of scope:** Batch K topology retirement, direct `GeneratorConfig` rejection, DTO
+> cleanup, schema and package work, allocation tuning, and every settled alternative in §7.
+> §8 stays verbatim: its Batch C phase/engine wording and its closing "pending Batch E
+> questions" wording are superseded, while its retained later-scope decisions remain binding
+> and govern batches after F.
 >
-> Preserve explicit Portal Road false/nil and valid approaches, independent internal
-> roads, nil-state content/road preservation, source cloning, one reusable local
-> half-opacity edge mask over unchanged opaque rasterization, and the Preview-only legend.
-> This handoff and the approved plan contain the full continuation context.
+> Preserve explicit Portal Road false/nil and valid approaches, the settled tri-state road
+> display classification, independent internal roads, nil-state content/road preservation,
+> source cloning, one reusable local half-opacity edge mask over unchanged opaque
+> rasterization, and the Preview-only legend. This handoff contains the full continuation
+> context.
