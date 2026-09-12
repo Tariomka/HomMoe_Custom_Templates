@@ -10,6 +10,8 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
 
+const TournamentPlayerCount = 2
+
 type EditorState struct {
 	TemplateIdentity
 	MapSettings
@@ -70,11 +72,6 @@ func NewDefaultEditorStateModel() EditorState {
 	}
 }
 
-// Clone returns a copy that shares no backing array or pointer with the
-// receiver, so an in-place edit of any element on either side stays invisible
-// to the other. A plain struct copy duplicates slice headers only, which would
-// hide element mutations from the change detection in
-// EqualsIgnoringManualEdits.
 func (this *EditorState) Clone() EditorState {
 	clone := *this
 
@@ -92,9 +89,14 @@ func (this *EditorState) Clone() EditorState {
 	return clone
 }
 
-// LayoutDefiningOptionsChanged reports whether any option that changes the set
-// of zones or the connection graph differs between two editor states. When
-// these are unchanged, manual zone edits remain valid and can be reapplied.
+func (this *EditorState) IsEffectiveTournament() bool {
+	return this.Tournament || this.VictoryCondition == registry.GetWinningConditionValues().Tournament
+}
+
+func (this *EditorState) IsEffectiveGladiatorArena() bool {
+	return this.GladiatorArena || this.VictoryCondition == registry.GetWinningConditionValues().FinalBattle
+}
+
 func (this *EditorState) LayoutDefiningOptionsChanged(incoming *EditorState) bool {
 	return this.PlayerCount != incoming.PlayerCount ||
 		this.Topology != incoming.Topology ||
@@ -102,14 +104,23 @@ func (this *EditorState) LayoutDefiningOptionsChanged(incoming *EditorState) boo
 		this.RandomPortals != incoming.RandomPortals ||
 		this.NoDirectPlayerConn != incoming.NoDirectPlayerConn ||
 		this.MaxPortalConnections != incoming.MaxPortalConnections ||
+		this.IsEffectiveTournament() != incoming.IsEffectiveTournament() ||
+		this.IsEffectiveGladiatorArena() != incoming.IsEffectiveGladiatorArena() ||
 		this.zoneCountOptionsChanged(incoming)
 }
 
-// DiffCastleSettings compares the castle-count options of this state (the one
-// behind the last generation) against the incoming current state. AdvancedMode
-// gates which neutral options are relevant; it cannot flip between the two
-// states here because such a flip is layout-defining and discards manual edits
-// before castle propagation is ever considered.
+func (this *EditorState) ApplyModeTransition(previous, requested *EditorState) ModeTransitionOutcome {
+	outcome := ModeTransitionOutcome{TournamentCountCorrected: this.tournamentCountCorrected(requested)}
+	if !outcome.TournamentCountCorrected && !this.effectiveModesChanged(previous) {
+		return outcome
+	}
+
+	outcome.ManualEditsDiscarded = this.HasManualEdits()
+	this.ManualZones = nil
+	this.ManualConnections = nil
+	return outcome
+}
+
 func (this *EditorState) DiffCastleSettings(incoming *EditorState) CastleSettingChanges {
 	changes := CastleSettingChanges{
 		PlayerCastles: this.PlayerZoneCastles != incoming.PlayerZoneCastles ||
@@ -127,15 +138,6 @@ func (this *EditorState) DiffCastleSettings(incoming *EditorState) CastleSetting
 	return changes
 }
 
-// EqualsIgnoringManualEdits reports whether two editor states are equal when
-// the manual-edit fields are disregarded. Manual zones and connections are
-// reapplied to the generated template through a separate path, so they must
-// not trigger an automatic regeneration on their own.
-//
-// The comparison is hand-rolled instead of [reflect.DeepEqual] because it runs
-// on the UI hot path several times per frame. Every non-manual field must be
-// covered here; the per-field mutation test on this method trips when a new
-// field is added to any entity group without extending the comparison.
 func (this *EditorState) EqualsIgnoringManualEdits(other *EditorState) bool {
 	return this.zoneOptionScalarsEqual(other) &&
 		this.generationOptionScalarsEqual(other) &&
@@ -152,6 +154,19 @@ func (this *EditorState) EqualsIgnoringManualEdits(other *EditorState) bool {
 
 func (this *EditorState) HasManualEdits() bool {
 	return len(this.ManualZones) > 0 || len(this.ManualConnections) > 0
+}
+
+func (this *EditorState) effectiveModesChanged(previous *EditorState) bool {
+	return previous != nil &&
+		(previous.IsEffectiveTournament() != this.IsEffectiveTournament() ||
+			previous.IsEffectiveGladiatorArena() != this.IsEffectiveGladiatorArena())
+}
+
+func (this *EditorState) tournamentCountCorrected(requested *EditorState) bool {
+	return requested != nil &&
+		this.IsEffectiveTournament() &&
+		this.PlayerCount == TournamentPlayerCount &&
+		requested.PlayerCount != TournamentPlayerCount
 }
 
 // zoneCountOptionsChanged reports whether the number of neutral zones differs

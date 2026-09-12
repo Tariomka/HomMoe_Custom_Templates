@@ -30,26 +30,25 @@ type State struct {
 	fileSystem   handler_interfaces.IFileSystemHandler
 	regeneration handler_interfaces.IRegenerationHandler
 
+	dialogs    *DialogHost
 	innerState *models.EditorState
 
 	currentPath string
 	unsaved     bool
 
-	outputPath   widget.Editor
-	lastTemplate *template_model.Template
-	// templateRevision counts every replacement of lastTemplate, letting the
-	// preview cache detect a new template without comparing its contents.
+	outputPath       widget.Editor
+	lastTemplate     *template_model.Template
 	templateRevision uint64
-	statusMsg        string
-	statusErr        bool
 
-	confirmExit bool
-	onExit      func() // app closing callback for Gio app.DestroyEvent flow.
+	statusMsg      string
+	statusErr      bool
+	pendingOutcome editor_state_model.ModeTransitionOutcome
 
 	applyNextStateAt time.Time               // for debouncing
 	pendingBaseZones dtos.ZoneEditorZonesDto // uncommitted layout produced by PreviewBaseZones.
 
-	dialogs *DialogHost
+	confirmExit bool
+	onExit      func() // app closing callback for Gio app.DestroyEvent flow.
 }
 
 func NewUIState(
@@ -111,15 +110,18 @@ func (this *State) Reset() {
 	this.innerState.ResetState()
 	this.currentPath = ""
 	this.unsaved = false
+	this.pendingOutcome = editor_state_model.ModeTransitionOutcome{}
 	this.clearGeneratedState()
 	this.SetStatus("New settings file.", false)
 }
 
 func (this *State) UpdateState(updateFunc func(*editor_state_model.EditorState)) {
-	this.innerState.UpdateCurrentState(updateFunc)
-	if this.innerState.WasStateChanged() {
+	outcome := this.innerState.UpdateCurrentState(updateFunc)
+	if this.innerState.WasStateChanged() || outcome.ManualEditsDiscarded || outcome.TournamentCountCorrected {
 		this.flagAsUnsaved()
 	}
+
+	this.noteStateTransition(outcome)
 }
 
 func (this *State) SetStatus(msg string, isErr bool) {
@@ -147,8 +149,6 @@ func (this *State) hasTemplateVariants() bool {
 	return this.lastTemplate != nil && len(this.lastTemplate.Variants) > 0
 }
 
-// setLastTemplate is the only writer of lastTemplate, so templateRevision
-// cannot drift away from the template the preview is showing.
 func (this *State) setLastTemplate(template *template_model.Template) {
 	this.lastTemplate = template
 	this.templateRevision++
@@ -174,6 +174,5 @@ func (this *State) getNextStateDto() *editor_state_dto.EditorStateDto {
 
 func (this *State) flagAsUnsaved() {
 	this.unsaved = true
-	// New edits invalidate a pending exit confirmation.
-	this.confirmExit = false
+	this.confirmExit = false // New edits invalidate a pending exit confirmation.
 }

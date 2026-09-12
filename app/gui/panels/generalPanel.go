@@ -105,7 +105,7 @@ func (this *GeneralPanel) LoadFromState() {
 	settings := this.state.GetStateData()
 
 	this.templateName.SetText(settings.TemplateName)
-	this.playerCount.Value = utils.Normalize(float32(settings.PlayerCount), 2, 8)
+	this.playerCount.Value = utils.Normalize(float32(this.getAllowedPlayerCount(&settings)), 2, 8)
 	this.checkMoreMapSizes.Value = settings.ExperimentalMapSizes
 	this.updateMapSizeSelectorItems()
 	this.mapSizeSelector.SelectByName(constants.GetMapSize(settings.MapSize).Label)
@@ -181,15 +181,26 @@ func (this *GeneralPanel) SaveToState() {
 		settings.TournamentInterval = utils.RoundedRange(this.tournamentIntervalCount.Value, 3, 30)
 		settings.TournamentPointsToWin = utils.RoundedRange(this.tournamentPointsCount.Value, 1, 10)
 		settings.TournamentSaveArmy = this.checkTournamentSaveArmy.Value
+
+		allowedPlayerCount := this.getAllowedPlayerCount(settings)
+		settings.PlayerCount = allowedPlayerCount
+		this.playerCount.Value = utils.Normalize(float32(allowedPlayerCount), 2, 8)
 	})
+}
+
+func (this *GeneralPanel) getAllowedPlayerCount(settings *editor_state_model.EditorState) int {
+	if settings.IsEffectiveTournament() {
+		return editor_state_model.TournamentPlayerCount
+	}
+
+	return settings.PlayerCount
 }
 
 func (this *GeneralPanel) getTemplateSectionWidget(theme *material.Theme) layout.Widget {
 	return widgets.NewSectionWidget(theme, "Template", []layout.Widget{
 		widgets.NewLabeledRowWidget(theme, "Template name", constants.DefaultLabelWidth,
 			widgets.NewTextboxWidget(theme, &this.templateName, "Enter template name", false)),
-		widgets.NewSliderRowWidget(theme, "Players", constants.DefaultLabelWidth,
-			&this.playerCount, utils.RoundedRangeFormatter(2, 8)),
+		this.getPlayerCountRowWidget(theme),
 		widgets.NewLabeledRowWidget(theme, "Map size", constants.DefaultLabelWidth,
 			func(gtx layout.Context) layout.Dimensions {
 				return this.updateMapSizeSelector(gtx).GetWidget(theme)(gtx)
@@ -197,6 +208,16 @@ func (this *GeneralPanel) getTemplateSectionWidget(theme *material.Theme) layout
 		widgets.NewLabeledCheckboxRowWidget(theme, &this.checkMoreMapSizes,
 			"Allow non official larger map sizes (>240)"),
 	})
+}
+
+func (this *GeneralPanel) getPlayerCountRowWidget(theme *material.Theme) layout.Widget {
+	row := widgets.NewSliderRowWidget(theme, "Players", constants.DefaultLabelWidth,
+		&this.playerCount, utils.RoundedRangeFormatter(2, 8))
+	if !this.isPlayerCountLocked() {
+		return row
+	}
+
+	return func(gtx layout.Context) layout.Dimensions { return row(gtx.Disabled()) }
 }
 
 func (this *GeneralPanel) getMapSectionWidget(theme *material.Theme) layout.Widget {
@@ -365,4 +386,8 @@ func (this *GeneralPanel) isHoldCity() bool {
 
 func (this *GeneralPanel) isTournament() bool {
 	return this.getCurrentVictoryCondition() == constants.GetVictoryConditionValues().Tournament
+}
+
+func (this *GeneralPanel) isPlayerCountLocked() bool {
+	return this.checkTournament.Value || this.isTournament()
 }

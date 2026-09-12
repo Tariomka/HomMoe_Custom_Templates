@@ -7,6 +7,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/regeneration"
+	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/editor"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
@@ -65,6 +66,68 @@ func TestWhenLayoutDefiningOptionChanged_RegeneratesImmediately(t *testing.T) {
 	request := regeneration.DecisionRequest{
 		Previous: defaultState(),
 		Current:  layoutChangedState(),
+		Now:      gofakeit.Date(),
+	}
+
+	// Act
+	decision := service.DecideRegeneration(request)
+
+	// Assert
+	assert.Equal(t, regeneration.Decision{
+		Regenerate:      true,
+		NextStateAction: regeneration.NextStateClear,
+	}, decision)
+}
+
+// An effective-mode change redefines the layout, so it regenerates on the frame
+// it happens rather than waiting out the non-layout debounce.
+func TestWhenTournamentModeIsEntered_RegeneratesImmediately(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	service := editor.NewRegenerationDecisionService()
+	request := regeneration.DecisionRequest{
+		Previous: defaultState(),
+		Current:  tournamentState(),
+		Now:      gofakeit.Date(),
+	}
+
+	// Act
+	decision := service.DecideRegeneration(request)
+
+	// Assert
+	assert.Equal(t, regeneration.Decision{
+		Regenerate:      true,
+		NextStateAction: regeneration.NextStateClear,
+	}, decision)
+}
+
+func TestWhenArenaModeIsEntered_RegeneratesImmediately(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	service := editor.NewRegenerationDecisionService()
+	request := regeneration.DecisionRequest{
+		Previous: defaultState(),
+		Current:  arenaState(),
+		Now:      gofakeit.Date(),
+	}
+
+	// Act
+	decision := service.DecideRegeneration(request)
+
+	// Assert
+	assert.Equal(t, regeneration.Decision{
+		Regenerate:      true,
+		NextStateAction: regeneration.NextStateClear,
+	}, decision)
+}
+
+func TestWhenTournamentModeIsLeft_RegeneratesImmediately(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	service := editor.NewRegenerationDecisionService()
+	request := regeneration.DecisionRequest{
+		Previous: tournamentState(),
+		Current:  defaultState(),
 		Now:      gofakeit.Date(),
 	}
 
@@ -228,6 +291,21 @@ func TestWhenOnlyManualEditsDiffer_CancelsPendingDebounce(t *testing.T) {
 func defaultState() *editor_state_model.EditorState {
 	state := editor_state_model.NewDefaultEditorStateModel()
 	return &state
+}
+
+// tournamentState enables the tournament rules through the checkbox alias, an
+// effective-mode change that redefines the layout.
+func tournamentState() *editor_state_model.EditorState {
+	state := defaultState()
+	state.Tournament = true
+	return state
+}
+
+// arenaState enables the arena rules through the victory condition alias.
+func arenaState() *editor_state_model.EditorState {
+	state := defaultState()
+	state.VictoryCondition = registry.GetWinningConditionValues().FinalBattle
+	return state
 }
 
 // layoutChangedState returns a state differing from defaultState in a

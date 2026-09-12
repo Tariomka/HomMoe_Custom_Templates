@@ -2,7 +2,11 @@
 
 package integration_common
 
-import "gioui.org/f32"
+import (
+	"image"
+
+	"gioui.org/f32"
+)
 
 // GeneralTabHandler drives the General tab. It embeds the pointer, not a copy,
 // so the layout-shift state it records stays visible to every other handler.
@@ -25,6 +29,41 @@ func (this *GeneralTabHandler) ToggleExperimentalMapSizes() *GeneralTabHandler {
 	this.isExperimentalMapSizes = !this.isExperimentalMapSizes
 	this.commit()
 	this.runner.VerifySnapshot()
+	return this
+}
+
+// DragPlayerCountToMaximum drags the Players slider from its left end to its
+// right end, which asks for eight players unless the control is disabled.
+func (this *GeneralTabHandler) DragPlayerCountToMaximum() *GeneralTabHandler {
+	this.runner.tb.Helper()
+	this.runner.DragTo(
+		image.Pt(playerCountSliderLeftX, playerCountSliderCenterY),
+		image.Pt(playerCountSliderRightX, playerCountSliderCenterY))
+	this.commit()
+	return this
+}
+
+// SelectVictoryCondition opens the Conditions section's victory dropdown and
+// picks the row with the given label, exactly as constants.GetVictoryConditionList
+// spells it.
+func (this *GeneralTabHandler) SelectVictoryCondition(label string) *GeneralTabHandler {
+	this.runner.tb.Helper()
+	this.runner.ClickAt(f32.Pt(victorySelectorTriggerX, victorySelectorTriggerY))
+	this.runner.ClickButtonIn(
+		image.Rect(victoryOptionsLeft, victoryOptionsTop, victoryOptionsRight, victoryOptionsBottom),
+		label)
+	this.commit()
+	return this
+}
+
+// ToggleConditionRule flips the checkbox at the top of the Conditions section's
+// right-hand column, which is the rule the selected victory condition offers -
+// "Enable tournament" under the tournament condition.
+func (this *GeneralTabHandler) ToggleConditionRule() *GeneralTabHandler {
+	this.runner.tb.Helper()
+	this.runner.ClickTopmostCheckboxIn(
+		image.Rect(conditionOptionsLeft, conditionOptionsTop, conditionOptionsRight, conditionOptionsBottom))
+	this.commit()
 	return this
 }
 

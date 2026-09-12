@@ -44,11 +44,22 @@ func (this *EditorState) GetTopology() config.MapTopology { return this.current.
 
 func (this *EditorState) GetExperimentalMapSizes() bool { return this.current.ExperimentalMapSizes }
 
-func (this *EditorState) UpdateCurrentState(updateFunc func(state *editor_state_model.EditorState)) {
-	updatedState := this.current.Clone()
-	updateFunc(&updatedState)
-	validation := this.validationHandler.ValidateEditorState(updatedState, true)
-	this.current = &validation.State
+func (this *EditorState) UpdateCurrentState(
+	updateFunc func(state *editor_state_model.EditorState)) editor_state_model.ModeTransitionOutcome {
+	requestedState := this.current.Clone()
+	updateFunc(&requestedState)
+	validation := this.validationHandler.ValidateEditorState(requestedState, true)
+	validatedState := validation.State
+	outcome := validatedState.ApplyModeTransition(this.current, &requestedState)
+	this.current = &validatedState
+	return outcome
+}
+
+func (this *EditorState) OverrideStateFromLoad(
+	raw, corrected editor_state_model.EditorState) editor_state_model.ModeTransitionOutcome {
+	outcome := corrected.ApplyModeTransition(nil, &raw)
+	this.OverrideState(corrected)
+	return outcome
 }
 
 func (this *EditorState) SnapshotCurrentState() {

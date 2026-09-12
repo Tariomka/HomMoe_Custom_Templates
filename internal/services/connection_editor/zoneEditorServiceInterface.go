@@ -54,6 +54,12 @@ type IZoneEditorService interface {
 		castleCount int,
 		tuning models.GenerationTuning)
 
+	// ApplyNeutralZoneQualityEdit re-profiles the named zone on clones of the
+	// requested graph and carries the incident connections' guard presets over
+	// to the guard quality resolved after the edit.
+	ApplyNeutralZoneQualityEdit(
+		request models.NeutralZoneQualityEditRequest) ([]template_model.Zone, []template_model.Connection)
+
 	// CanDeleteZone reports whether the zone may be removed in the editor.
 	CanDeleteZone(zoneName string, playerZoneNames map[string]bool) bool
 

@@ -73,13 +73,18 @@ func (this *zoneEditorHandler) GetZoneConnectionGuardQuality(
 	return this.tierService.GetConnectionGuardQuality(from, to, zones, playerNames)
 }
 
-func (this *zoneEditorHandler) ApplyZoneEditorQuality(request dtos.ZoneEditorQualityRequestDto) template_model.Zone {
-	this.zoneEditor.ApplyNeutralZoneQuality(
-		&request.Zone,
-		request.Quality,
-		request.CastleCount,
-		request.Tuning)
-	return request.Zone
+func (this *zoneEditorHandler) ApplyZoneEditorQuality(
+	request dtos.ZoneEditorQualityRequestDto) dtos.ZoneEditorMutationDto {
+	zones, connections := this.zoneEditor.ApplyNeutralZoneQualityEdit(models.NeutralZoneQualityEditRequest{
+		Zones:           request.Zones,
+		Connections:     request.Connections,
+		PlayerZoneNames: request.PlayerZoneNames,
+		ZoneName:        request.Zone.Name,
+		Quality:         request.Quality,
+		CastleCount:     request.CastleCount,
+		Tuning:          request.Tuning,
+	})
+	return dtos.ZoneEditorMutationDto{Zones: zones, Connections: connections}
 }
 
 func (this *zoneEditorHandler) DescribeZoneEditorGraph(

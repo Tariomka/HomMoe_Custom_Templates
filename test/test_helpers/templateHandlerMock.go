@@ -27,7 +27,7 @@ type TemplateHandlerMock struct {
 	CountZoneCastlesFunc               func(template_model.Zone) int
 	GetZoneQualityFunc                 func(template_model.Zone) neutral_zone.Quality
 	GetZoneConnectionQualityFunc       func(string, string, []template_model.Zone, map[string]bool) neutral_zone.Quality
-	ApplyZoneEditorQualityFunc         func(dtos.ZoneEditorQualityRequestDto) template_model.Zone
+	ApplyZoneEditorQualityFunc         func(dtos.ZoneEditorQualityRequestDto) dtos.ZoneEditorMutationDto
 	DescribeZoneEditorGraphFunc        func([]template_model.Zone, []template_model.Connection) dtos.ZoneEditorGraphDto
 	CreateZoneEditorConnectionFunc     func(dtos.ZoneEditorConnectionRequestDto) template_model.Connection
 	ChangeZoneEditorConnectionTypeFunc func(dtos.ZoneEditorConnectionTypeRequestDto) template_model.Connection
@@ -107,11 +107,11 @@ func (this *TemplateHandlerMock) GetZoneConnectionGuardQuality(
 
 func (this *TemplateHandlerMock) ApplyZoneEditorQuality(
 	request dtos.ZoneEditorQualityRequestDto,
-) template_model.Zone {
+) dtos.ZoneEditorMutationDto {
 	if this.ApplyZoneEditorQualityFunc != nil {
 		return this.ApplyZoneEditorQualityFunc(request)
 	}
-	return request.Zone
+	return dtos.ZoneEditorMutationDto{Zones: request.Zones, Connections: request.Connections}
 }
 
 func (this *TemplateHandlerMock) DescribeZoneEditorGraph(

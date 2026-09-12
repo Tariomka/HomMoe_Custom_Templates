@@ -116,8 +116,7 @@ func (this *ZoneEditorDialog) SelectZone(name string) { this.selectZone(name) }
 // SelectedZone ONLY FOR INTEGRATION TEST USE
 func (this *ZoneEditorDialog) SelectedZone() string { return this.selectedZone }
 
-// SelectConnection selects the connection with the given name and reports
-// whether it exists. ONLY FOR INTEGRATION TEST USE
+// SelectConnection ONLY FOR INTEGRATION TEST USE
 func (this *ZoneEditorDialog) SelectConnection(name string) bool {
 	for _, connection := range this.working {
 		if connection.Name == name {
@@ -137,6 +136,11 @@ func (this *ZoneEditorDialog) SelectedConnection() string {
 	}
 
 	return this.selected.Name
+}
+
+// SelectedConnectionIsUserAdded ONLY FOR INTEGRATION TEST USE
+func (this *ZoneEditorDialog) SelectedConnectionIsUserAdded() bool {
+	return this.selected != nil && this.selected.IsUserAdded
 }
 
 // ClickUndo ONLY FOR INTEGRATION TEST USE
@@ -202,3 +206,13 @@ func (this *ZoneEditorDialog) EditedConnectionRecords() []template_model.Connect
 
 // StatusHint ONLY FOR INTEGRATION TEST USE
 func (this *ZoneEditorDialog) StatusHint() string { return this.hint }
+
+// GuardPresetLabels ONLY FOR INTEGRATION TEST USE
+func (this *ZoneEditorDialog) GuardPresetLabels() []string {
+	return append([]string(nil), this.guardPresetLabels...)
+}
+
+// SelectedGuardPresetLabel ONLY FOR INTEGRATION TEST USE
+func (this *ZoneEditorDialog) SelectedGuardPresetLabel() string {
+	return this.selectedGuardPresetLabel()
+}

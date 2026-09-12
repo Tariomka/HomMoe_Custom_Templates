@@ -41,7 +41,7 @@ func InitializeGuiHandler() handler_interfaces.IGuiHandler {
 	iZoneTierService := zones.NewZoneTierService()
 	iCastleFactory := zones.NewCastleFactory()
 	iZoneFactory := zones.NewZoneFactory(iCastleFactory, iRoadFactory)
-	iZoneEditorService := connection_editor.NewZoneEditorService(iCastleFactory, iRoadPolicyService, iZoneFactory)
+	iZoneEditorService := connection_editor.NewZoneEditorService(iCastleFactory, iRoadPolicyService, iZoneFactory, iZoneTierService)
 	iMandatoryContentProvider := providers.NewMandatoryContentProvider(iZoneTierService, iZoneEditorService)
 	iGameRulesProvider := providers.NewGameRulesProvider()
 	iGladiatorArenaProvider := providers.NewGladiatorArenaProvider(iZoneTierService)

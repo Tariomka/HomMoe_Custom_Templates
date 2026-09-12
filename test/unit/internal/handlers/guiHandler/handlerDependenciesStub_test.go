@@ -113,8 +113,8 @@ func (this *handlerDependenciesStub) GetZoneConnectionGuardQuality(
 
 func (this *handlerDependenciesStub) ApplyZoneEditorQuality(
 	request dtos.ZoneEditorQualityRequestDto,
-) template_model.Zone {
-	return request.Zone
+) dtos.ZoneEditorMutationDto {
+	return dtos.ZoneEditorMutationDto{Zones: request.Zones, Connections: request.Connections}
 }
 
 func (this *handlerDependenciesStub) DescribeZoneEditorGraph(

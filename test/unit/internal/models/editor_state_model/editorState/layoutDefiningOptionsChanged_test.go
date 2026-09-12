@@ -5,6 +5,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
+	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -70,6 +71,26 @@ func TestWhenLayoutDefiningOptionChanges_ReportsChanged(t *testing.T) {
 			"WhenNeutralHighCastleCountChanges_ReportsChanged",
 			func(state *editor_state_model.EditorState) { state.NeutralHighCastleCount++ },
 		},
+		{
+			"WhenTournamentIsEnabled_ReportsChanged",
+			func(state *editor_state_model.EditorState) { state.Tournament = true },
+		},
+		{
+			"WhenTheTournamentVictoryConditionIsChosen_ReportsChanged",
+			func(state *editor_state_model.EditorState) {
+				state.VictoryCondition = registry.GetWinningConditionValues().Tournament
+			},
+		},
+		{
+			"WhenTheGladiatorArenaIsEnabled_ReportsChanged",
+			func(state *editor_state_model.EditorState) { state.GladiatorArena = true },
+		},
+		{
+			"WhenTheFinalBattleVictoryConditionIsChosen_ReportsChanged",
+			func(state *editor_state_model.EditorState) {
+				state.VictoryCondition = registry.GetWinningConditionValues().FinalBattle
+			},
+		},
 	}
 	for _, testCase := range testCases {
 		t.Run(testCase.subtestName, func(t *testing.T) {
@@ -109,6 +130,57 @@ func TestWhenOnlyNonLayoutOptionsChange_ReportsUnchanged(t *testing.T) {
 	incoming.TemplateName = "Renamed"
 	incoming.NeutralZoneCastles = previous.NeutralZoneCastles + 2
 	incoming.ResourceDensityPercent = previous.ResourceDensityPercent + 50
+
+	// Act
+	changed := previous.LayoutDefiningOptionsChanged(&incoming)
+
+	// Assert
+	assert.False(t, changed)
+}
+
+// The same tournament expressed through the other alias generates the same map,
+// so the layout is judged on the effective mode rather than on which control
+// carries it.
+func TestWhenATournamentAliasIsTradedForTheOther_ReportsUnchanged(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	previous := editor_state_model.NewDefaultEditorStateModel()
+	previous.Tournament = true
+	incoming := previous
+	incoming.Tournament = false
+	incoming.VictoryCondition = registry.GetWinningConditionValues().Tournament
+
+	// Act
+	changed := previous.LayoutDefiningOptionsChanged(&incoming)
+
+	// Assert
+	assert.False(t, changed)
+}
+
+func TestWhenAnArenaAliasIsTradedForTheOther_ReportsUnchanged(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	previous := editor_state_model.NewDefaultEditorStateModel()
+	previous.GladiatorArena = true
+	incoming := previous
+	incoming.GladiatorArena = false
+	incoming.VictoryCondition = registry.GetWinningConditionValues().FinalBattle
+
+	// Act
+	changed := previous.LayoutDefiningOptionsChanged(&incoming)
+
+	// Assert
+	assert.False(t, changed)
+}
+
+func TestWhenOneOfTwoTournamentAliasesIsRemoved_ReportsUnchanged(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	previous := editor_state_model.NewDefaultEditorStateModel()
+	previous.Tournament = true
+	previous.VictoryCondition = registry.GetWinningConditionValues().Tournament
+	incoming := previous
+	incoming.Tournament = false
 
 	// Act
 	changed := previous.LayoutDefiningOptionsChanged(&incoming)

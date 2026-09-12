@@ -53,10 +53,6 @@ func NewEditorStateValidator() IEditorStateValidator {
 	return &EditorStateValidator{}
 }
 
-// Validate checks an editor state loaded from a .gen.json file
-// against the editor's allowed ranges and the known registry values. It never
-// modifies the state; each returned issue carries a Fix that applies the
-// correction. An empty result means the state is valid.
 func (this *EditorStateValidator) Validate(state *editor_state_model.EditorState) []ValidationIssue {
 	issues := this.validateRangedFields(state)
 	issues = append(issues, this.validateRangedFloatFields(state)...)
@@ -65,6 +61,7 @@ func (this *EditorStateValidator) Validate(state *editor_state_model.EditorState
 	issues = append(issues, this.validateGameMode(state)...)
 	issues = append(issues, this.validateVictoryCondition(state)...)
 	issues = append(issues, this.validateTopology(state)...)
+	issues = append(issues, this.validateTournamentPlayerCount(state)...)
 	return issues
 }
 
@@ -185,10 +182,23 @@ func (this *EditorStateValidator) validateTopology(state *editor_state_model.Edi
 	}}
 }
 
+func (this *EditorStateValidator) validateTournamentPlayerCount(
+	state *editor_state_model.EditorState) []ValidationIssue {
+	if !state.IsEffectiveTournament() || state.PlayerCount == editor_state_model.TournamentPlayerCount {
+		return nil
+	}
+
+	return []ValidationIssue{{
+		Message: fmt.Sprintf("playerCount %d is not the %d players tournament mode requires",
+			state.PlayerCount, editor_state_model.TournamentPlayerCount),
+		fix: func(state *editor_state_model.EditorState) {
+			state.PlayerCount = editor_state_model.TournamentPlayerCount
+		},
+	}}
+}
+
 // rangedIntFields lists every integer field of the editor state together with
-// the bounds its editor control offers. Count fields keep a zero floor rather
-// than their control's minimum so states written before these ceilings existed
-// keep loading unchanged.
+// the bounds its editor control offers.
 //
 //nolint:funlen // Declarative field table.
 func (this *EditorStateValidator) getRangedIntFieldDescriptors() []rangedFieldDescriptor[int] {

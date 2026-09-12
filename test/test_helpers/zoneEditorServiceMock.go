@@ -71,6 +71,14 @@ func (this *ZoneEditorServiceMock) ApplyNeutralZoneQuality(
 	this.Called(zone, quality, castleCount, tuning)
 }
 
+func (this *ZoneEditorServiceMock) ApplyNeutralZoneQualityEdit(
+	request models.NeutralZoneQualityEditRequest) ([]template_model.Zone, []template_model.Connection) {
+	arguments := this.Called(request)
+	mutatedZones, _ := arguments.Get(0).([]template_model.Zone)
+	mutatedConnections, _ := arguments.Get(1).([]template_model.Connection)
+	return mutatedZones, mutatedConnections
+}
+
 func (this *ZoneEditorServiceMock) CanDeleteZone(zoneName string, playerZoneNames map[string]bool) bool {
 	arguments := this.Called(zoneName, playerZoneNames)
 	return arguments.Bool(0)

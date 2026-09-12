@@ -41,6 +41,15 @@ const (
 	loadButtonX   = 84
 	saveToButtonX = 200
 
+	// playerCountSlider* address the General tab's Players slider, which sits
+	// between the template name row and the map size dropdown. A slider emits no
+	// semantic.Button, so the row band was found by dragging at successive
+	// heights and confirmed by asserting EditorStateDto.PlayerCount reached 8;
+	// the band spans y=142..178, and the center is used.
+	playerCountSliderCenterY = 160
+	playerCountSliderLeftX   = 200
+	playerCountSliderRightX  = 520
+
 	// mapSizeSelectorTrigger* opens the General tab's map size dropdown.
 	// Confirmed by clicking it and observing the option rows appear.
 	mapSizeSelectorTriggerX = 360
@@ -60,6 +69,31 @@ const (
 	// and asserting EditorStateDto.ExperimentalMapSizes flipped.
 	experimentalMapSizesCheckboxX = 100
 	experimentalMapSizesCheckboxY = 234
+
+	// victorySelectorTrigger* opens the General tab's Rules > Conditions victory
+	// dropdown, which sits in the left half of that section. Confirmed by
+	// clicking it and then clicking a row, asserting
+	// EditorStateDto.VictoryCondition.
+	victorySelectorTriggerX = 370
+	victorySelectorTriggerY = 431
+
+	// victoryOption* bound the block the open victory dropdown draws its rows in,
+	// below the trigger and left of the condition options column. The rows emit
+	// semantic.Button, so they are addressed by label inside this rectangle.
+	victoryOptionsLeft   = 178
+	victoryOptionsTop    = 446
+	victoryOptionsRight  = 570
+	victoryOptionsBottom = WindowHeight
+
+	// conditionOptions* bound the Conditions section's right-hand column, which
+	// carries the checkboxes the selected victory condition offers. Its topmost
+	// one is the rule that condition is about - "Enable tournament" under the
+	// tournament condition. Confirmed by clicking it and asserting
+	// EditorStateDto.Tournament flipped.
+	conditionOptionsLeft   = 570
+	conditionOptionsTop    = 405
+	conditionOptionsRight  = 1110
+	conditionOptionsBottom = 700
 
 	// gameMode*X select the General tab's game mode segment buttons at
 	// gameModeCenterY. SingleHero removes the three hero count rows below them,
@@ -209,6 +243,12 @@ const (
 	zoneEditorConnectionMatchGroupY   = 446
 	zoneEditorConnectionGuardEscapeY  = 480
 	zoneEditorConnectionSimTurnSquadY = 520
+
+	// zoneEditorConnectionNoteDrop is how far every row above moves down when the
+	// panel draws the "User-added connection" note, which only a connection the
+	// user drew carries - see connectionRowY. It is one line rather than the zone
+	// panel's two, so it is not the same drop as zoneEditorSidePanelNoteDrop.
+	zoneEditorConnectionNoteDrop = 15
 )
 
 // zoneEditorRect is the modal panel the zone editor is drawn into.

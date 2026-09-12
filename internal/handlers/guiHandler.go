@@ -73,7 +73,8 @@ func (this *GUIHandler) GetZoneConnectionGuardQuality(
 	return this.zoneEditorHandler.GetZoneConnectionGuardQuality(from, to, zones, playerZoneNames)
 }
 
-func (this *GUIHandler) ApplyZoneEditorQuality(request dtos.ZoneEditorQualityRequestDto) template_model.Zone {
+func (this *GUIHandler) ApplyZoneEditorQuality(
+	request dtos.ZoneEditorQualityRequestDto) dtos.ZoneEditorMutationDto {
 	return this.zoneEditorHandler.ApplyZoneEditorQuality(request)
 }
 

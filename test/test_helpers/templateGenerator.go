@@ -18,7 +18,7 @@ func NewTemplateGenerator(configuration *config.GeneratorConfig) template_genera
 	roadPolicy := zones.NewRoadPolicyService(roadFactory)
 	zoneFactory := zones.NewZoneFactory(castleFactory, roadFactory)
 	zoneClassifier := zones.NewZoneTierService()
-	zoneEditor := connection_editor.NewZoneEditorService(castleFactory, roadPolicy, zoneFactory)
+	zoneEditor := connection_editor.NewZoneEditorService(castleFactory, roadPolicy, zoneFactory, zoneClassifier)
 	zoneLabelProvider := zones.NewZoneLabelProvider()
 	connectionService := base.NewTopologyConnectionService(zoneLabelProvider)
 

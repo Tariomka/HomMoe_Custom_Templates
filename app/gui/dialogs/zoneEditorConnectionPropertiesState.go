@@ -11,6 +11,7 @@ type zoneEditorConnectionPropertiesState struct {
 	typeDropdown      *components.DropdownSelector
 	guardZoneDropdown *components.DropdownSelector
 	guardDropdown     *components.DropdownSelector
+	guardPresetLabels []string
 	guardPresetValues []int
 	weeklyDropdown    *components.DropdownSelector
 	guardValueEdit    widget.Editor

@@ -19,6 +19,7 @@ package integration_common
 
 import (
 	"image"
+	"math"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -270,6 +271,20 @@ func (this *AppRunner) InputText(text string) {
 	this.invalidate()
 }
 
+// ReplaceText replaces everything the focused editor holds with text, which
+// InputText cannot do: an edit event with no range inserts at the caret, and a
+// freshly focused Gio editor puts the caret at the start. Gio clamps the range
+// to the text actually present, so the end is simply past any of it.
+func (this *AppRunner) ReplaceText(text string) {
+	this.tb.Helper()
+	this.mu.Lock()
+	this.frameLocked()
+	this.router.Queue(key.EditEvent{Range: key.Range{Start: 0, End: math.MaxInt32}, Text: text})
+	this.frameLocked()
+	this.mu.Unlock()
+	this.invalidate()
+}
+
 // SelectedTabIndex returns the editor's selected tab, taken under the lock so it
 // is safe to read while the render goroutine is active.
 func (this *AppRunner) SelectedTabIndex() int {
@@ -380,6 +395,15 @@ func (this *AppRunner) Status() (string, bool) {
 	this.mu.Lock()
 	defer this.mu.Unlock()
 	return this.App.GetStateDriver().GetStatus()
+}
+
+// SetStatus overwrites the status message, so a test can tell a message the
+// editor writes later apart from the one it is already showing (lock-guarded).
+func (this *AppRunner) SetStatus(message string, isError bool) {
+	this.tb.Helper()
+	this.mu.Lock()
+	this.App.GetStateDriver().SetStatus(message, isError)
+	this.mu.Unlock()
 }
 
 // OutputPath returns the directory templates would be exported to, which is

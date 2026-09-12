@@ -15,5 +15,6 @@ func NewZoneEditorService() connection_editor.IZoneEditorService {
 		castleFactory,
 		zones.NewRoadPolicyService(roadFactory),
 		zones.NewZoneFactory(castleFactory, roadFactory),
+		zones.NewZoneTierService(),
 	)
 }

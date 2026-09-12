@@ -7,6 +7,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
+	"github.com/Tariomka/hommoe_custom_templates/internal/validators"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
@@ -124,4 +125,42 @@ func TestWhenValidationReportsIssues_ReturnsThemAsWarnings(t *testing.T) {
 
 	// Assert
 	assert.Equal(t, []string{firstMessage, secondMessage}, validation.Warnings)
+}
+
+// The load the editor performs first asks for no fixes, because the file's own
+// tournament player count is what tells it a correction happened at all.
+func TestWhenIssuesAreNotFixed_ReturnsTheFilesTournamentPlayerCount(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	loaded := editor_state_model.NewDefaultEditorStateModel()
+	loaded.Tournament = true
+	loaded.PlayerCount = 6
+	fileService := &test_helpers.FileServiceMock{}
+	fileService.On("LoadSettingsFile", mock.Anything).Return(&loaded, nil)
+	handler := handlers.NewStateHandler(fileService, validators.NewEditorStateValidator())
+
+	// Act
+	validation, err := handler.LoadState(gofakeit.Word(), false)
+
+	// Assert
+	require.NoError(t, err)
+	assert.Equal(t, 6, validation.State.PlayerCount)
+}
+
+func TestWhenIssuesAreFixed_ReturnsTheCorrectedTournamentPlayerCount(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	loaded := editor_state_model.NewDefaultEditorStateModel()
+	loaded.Tournament = true
+	loaded.PlayerCount = 6
+	fileService := &test_helpers.FileServiceMock{}
+	fileService.On("LoadSettingsFile", mock.Anything).Return(&loaded, nil)
+	handler := handlers.NewStateHandler(fileService, validators.NewEditorStateValidator())
+
+	// Act
+	validation, err := handler.LoadState(gofakeit.Word(), true)
+
+	// Assert
+	require.NoError(t, err)
+	assert.Equal(t, 2, validation.State.PlayerCount)
 }
