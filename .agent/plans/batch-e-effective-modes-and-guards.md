@@ -7,11 +7,11 @@ Fix review findings §1.5, §1.11 and §1.12 only: invalidate incompatible manua
 ## Authority and approval gate
 
 - Date: 2026-09-12. Owner confirmed the product decisions and full scope below through three question rounds.
-- **Written plan APPROVED for a subsequent implementation session.** No production code, tests, generated files, configuration or existing reports have changed during discovery/planning. No tests were run. This session must not begin implementation.
+- **Written plan APPROVED; Phase 1 COMPLETE.** The owner committed the plan in `b9dd616` on `AD/modes_and_guard_propagation`, then requested Phase 1 completion and handoff on 2026-09-12. Fresh unit coverage passed and reports were regenerated. No production code, tests, configuration or generated Wire changed. Phases 2-4 remain unstarted; this closeout does not begin implementation.
 - Read [AGENTS.md](../../AGENTS.md), the [current handoff](../session-carry-forward.md) and the [surviving review](../backlog/review-gpt-6-astra-09-07.md). This plan becomes the working record for Batch E after approval.
 - Batches A/D, B and C are closed. Accept the owner's commit/engine record; do not retrieve retired documents, re-review those batches, or schedule a separate closed-batch verification. Normal regression suites for actual Batch E changes are required.
 - The handoff's §8 is verbatim historical text. Do not edit it. Its later-scope decisions remain binding, but its Batch C phase/engine wording is superseded.
-- Approval record, 2026-09-12: owner selected **"Approve the plan for subsequent implementation"** after reading the written-plan approval question and independent-review result. This is explicit approval of this plan, beyond prior scope confirmation. Next session starts with Phase 1's remaining read-only worktree inspection and fresh coverage baseline, then Phase 2. No code is authorized in the current discovery/planning session.
+- Approval record, 2026-09-12: owner selected **"Approve the plan for subsequent implementation"** after reading the written-plan approval question and independent-review result. This is explicit approval of this plan, beyond prior scope confirmation. Subsequent instruction: **"the plan is commited, proceed with finishing Phase 1 and update carry forward"**. Phase 1 is now complete. Next implementation session starts at Phase 2, after checking that the source still matches the baseline; do not repeat settled product questions or the approved plan review.
 - Independent plan review: **APPROVED by Claude Opus 5, 2026-09-12**, after one revision. All five initial blockers resolved: remove unapproved direct-generator rejection; separate count validation from visible discard outcomes; invalidate before generation failure can consume transitions; rebind working/selected pointers; specify ordered Default matching. No implementation review has occurred.
 
 ## For Future Agents
@@ -68,7 +68,7 @@ As work proceeds, mark checkboxes when items complete. For every phase, record i
 | --- | --- |
 | Effective aliases | [GeneratorConfig](../../internal/models/config/generatorConfig.go#L97-L105) has the two predicates; [EditorState](../../internal/models/editor_state_model/editorState.go#L98-L106) omits them from layout comparison. Add model-level effective predicates and compare booleans, with equivalence tests against config semantics. Do not introduce reverse model dependencies. |
 | Regeneration | [decision service](../../internal/services/editor/regenerationDecisionService.go#L72-L91) preserves loaded snapshots when no previous generation exists. [driver generation](../../app/gui/drivers/stateGeneration.go#L82-L127) reapplies snapshots after generation and overwrites status. Retain the existing generation/reapply structure while enforcing mode invalidation and preserving new warnings. |
-| Live validation | [GUI state model](../../app/gui/models/editorState.go#L47-L52) validates a clone but discards warning metadata. Keep the validator responsible for count correction only. A domain-model transition operation compares old stored modes against validated modes and detects invalid tournament count in the raw requested candidate; it clears manual snapshots on the validated clone and reports actual discard/correction. Invoke it before assigning current state, independently of generation snapshots. Return the transient outcome to [driver UpdateState](../../app/gui/drivers/state.go#L135-L140), which explicitly calls its dirty/Exit setter for an actual discard even if `WasStateChanged` is false, and queues the warning. No business policy is placed in the GUI. |
+| Live validation | [GUI state model](../../app/gui/models/editorState.go#L47-L52) validates a clone but discards warning metadata. Keep the validator responsible for count correction only. A domain-model transition operation compares old stored modes against validated modes and detects invalid tournament count in the raw requested candidate; it clears manual snapshots on the validated clone and reports actual discard/correction. Invoke it before assigning current state, independently of generation snapshots. Return the transient outcome to [driver UpdateState](../../app/gui/drivers/state.go#L118-L123), which explicitly calls its dirty/Exit setter for an actual discard even if `WasStateChanged` is false, and queues the warning. No business policy is placed in the GUI. |
 | Load | [state handler](../../internal/handlers/stateHandler.go#L28-L40) supports `fixIssues=false`; [validation](../../internal/handlers/stateHandler.go#L56-L75) clones before fixes. [driver load](../../app/gui/drivers/stateFiles.go#L95-L120) currently always marks loaded state clean. Call existing `LoadState(path, false)` once then existing `ValidateEditorState(raw, true)`, using only the latter's warnings. Use a model-level operation on raw and corrected state to identify tournament count correction and clear its snapshot, without comparing modes against the document being replaced. The driver consumes that structured outcome to set dirty/Exit and notify. No new load API, warning parsing, duplicate warnings, extra disk read or persisted metadata. |
 | Player UI | [General panel](../../app/gui/panels/generalPanel.go#L104-L200) loads, rounds and saves a 2-8 slider without a tournament gate. Ensure the slider value itself becomes two, not just the outgoing DTO, and disable input under either alias. |
 | Validator | [EditorStateValidator](../../internal/validators/editorStateValidator.go) currently has independent range checks. Add a tournament-count issue/fix that changes the count only; warning-producing domain transition/load policy owns manual-snapshot clearing. Ensure general range fixes cannot overwrite the two-player result; test fix ordering and extreme invalid values. |
@@ -85,15 +85,15 @@ Implementation details may be adjusted within these seams, but a changed product
 
 ## Phase 1: Approval and comparable baseline
 
-Status: In progress
+Status: Complete
 
 - [x] Read required instructions, handoff and surviving review; inspect Batch E callers and existing tests without modifying code.
 - [x] Resolve product choices and receive full scope confirmation.
 - [x] Draft this durable plan, with no implementation authorization implied.
 - [x] Obtain independent Claude Opus 5 plan review; record verdict and address blockers here. Re-review approved all five revisions on 2026-09-12.
 - [x] Obtain explicit owner approval of the written plan; record authorization above. Approved for a subsequent session on 2026-09-12.
-- [ ] After approval, inspect worktree/index read-only and record inherited changes without disturbing them. Do not look up closed-batch documents or commits.
-- [ ] Run fresh baseline unit coverage and record total/per-target function coverage before the first Go edit.
+- [x] After approval, inspect worktree/index read-only and record inherited changes without disturbing them. Branch `AD/modes_and_guard_propagation`, HEAD and plan commit `b9dd616` (`Init`); clean worktree, no staged paths, no inherited changes. No closed-batch documents or commits inspected.
+- [x] Run fresh baseline unit coverage and record total/per-target function coverage before the first Go edit. PASS: 186 unit packages, 75.1% total statements, Windows/amd64 Go 1.27.0; target detail below.
 
 ### Verification Plan
 
@@ -103,7 +103,38 @@ Status: In progress
 
 ### Phase Summary
 
-Read-only discovery and scope questions completed on 2026-09-12. Owner chose full snapshot invalidation instead of arena reconciliation, numeric preset identity with explicit Custom, no previous-count restoration, and automatic invalid tournament-load correction with warning/dirty state. Independent revised-plan review and explicit owner plan approval are complete. No code, tests, generated files or coverage artifacts changed. Worktree inspection and baseline remain for the subsequent implementation session.
+Completed on 2026-09-12. Owner chose full snapshot invalidation instead of arena reconciliation, numeric preset identity with explicit Custom, no previous-count restoration, and automatic invalid tournament-load correction with warning/dirty state. Independent revised-plan review and explicit owner plan approval are complete; plan commit `b9dd616` was verified read-only on `AD/modes_and_guard_propagation`.
+
+Fresh baseline: the existing coverage task ran `go test -count=1 '-coverpkg=./internal/...,./app/...' '-coverprofile=coverage.txt' ./test/unit/...`, generated HTML and LCOV, and reported all **186 packages passing**. `go tool cover '-func=coverage.txt'` succeeded and reported **75.1%** total statements. `GOFLAGS` was empty. No application build, default/full suite, tagged integration/GUI suite, lint, Wire generation or Linux execution was run for this Phase 1 closeout. No production/test changes were made; only plan/handoff edits and ignored coverage reports result. Phase 2 remains unstarted.
+
+### Baseline target function coverage
+
+Measured from Go's function report, not per-test-package percentages. Existing 100% statement coverage does not establish the new mode/guard contracts; add the specified value/branch regressions during implementation.
+
+| Current target | Function(s) | Baseline |
+| --- | --- | --- |
+| [Domain editor state](../../internal/models/editor_state_model/editorState.go) | `LayoutDefiningOptionsChanged`, `EqualsIgnoringManualEdits`, `HasManualEdits` | 100.0% each |
+| [Config mode predicates](../../internal/models/config/generatorConfig.go) | `IsTournamentMode`, `IsGladiatorArenaMode` | 100.0% each |
+| [Regeneration decisions](../../internal/services/editor/regenerationDecisionService.go) | `DecideRegeneration`, `DecideManualEditReapplication` | 100.0% each |
+| [Validator](../../internal/validators/editorStateValidator.go) | `Validate` and every currently reported private validation/descriptor function | 100.0% each |
+| [State handler](../../internal/handlers/stateHandler.go) | `LoadState`, `ValidateEditorState` | 100.0% each |
+| [Generation handler](../../internal/handlers/templateHandler.go) | `GenerateTemplate` | 100.0% |
+| [Quality handler](../../internal/handlers/zoneEditorHandler.go) | `ApplyZoneEditorQuality` | 100.0% |
+| [Facade](../../internal/handlers/guiHandler.go) | `LoadState`, `ValidateEditorState`, `GenerateTemplate`, `ApplyZoneEditorQuality` | 100.0% each |
+| [GUI state model](../../app/gui/models/editorState.go) | `UpdateCurrentState`, `HasManualEdits` | 100.0% each |
+| [State driver](../../app/gui/drivers/state.go) | `UpdateState`, `flagAsUnsaved` | 100.0% each |
+| [Load driver](../../app/gui/drivers/stateFiles.go) | `handleLoadState` | 0.0%; integration-only callback path |
+| [Generation driver](../../app/gui/drivers/stateGeneration.go) | `handleGenerateTemplate`; `applyGeneratedTemplate`, `clearGeneratedState` | 81.0%; 100.0% each respectively |
+| [Quality service](../../internal/services/connection_editor/zoneEditorService.go) | `NewZoneEditorService`, `ApplyNeutralZoneQuality` | 100.0% each |
+| [Tier service](../../internal/services/zones/zoneTierService.go) | `ResolveQuality`, `GetGuardQuality`, `GetConnectionGuardQuality` | 100.0% each |
+| [Preset lookup](../../internal/common/common_connections/guardStrength.go) | `GetGuardStrengthListForQuality`, `GetGuardStrengthForQuality` | 100.0% each |
+| [Connection properties](../../app/gui/dialogs/zoneEditorConnectionProps.go) | `syncPropsFromConnection`, `writebackProps`, `guardPresetItems`, `matchGuardLabel` | 0.0% each; GUI integration territory |
+| [Zone properties](../../app/gui/dialogs/zoneEditorZoneProps.go) | `syncZoneProps`, `writebackZoneProps` | 0.0% each; GUI integration territory |
+| [General panel](../../app/gui/panels/generalPanel.go) | No function entries in this unit profile | Not instrumented, **not** a measured 0% or 100%; use GUI integration |
+
+The coverage task regenerated ignored [coverage.txt](../../coverage.txt), [coverage.html](../../coverage.html) and [lcov.info](../../lcov.info). Baseline profile SHA-256: `44FE40F418607CC691CAE32DFD0D48439A9C620B5333B5A2ADF559CBF25EEBDF`. These reports are local artifacts, not tracked baseline files. The recorded figures survive report replacement. Before Phase 2 edits, check source/toolchain/coverage scope still matches this baseline; refresh it only if inputs changed or evidence is unavailable. This is Batch E's pre-change baseline, not a reopening of earlier batches.
+
+Closeout checks passed: full index unchanged; handoff §8 exact UTF-8 text including line endings preserved; only this plan and the handoff modified in tracked files; local document links valid; whitespace check and editor diagnostics clean. The owner receives two unstaged documentation changes, not a code implementation.
 
 ## Phase 2: Effective modes and two-player state lifecycle
 
@@ -131,7 +162,7 @@ Status: Not started
 
 ### Phase Summary
 
-Written plan approved; implementation and fresh baseline deferred to the next session.
+Written plan approved and Phase 1 baseline recorded above; implementation deferred to the next session.
 
 ## Phase 3: Quality propagation and explicit Custom display
 
@@ -194,7 +225,8 @@ Pending.
 
 | Check | Baseline | Final |
 | --- | --- | --- |
-| Build / unit / coverage | Not run; next-session baseline required before edits | Pending |
+| Build | Not run in Phase 1 | Pending |
+| Fresh unit / coverage | PASS, 186 packages, 75.1%; Windows/amd64 Go 1.27.0 at `b9dd616`, 2026-09-12 | Pending |
 | Focused domain / handler / GUI / persistence | Source inspected only | Pending |
 | Default / tagged integration / GUI | Not run | Pending |
 | Layout / report-only lint / formatting / Wire | Not run | Pending |
@@ -206,11 +238,11 @@ Discovery tooling notes: initial subagent requests used unsupported lowercase mo
 
 ## Final Recap
 
-Pending implementation and verification. Discovery resolved all requested product choices; only this plan was created. The revised plan passed independent review and the owner approved subsequent-session implementation. No claim of fixed findings, successful tests or runtime behavior is made yet.
+Implementation and final verification remain pending. Discovery resolved all requested product choices; the revised plan passed independent review and the owner approved/committed it. Phase 1 is complete with a fresh passing unit baseline at 75.1%. Only documentation and ignored coverage reports changed during closeout. No Batch E finding is fixed yet; no new behavior or in-game outcome is claimed.
 
 ## Deployment Plan
 
-No deployment is authorized or performed in this planning session. After implementation approval and successful verification:
+No deployment is authorized or performed in this planning/baseline session. Implementation approval is recorded; after implementation and successful verification:
 
 1. Owner reviews the scoped changes, warnings and UI behavior; performs staging/commits and any release steps.
 2. Build/package through the existing platform workflow. No dependency installation, saved-schema migration or output-directory change is planned; Wire regeneration is build-time only if required.
