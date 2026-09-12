@@ -130,6 +130,21 @@ func (this *ZoneEditorHandler) ClickConnection(name string) *ZoneEditorHandler {
 	return this.ClickCanvasAt(this.connectionMidPoint(name))
 }
 
+// ClickConnectionBetween taps the midpoint of the curve joining two zones. It is
+// how a user-added connection is selected: the generator names its own, a drawn
+// one carries no name at all.
+func (this *ZoneEditorHandler) ClickConnectionBetween(from string, to string) *ZoneEditorHandler {
+	this.base.runner.tb.Helper()
+	for _, edge := range this.Dialog().EdgeGeometries() {
+		if (edge.From == from && edge.To == to) || (edge.From == to && edge.To == from) {
+			return this.ClickCanvasAt(edge.MidPoint)
+		}
+	}
+
+	this.base.runner.tb.Fatalf("the canvas is not showing a connection between %q and %q", from, to)
+	return this
+}
+
 // RightClickEdge presses the secondary mouse button on the named connection's
 // curve, which is how the canvas deletes a connection.
 func (this *ZoneEditorHandler) RightClickEdge(name string) *ZoneEditorHandler {
@@ -263,55 +278,68 @@ func (this *ZoneEditorHandler) ClickDeleteZone() *ZoneEditorHandler {
 
 // SelectConnectionType picks the selected connection's type.
 func (this *ZoneEditorHandler) SelectConnectionType(label string) *ZoneEditorHandler {
-	return this.selectInSidePanelDropdown(zoneEditorConnectionTypeY, label)
+	return this.selectInSidePanelDropdown(this.connectionRowY(zoneEditorConnectionTypeY), label)
 }
 
 // SelectConnectionGuardZone picks which of the connected zones the guard is
 // drawn from.
 func (this *ZoneEditorHandler) SelectConnectionGuardZone(label string) *ZoneEditorHandler {
-	return this.selectInSidePanelDropdown(zoneEditorConnectionGuardZoneY, label)
+	return this.selectInSidePanelDropdown(this.connectionRowY(zoneEditorConnectionGuardZoneY), label)
 }
 
 // SelectConnectionGuardPreset picks a guard strength preset, which rewrites the
 // guard value field below it.
 func (this *ZoneEditorHandler) SelectConnectionGuardPreset(label string) *ZoneEditorHandler {
-	return this.selectInSidePanelDropdown(zoneEditorConnectionGuardPresetY, label)
+	return this.selectInSidePanelDropdown(this.connectionRowY(zoneEditorConnectionGuardPresetY), label)
 }
 
 // SelectConnectionWeekly picks the connection's weekly increment mode.
 func (this *ZoneEditorHandler) SelectConnectionWeekly(label string) *ZoneEditorHandler {
-	return this.selectInSidePanelDropdown(zoneEditorConnectionWeeklyY, label)
+	return this.selectInSidePanelDropdown(this.connectionRowY(zoneEditorConnectionWeeklyY), label)
 }
 
 // TypeConnectionGuardValue types into the connection's guard value field.
 func (this *ZoneEditorHandler) TypeConnectionGuardValue(text string) *ZoneEditorHandler {
-	return this.typeInSidePanelField(zoneEditorConnectionGuardValueY, text)
+	return this.typeInSidePanelField(this.connectionRowY(zoneEditorConnectionGuardValueY), text)
+}
+
+// SetConnectionGuardValue replaces the connection's guard value with text,
+// rather than inserting at the caret the way TypeConnectionGuardValue does. It
+// is how a test enters an exact number.
+func (this *ZoneEditorHandler) SetConnectionGuardValue(text string) *ZoneEditorHandler {
+	this.base.runner.tb.Helper()
+	this.base.runner.ClickAt(f32.Pt(
+		zoneEditorSidePanelFieldX, float32(this.connectionRowY(zoneEditorConnectionGuardValueY))))
+	this.base.runner.ReplaceText(text)
+	this.base.runner.NextFrame()
+	this.verifySnapshot()
+	return this
 }
 
 // TypeConnectionIncrement types into the connection's increment field.
 func (this *ZoneEditorHandler) TypeConnectionIncrement(text string) *ZoneEditorHandler {
-	return this.typeInSidePanelField(zoneEditorConnectionIncrementY, text)
+	return this.typeInSidePanelField(this.connectionRowY(zoneEditorConnectionIncrementY), text)
 }
 
 // TypeConnectionMatchGroup types into the connection's match group field, which
 // only exists while the advanced options are shown.
 func (this *ZoneEditorHandler) TypeConnectionMatchGroup(text string) *ZoneEditorHandler {
-	return this.typeInSidePanelField(zoneEditorConnectionMatchGroupY, text)
+	return this.typeInSidePanelField(this.connectionRowY(zoneEditorConnectionMatchGroupY), text)
 }
 
 // ToggleAdvancedOptions shows or hides the connection's advanced rows.
 func (this *ZoneEditorHandler) ToggleAdvancedOptions() *ZoneEditorHandler {
-	return this.clickSidePanelCheckbox(zoneEditorConnectionAdvancedY)
+	return this.clickSidePanelCheckbox(this.connectionRowY(zoneEditorConnectionAdvancedY))
 }
 
 // ToggleGuardEscape flips the connection's guard escape flag.
 func (this *ZoneEditorHandler) ToggleGuardEscape() *ZoneEditorHandler {
-	return this.clickSidePanelCheckbox(zoneEditorConnectionGuardEscapeY)
+	return this.clickSidePanelCheckbox(this.connectionRowY(zoneEditorConnectionGuardEscapeY))
 }
 
 // ToggleSimTurnSquad flips the connection's simultaneous turn squad flag.
 func (this *ZoneEditorHandler) ToggleSimTurnSquad() *ZoneEditorHandler {
-	return this.clickSidePanelCheckbox(zoneEditorConnectionSimTurnSquadY)
+	return this.clickSidePanelCheckbox(this.connectionRowY(zoneEditorConnectionSimTurnSquadY))
 }
 
 // ClickDeleteConnection removes the selected connection.
@@ -381,6 +409,17 @@ func (this *ZoneEditorHandler) zoneRowY(noteRowY int) int {
 	}
 
 	return noteRowY
+}
+
+// connectionRowY shifts a row measured on a generated connection down for a
+// user-added one, whose panel carries an extra note row above every field.
+func (this *ZoneEditorHandler) connectionRowY(rowY int) int {
+	this.base.runner.tb.Helper()
+	if this.Dialog().SelectedConnectionIsUserAdded() {
+		return rowY + zoneEditorConnectionNoteDrop
+	}
+
+	return rowY
 }
 
 // connectionMidPoint reads where the canvas currently draws the middle of the

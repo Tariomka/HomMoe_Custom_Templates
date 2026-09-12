@@ -11,6 +11,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/zone_helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
@@ -83,13 +84,39 @@ func (this *ZoneEditorDialog) writebackZoneProps(zone *template_model.Zone) {
 		(this.qualityDropdown.WasUpdated || this.castleDropdown.WasUpdated) {
 		quality := neutral_zone.GetQualityFromIndex(this.qualityDropdown.GetSelectedIndex())
 		castles := this.castleDropdown.GetSelectedIndex()
-		*zone = this.zoneHandler.ApplyZoneEditorQuality(dtos.ZoneEditorQualityRequestDto{
-			Zone:        *zone,
-			Quality:     quality,
-			CastleCount: castles,
-			Tuning:      this.tuning,
-		})
-		this.geometryDirty = true // tier color / castle glyph live in previewZones
-		this.syncedZoneFor = ""   // re-sync dependent fields next frame
+		this.applyQualityMutation(this.zoneHandler.ApplyZoneEditorQuality(
+			dtos.ZoneEditorQualityRequestDto{
+				Zone:            *zone,
+				Quality:         quality,
+				CastleCount:     castles,
+				Tuning:          this.tuning,
+				Zones:           this.zones,
+				Connections:     derefConnections(this.working),
+				PlayerZoneNames: linq.FromMap(this.playerZones).SelectKeys().ToSlice(),
+			}))
 	}
+}
+
+func (this *ZoneEditorDialog) applyQualityMutation(mutation dtos.ZoneEditorMutationDto) {
+	selectedIndex := -1
+	for index, connection := range this.working {
+		if connection == this.selected {
+			selectedIndex = index
+			break
+		}
+	}
+
+	this.working = make([]*template_model.Connection, 0, len(mutation.Connections))
+	for index := range mutation.Connections {
+		this.working = append(this.working, &mutation.Connections[index])
+	}
+	this.selected = nil
+	if selectedIndex >= 0 && selectedIndex < len(this.working) {
+		this.selected = this.working[selectedIndex]
+	}
+	this.syncedFor = nil
+
+	this.zones = mutation.Zones
+	this.geometryDirty = true // tier color / castle glyph live in previewZones
+	this.syncedZoneFor = ""   // re-sync dependent fields next frame
 }

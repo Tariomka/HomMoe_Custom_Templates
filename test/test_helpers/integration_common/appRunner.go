@@ -19,6 +19,7 @@ package integration_common
 
 import (
 	"image"
+	"math"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -265,6 +266,20 @@ func (this *AppRunner) InputText(text string) {
 	this.mu.Lock()
 	this.frameLocked()
 	this.router.Queue(key.EditEvent{Text: text})
+	this.frameLocked()
+	this.mu.Unlock()
+	this.invalidate()
+}
+
+// ReplaceText replaces everything the focused editor holds with text, which
+// InputText cannot do: an edit event with no range inserts at the caret, and a
+// freshly focused Gio editor puts the caret at the start. Gio clamps the range
+// to the text actually present, so the end is simply past any of it.
+func (this *AppRunner) ReplaceText(text string) {
+	this.tb.Helper()
+	this.mu.Lock()
+	this.frameLocked()
+	this.router.Queue(key.EditEvent{Range: key.Range{Start: 0, End: math.MaxInt32}, Text: text})
 	this.frameLocked()
 	this.mu.Unlock()
 	this.invalidate()

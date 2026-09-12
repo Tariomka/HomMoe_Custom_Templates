@@ -6,6 +6,7 @@ Fix review findings §1.5, §1.11 and §1.12 only: invalidate incompatible manua
 
 ## Authority and approval gate
 
+- **Current closeout, 2026-09-12:** Phase 3 COMPLETE. Phase 4 Windows gates and independent Claude Opus 5 review PASS; native Linux verification and owner acceptance/commit remain outstanding. The owner explicitly accepted unit coverage decreasing from 75.1% to 74.9% for integration-covered GUI helpers. Earlier phase status/unstaged statements below are historical; Phase 2 is committed at `f80f7ca`.
 - Date: 2026-09-12. Owner confirmed the product decisions and full scope below through three question rounds.
 - **Written plan APPROVED; Phases 1 and 2 COMPLETE.** The owner committed the plan in `b9dd616` on `AD/modes_and_guard_propagation` and asked for Phase 1 completion, then for Phase 2 implementation in the following session. Phase 2 is implemented, fully verified and independently approved; its changes are unstaged/untracked and await the owner's review. **Phases 3 and 4 remain unstarted.**
 - Read [AGENTS.md](../../AGENTS.md), the [current handoff](../session-carry-forward.md) and the [surviving review](../backlog/review-gpt-6-astra-09-07.md). This plan becomes the working record for Batch E after approval.
@@ -206,15 +207,21 @@ Completed on 2026-09-12; findings §1.5 and §1.12 are implemented, §1.11 remai
 
 ## Phase 3: Quality propagation and explicit Custom display
 
-Status: Not started
+Status: Complete
 
-- [ ] Extend the existing quality-edit handler contract with current zone/connection context; reuse the mutation response. Update interfaces, facade, mocks and direct callers together, with no unrelated DTO changes.
-- [ ] Add model-based zone-plus-incident-connection editing in the existing service package. Capture old effective quality/preset before reprofile, resolve new endpoint quality afterward, and change only matching incident guard values on an actual quality change.
-- [ ] Clone zones/connections before mutation using existing deep-clone facilities; preserve order, names, endpoint identity and nil/empty semantics. Keep the current zone-only reprofile API and road finalization behavior for other callers.
-- [ ] Inject the tier collaborator where needed; regenerate Wire through the existing task. Update explicit test constructors/helpers, never generated source by hand.
-- [ ] Consume the whole mutation using the index-preserving pointer replacement described above. Rebind selected, clear `syncedFor`, finish old zone-pointer use before replacing zones, and refresh geometry/property state. Test that editing a connection after a quality mutation affects the retained working collection, not a discarded allocation.
-- [ ] Add explicit Custom display and exact-match synchronization. Use a nonnumeric Custom item with safe index mapping; choosing it must not change the guard number.
-- [ ] Add unit, handler, GUI and save/reload regressions as changes land.
+Resume, 2026-09-12: owner requested Phase 3. Worktree and index are clean on
+`AD/modes_and_guard_propagation`; Phase 2 has been committed since the handoff.
+Approved product decisions remain closed. Implementation starts with a cloned
+zone/connection mutation and ordered preset remapping, followed by dialog pointer
+rebinding and explicit Custom synchronization. Protected paths remain untouched.
+
+- [x] Extend the existing quality-edit handler contract with current zone/connection context; reuse the mutation response. Update interfaces, facade, mocks and direct callers together, with no unrelated DTO changes.
+- [x] Add model-based zone-plus-incident-connection editing in the existing service package. Capture old effective quality/preset before reprofile, resolve new endpoint quality afterward, and change only matching incident guard values on an actual quality change.
+- [x] Clone zones/connections before mutation using existing deep-clone facilities; preserve order, names, endpoint identity and nil/empty semantics. Keep the current zone-only reprofile API and road finalization behavior for other callers.
+- [x] Inject the tier collaborator where needed; regenerate Wire through the existing task. Update explicit test constructors/helpers, never generated source by hand.
+- [x] Consume the whole mutation using the index-preserving pointer replacement described above. Rebind selected, clear `syncedFor`, finish old zone-pointer use before replacing zones, and refresh geometry/property state. Test that editing a connection after a quality mutation affects the retained working collection, not a discarded allocation.
+- [x] Add explicit Custom display and exact-match synchronization. Use a nonnumeric Custom item with safe index mapping; choosing it must not change the guard number.
+- [x] Add unit, handler, GUI and save/reload regressions as changes land.
 
 ### Verification Plan
 
@@ -228,17 +235,43 @@ Status: Not started
 
 ### Phase Summary
 
-Pending.
+Complete; implementation and verification details follow.
+
+### Phase 3 completed work and evidence
+
+Completed 2026-09-12. `ApplyNeutralZoneQualityEdit` takes the new model request,
+deep-clones both collections, captures ordered preset indices before reprofile and
+resolves the new stronger-endpoint table afterward. Same-quality/castle-only edits
+never capture presets; custom numbers are untouched. Missing target returns clones
+unchanged. The existing zone-only method and road policy remain intact. The tier
+service is injected; Wire generation passed and a second generation was unchanged.
+DTO/interface/facade/mocks and constructors were updated together.
+
+The dialog installs the full mutation, rebinds selected by working index and clears
+property/geometry synchronization. Custom is appended outside the numeric values
+slice and the displayed selection is derived after numeric writeback, never persisted.
+Choosing Custom on an exact preset retains the number and displays that preset again.
+
+Dedicated service tests: 46 passing cases, including all named tiers, dedicated
+Bronze Default -> Gold Default, stronger endpoints, inference/fallbacks, all edge
+types, parallel/self edges, road true/false/nil, custom/Plastic 10,000, cloning and
+no-op requests. Current tables have no duplicate values: ordered lookup is explicit
+in code; precedence cannot be experimentally distinguished with current data.
+Handler/facade tests pass. GUI adds 21 real-input regressions for remapping, Custom,
+exact/invalid typing, idle frames, collection replacement, Apply/Cancel including
+existing manual state, reopen and save/load. Two handler persistence regressions pass.
+Selection is nil during reachable zone editing; the non-nil rebinding branch is
+defensive and source-reviewed, not claimed as directly exercised by GUI inputs.
 
 ## Phase 4: Whole Batch E verification and owner handback
 
-Status: Not started
+Status: In progress (Windows gates complete; Linux and owner acceptance outstanding)
 
 - [ ] Verify the combined real flow: manual edits -> arena/tournament change -> new generated graph; invalid tournament load -> correction -> frame/save/reload; pending quality edits -> Apply/Cancel -> regeneration/persistence.
-- [ ] Run final build, fresh unit tests, comparable coverage, default/integration/GUI suites, test-layout checker and report-only lint. No blanket snapshot updates or auto-fix across the repository.
-- [ ] Compare before/after total coverage and changed-function coverage. Cover every reachable changed branch/logical unit; record genuine GUI-only/unreachable limitations instead of fake unit seams.
-- [ ] Obtain independent Claude Opus 5 implementation review limited to Batch E and its regression interactions. Address blockers and rerun affected checks.
-- [ ] Inspect diff scope and owner's index read-only; protected trees/output path/opaque raster/retired topology work remain untouched except generated Wire produced by its generator as required.
+- [x] Run final build, fresh unit tests, comparable coverage, default/integration/GUI suites, test-layout checker and report-only lint. No blanket snapshot updates or auto-fix across the repository.
+- [x] Compare before/after total coverage and changed-function coverage. Cover every reachable changed branch/logical unit; record genuine GUI-only/unreachable limitations instead of fake unit seams.
+- [x] Obtain independent Claude Opus 5 implementation review limited to Batch E and its regression interactions. Address blockers and rerun affected checks.
+- [x] Inspect diff scope and owner's index read-only; protected trees/output path/opaque raster/retired topology work remain untouched except generated Wire produced by its generator as required.
 - [ ] Present owner-facing behavior and verification results. Owner performs all staging/commits and acceptance. Do not mark review findings fixed before the owner's commit protocol is satisfied.
 - [ ] Complete Final Recap and Deployment Plan, and update this plan with remaining blockers if work stops partway.
 
@@ -263,6 +296,18 @@ Pending.
 
 ## Verification ledger
 
+### Final Windows results, 2026-09-12
+
+- Go 1.27.0, Windows/amd64, empty GOFLAGS; `go build ./...` PASS.
+- Fresh full unit/coverage PASS: `go test -p=2 -count=1 '-coverpkg=./internal/...,./app/...' '-coverprofile=coverage.txt' ./test/unit/...`. Bounded compile parallelism followed interrupted Windows linkers (`0xc000013a`); that incomplete profile was discarded.
+- **74.9%** total vs recorded 75.1%; **owner explicitly accepted** the GUI-only decrease on 2026-09-12. All three new service functions and both quality handler/facade methods are 100.0%. The three new GUI helpers are 0.0% in unit coverage and integration-covered, with the defensive pointer branch noted above.
+- Final profile SHA-256: `23B78F2CF15B73902398D8A21A755FD684D3668486E56D8CFA770BE2BE7F9F31`. HTML/LCOV refreshed. The transient 75.2% reading had a different delegated coverage scope and is not a comparable full baseline.
+- `go test ./test/...`, `go test -tags=integration_test ./test/integration/...`, and `go test -tags='integration_test,gui' ./test/integration/...`: PASS.
+- `go run ./cmd/testlayoutcheck .`: PASS. `golangci-lint-v2 run ./... --issues-exit-code=1`: PASS, zero issues after wrapping two test literals. No bulk auto-fix. Whitespace and touched-code diagnostics PASS.
+- Independent Claude Opus 5 review and follow-up review APPROVED, including the simplified index map and additional GUI tests.
+- Native Linux/Steam Deck: UNRUN. Prior inspection found no Go/pkg-config in WSL; nothing installed, no native result claimed. No new platform-specific code.
+- Clean start at owner commit `f80f7ca` on `AD/modes_and_guard_propagation`; new work unstaged/untracked. No protected/output/topology/schema writes, dependencies, snapshots, owner-findings edits or Git mutations.
+
 The Phase 2 column is scoped to Phase 2's changes; the batch-final column stays open until Phase 4 reruns everything over Phase 3's work as well.
 
 | Check | Baseline | Phase 2 result | Batch final (Phase 4) |
@@ -280,7 +325,13 @@ Discovery tooling notes: initial subagent requests used unsupported lowercase mo
 
 ## Final Recap
 
-Still pending: it is written once Phases 3 and 4 are done. Phases 1 and 2 are complete. Discovery resolved all requested product choices, the revised plan passed independent review and the owner committed it, and the effective-mode/two-player lifecycle is implemented, verified and independently approved in isolation. Findings §1.5 and §1.12 have working implementations; **no Batch E finding is marked fixed**, because the owner's review and commit protocol has not run and §1.11 is untouched. Guard propagation, explicit Custom display, the combined cross-phase flow, the coverage comparison over the whole batch and the batch-wide implementation review all remain outstanding. No in-game outcome is claimed.
+Current outcome: Phase 3 complete; all Batch E findings now have implementations,
+but none is marked fixed pending owner acceptance/commit. Windows checks and review
+are complete with the accepted coverage exception. Phase 4 remains open for native
+Linux verification and a dedicated combined cross-phase flow (existing component
+lifecycle/GUI suites pass; no new monolithic combined-flow test was added).
+
+No in-game outcome is claimed. Do not reopen accepted product decisions or reimplement Phase 3; remaining work is verification and owner acceptance only.
 
 ## Deployment Plan
 

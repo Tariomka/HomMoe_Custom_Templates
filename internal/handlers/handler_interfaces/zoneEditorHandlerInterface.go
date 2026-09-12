@@ -17,7 +17,7 @@ type IZoneEditorHandler interface {
 		from, to string,
 		zones []template_model.Zone,
 		playerZoneNames map[string]bool) neutral_zone.Quality
-	ApplyZoneEditorQuality(request dtos.ZoneEditorQualityRequestDto) template_model.Zone
+	ApplyZoneEditorQuality(request dtos.ZoneEditorQualityRequestDto) dtos.ZoneEditorMutationDto
 	DescribeZoneEditorGraph(
 		zones []template_model.Zone,
 		connections []template_model.Connection) dtos.ZoneEditorGraphDto

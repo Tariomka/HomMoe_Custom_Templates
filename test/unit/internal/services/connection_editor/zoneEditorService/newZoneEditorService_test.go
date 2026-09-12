@@ -19,6 +19,7 @@ func TestWhenFactoriesAreProvided_ReturnsUsableService(t *testing.T) {
 		castleFactory,
 		zones.NewRoadPolicyService(roadFactory),
 		zones.NewZoneFactory(castleFactory, roadFactory),
+		zones.NewZoneTierService(),
 	)
 
 	// Assert

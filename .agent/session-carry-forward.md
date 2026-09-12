@@ -1,4 +1,31 @@
-# Carry-forward: Batch E Phase 2 complete, Phase 3 next
+# Carry-forward: Batch E Phase 3 complete, remaining Phase 4 gates
+
+## Current Session Closeout (2026-09-12)
+
+**This section supersedes all older phase/status/next-action text below. Historical
+section 8 remains verbatim and its later-scope decisions remain binding.**
+
+- Goal: resume Phase 3 of the approved Batch E plan. Phase 3 is complete; Windows Phase 4 checks and independent review are complete. Native Linux verification, dedicated combined cross-phase flow and owner acceptance remain outstanding. No finding has been marked fixed.
+- Behavior: actual neutral-quality edits remap exact preset guard values using old/new stronger endpoints; unmatched values remain Custom. Default moves as a named tier. All connection types and road tri-states are preserved. Pending edits remain isolated until Apply; Custom is derived from numbers after typing/reselect/reopen/save-load.
+- Domain: new `models.NeutralZoneQualityEditRequest` and `ApplyNeutralZoneQualityEdit`; cloned graph mutation with ordered connection-index-to-preset-index matching. Existing zone-only API remains. Tier service injected; Wire regenerated, then confirmed unchanged by a second generation.
+- UI: full mutation installation with index-preserving connection rebinding and synchronization reset; explicit nonnumeric Custom last. Exact preset number plus Custom selection retains the number and re-displays the preset. No new persisted metadata.
+- Changed production paths: quality request DTO; new model request; zone-editor service/interface; zone-editor handler/interface and GUI facade; generated Wire; three dialog property/state files; dialog/window test exports. Changed tests/helpers: service constructor/helpers/mock, generator helper, template mock; quality handler/facade stubs/tests; new mirrored service method test; GUI properties and tier-persistence integration; AppRunner, GUI zone-editor helper and coordinates. Full exact inventory is available from the unstaged diff and plan implementation map.
+- Tests: 46 focused service cases; 21 new real-input GUI cases; two persistence regressions; updated handler/facade/constructor suites. All final Windows build, fresh unit/coverage, default tests, explicit integration and combined GUI integration, layout checker and report-only lint passed. Lint has zero issues. No goldens/snapshots changed.
+- Coverage: final **74.9%** vs recorded **75.1%**; owner explicitly accepted the integration-covered GUI-only decrease in this session. New service functions and both handler entry points are 100.0%. Profile SHA-256 `23B78F2CF15B73902398D8A21A755FD684D3668486E56D8CFA770BE2BE7F9F31`; HTML/LCOV refreshed. A transient 75.2% scoped profile was not comparable and was not used as the final measurement.
+- Verification failure/recovery: concurrent final commands were interrupted (Windows linker exit `0xc000013a`, empty lint failure). Sequential coverage retry with `-p=2 -count=1` passed; final lint passed after wrapping two test literals. No failed/incomplete profile is accepted.
+- Review: independent Claude Opus 5 APPROVED, then follow-up review APPROVED after private-record simplification and additional Custom/invalid-text/idle/save-load/Cancel tests. Non-nil selected-pointer rebinding is defensive and unreachable from current real zone-selection input; source-reviewed, not falsely claimed covered. No duplicate preset values exist, so first-match precedence is explicit in code but not distinguishable with current tables.
+- Git: clean start on `AD/modes_and_guard_propagation`, HEAD `f80f7ca` (owner's Phase 2 commit). Phase 3 work is unstaged/untracked; no assistant Git mutations. Protected paths, output path, owner_findings, retired topology work, dependencies and opaque rendering untouched. Documentation changes are this handoff, the approved plan and existing test-observations registry.
+- Remaining: native Linux/Steam Deck unrun (prior WSL inspection found no Go/pkg-config, nothing installed). Complete a dedicated combined cross-phase flow or explicitly agree that existing lifecycle/integration coverage suffices; obtain owner review/commit acceptance. Do not broaden into Batch K or settled alternatives.
+
+**Resume prompt:** Read AGENTS.md first, this current closeout and the approved Batch E
+plan. Phase 3 is done; finish only remaining Phase 4 verification/acceptance. Keep
+data/schema/registry read-only, Windows/Linux compatibility, test coverage with the
+owner-accepted 74.9% exception, durable planning, no Git mutations or bulk rewrites,
+and machine-detected never-persisted output paths. Preserve historical section 8.
+Do not reimplement or separately re-review closed phases. Owner alone stages,
+commits and releases; no deployment or schema migration has occurred.
+
+## Historical Phase 2 Handoff
 
 Date: 2026-09-12.
 

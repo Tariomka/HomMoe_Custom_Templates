@@ -113,6 +113,7 @@ type IZoneEditorDialog interface {
 	HitTestCanvasEdge(pos models.Position) string
 	SelectedZone() string
 	SelectedConnection() string
+	SelectedConnectionIsUserAdded() bool
 	EditedZones() []template_model.Zone
 	EditedConnectionNames() []string
 	EditedConnectionRecords() []template_model.Connection
@@ -123,6 +124,8 @@ type IZoneEditorDialog interface {
 	SnapEnabled() bool
 	SnapGuides() (x float64, xActive bool, y float64, yActive bool)
 	StatusHint() string
+	GuardPresetLabels() []string
+	SelectedGuardPresetLabel() string
 }
 
 // TopZoneEditor ONLY FOR INTEGRATION TEST USE

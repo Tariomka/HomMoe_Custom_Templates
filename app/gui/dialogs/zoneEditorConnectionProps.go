@@ -17,6 +17,8 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
 
+const customGuardPresetLabel = "Custom"
+
 func (this *ZoneEditorDialog) propertyRows(theme *material.Theme) []layout.Widget {
 	connection := this.selected
 	rows := []layout.Widget{
@@ -84,9 +86,10 @@ func (this *ZoneEditorDialog) syncPropsFromConnection() {
 		this.playerZones,
 	)
 	labels, values := guardPresetItems(quality)
+	this.guardPresetLabels = labels
 	this.guardPresetValues = values
 	this.guardDropdown.SetItems(labels)
-	this.guardDropdown.SelectByName(matchGuardLabel(labels, values, connection.GuardValue))
+	this.syncGuardPresetSelection(connection.GuardValue)
 	this.guardValueEdit.SetText(strconv.Itoa(connection.GuardValue))
 	this.weeklyDropdown.SetItems(common_connections.GetGuardWeeklyIncrementLabels())
 	this.weeklyDropdown.SelectByName(matchWeeklyLabel(connection.GuardWeeklyIncrement))
@@ -106,8 +109,6 @@ func (this *ZoneEditorDialog) writebackProps() {
 	typeItems := common_connections.GetConnectionTypes()
 	if index := this.typeDropdown.GetSelectedIndex(); index >= 0 && index < len(typeItems) {
 		if this.typeDropdown.WasUpdated {
-			// A picked type also decides the pending road state, so the change
-			// goes through the handler instead of being written here.
 			*connection = this.zoneHandler.ChangeZoneEditorConnectionType(
 				dtos.ZoneEditorConnectionTypeRequestDto{
 					Connection:     *connection,
@@ -130,6 +131,7 @@ func (this *ZoneEditorDialog) writebackProps() {
 	if value, err := strconv.Atoi(strings.TrimSpace(this.guardValueEdit.Text())); err == nil {
 		connection.GuardValue = value
 	}
+	this.syncGuardPresetSelection(connection.GuardValue)
 	if this.weeklyDropdown.WasUpdated {
 		weeklyIncrementValues := common_connections.GetGuardWeeklyIncrementValues()
 		if index := this.weeklyDropdown.GetSelectedIndex(); index >= 0 &&
@@ -145,12 +147,34 @@ func (this *ZoneEditorDialog) writebackProps() {
 	connection.SimTurnSquad = this.simSquadBool.Value
 }
 
+func (this *ZoneEditorDialog) syncGuardPresetSelection(value int) {
+	label := matchGuardLabel(this.guardPresetLabels, this.guardPresetValues, value)
+	if label == "" {
+		label = customGuardPresetLabel
+	}
+	if label == this.selectedGuardPresetLabel() {
+		return
+	}
+
+	this.guardDropdown.SelectByName(label)
+}
+
+// selectedGuardPresetLabel is the option the preset dropdown is showing.
+func (this *ZoneEditorDialog) selectedGuardPresetLabel() string {
+	index := this.guardDropdown.GetSelectedIndex()
+	if index < 0 || index >= len(this.guardPresetLabels) {
+		return ""
+	}
+
+	return this.guardPresetLabels[index]
+}
+
 func guardPresetItems(quality neutral_zone.Quality) (labels []string, values []int) {
 	for _, guardStrengths := range common_connections.GetGuardStrengthListForQuality(quality) {
 		labels = append(labels, fmt.Sprintf("%s (%d)", guardStrengths.Key, guardStrengths.Value))
 		values = append(values, guardStrengths.Value)
 	}
-	return labels, values
+	return append(labels, customGuardPresetLabel), values
 }
 
 func matchGuardLabel(labels []string, values []int, value int) string {
@@ -159,6 +183,7 @@ func matchGuardLabel(labels []string, values []int, value int) string {
 			return labels[i]
 		}
 	}
+
 	return ""
 }
 
@@ -168,9 +193,8 @@ func matchWeeklyLabel(value float64) string {
 			return candidate.Key
 		}
 	}
+
 	return ""
 }
 
-func formatIncrement(value float64) string {
-	return strconv.FormatFloat(value, 'g', -1, 64)
-}
+func formatIncrement(value float64) string { return strconv.FormatFloat(value, 'g', -1, 64) }

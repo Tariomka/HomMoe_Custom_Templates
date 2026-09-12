@@ -3,7 +3,9 @@ package connection_editor
 import (
 	"fmt"
 	"math"
+	"slices"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_connections"
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_zones"
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/constants"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
@@ -19,16 +21,19 @@ type ZoneEditorService struct {
 	castleFactory zone_interfaces.ICastleFactory
 	zoneFactory   zone_interfaces.IZoneFactory
 	roadPolicy    zone_interfaces.IRoadPolicyService
+	tierService   zone_interfaces.IZoneTierService
 }
 
 func NewZoneEditorService(
 	castleFactory zone_interfaces.ICastleFactory,
 	roadPolicy zone_interfaces.IRoadPolicyService,
-	zoneFactory zone_interfaces.IZoneFactory) IZoneEditorService {
+	zoneFactory zone_interfaces.IZoneFactory,
+	tierService zone_interfaces.IZoneTierService) IZoneEditorService {
 	return &ZoneEditorService{
 		zoneFactory:   zoneFactory,
 		castleFactory: castleFactory,
 		roadPolicy:    roadPolicy,
+		tierService:   tierService,
 	}
 }
 
@@ -210,4 +215,69 @@ func (this *ZoneEditorService) FindOpenPosition(occupied []data.Vec2[float64]) d
 // current main objects, preserving every other road.
 func (this *ZoneEditorService) RebuildCastleRoads(zone *template_model.Zone) {
 	this.roadPolicy.RebuildCastleRoads(zone)
+}
+
+func (this *ZoneEditorService) ApplyNeutralZoneQualityEdit(
+	request models.NeutralZoneQualityEditRequest) ([]template_model.Zone, []template_model.Connection) {
+	zones := helpers.MapSlice(request.Zones, template_model.Zone.Clone)
+	connections := helpers.MapSlice(request.Connections, template_model.Connection.Clone)
+
+	targetIndex := slices.IndexFunc(zones, func(zone template_model.Zone) bool {
+		return zone.Name == request.ZoneName
+	})
+	if targetIndex < 0 {
+		return zones, connections
+	}
+
+	var presets map[int]int
+	if this.tierService.ResolveQuality(zones[targetIndex]) != request.Quality {
+		presets = this.captureIncidentGuardPresets(zones, connections, request)
+	}
+
+	this.ApplyNeutralZoneQuality(&zones[targetIndex], request.Quality, request.CastleCount, request.Tuning)
+
+	for connectionIndex, presetIndex := range presets {
+		connection := &connections[connectionIndex]
+		quality := this.tierService.GetConnectionGuardQuality(
+			connection.From, connection.To, zones, request.PlayerZoneNames)
+
+		connection.GuardValue = common_connections.
+			GetGuardStrengthListForQuality(quality)[presetIndex].Value
+	}
+
+	return zones, connections
+}
+
+func (this *ZoneEditorService) captureIncidentGuardPresets(
+	zones []template_model.Zone,
+	connections []template_model.Connection,
+	request models.NeutralZoneQualityEditRequest) map[int]int {
+	presets := make(map[int]int)
+	for index := range connections {
+		connection := connections[index]
+		if connection.From != request.ZoneName && connection.To != request.ZoneName {
+			continue
+		}
+
+		quality := this.tierService.GetConnectionGuardQuality(
+			connection.From, connection.To, zones, request.PlayerZoneNames)
+		tierIndex, ok := findGuardPresetIndex(quality, connection.GuardValue)
+		if !ok {
+			continue
+		}
+
+		presets[index] = tierIndex
+	}
+
+	return presets
+}
+
+func findGuardPresetIndex(quality neutral_zone.Quality, guardValue int) (int, bool) {
+	for index, preset := range common_connections.GetGuardStrengthListForQuality(quality) {
+		if preset.Value == guardValue {
+			return index, true
+		}
+	}
+
+	return 0, false
 }

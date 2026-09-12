@@ -243,6 +243,12 @@ const (
 	zoneEditorConnectionMatchGroupY   = 446
 	zoneEditorConnectionGuardEscapeY  = 480
 	zoneEditorConnectionSimTurnSquadY = 520
+
+	// zoneEditorConnectionNoteDrop is how far every row above moves down when the
+	// panel draws the "User-added connection" note, which only a connection the
+	// user drew carries - see connectionRowY. It is one line rather than the zone
+	// panel's two, so it is not the same drop as zoneEditorSidePanelNoteDrop.
+	zoneEditorConnectionNoteDrop = 15
 )
 
 // zoneEditorRect is the modal panel the zone editor is drawn into.

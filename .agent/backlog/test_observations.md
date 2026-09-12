@@ -5,6 +5,13 @@ public APIs in unit tests, so per-file coverage gaps here are intentional.
 
 ## Gio-UI-heavy code (integration-suite territory, no unit tests)
 
+- app/gui/dialogs/zoneEditorZoneProps.go and zoneEditorConnectionProps.go - Batch E
+  quality-mutation installation and Custom preset synchronization are covered by
+  test/integration/gui/zoneEditorProperties_integration_test.go. They remain 0% in
+  the unit profile; owner accepted total coverage 75.1% -> 74.9% on 2026-09-12.
+  The non-nil selected-index rebinding branch is defensive: selecting a zone clears
+  the connection selection, so current real inputs cannot enter that branch.
+
 - app/gui/program.go - `StartApplication`, `eventLoop` and
   `getAndConfigureWindow` are the Gio bootstrap: they create a real
   `app.Window`, block in `app.Main`, read `os.Args` process-wide and call
