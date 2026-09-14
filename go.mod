@@ -5,10 +5,10 @@ go 1.27.0
 require (
 	gioui.org v0.10.2
 	github.com/andygrunwald/vdf v1.1.0
-	github.com/brianvoe/gofakeit/v7 v7.16.0
+	github.com/brianvoe/gofakeit/v7 v7.17.0
 	github.com/goforj/wire v1.2.0
 	github.com/stretchr/testify v1.12.1
-	golang.org/x/sys v0.47.0
+	golang.org/x/sys v0.48.0
 )
 
 require (
