@@ -1,90 +1,136 @@
-# Carry-forward: Batch F closed, Batch G not started
+# Carry-forward: Batch J closed, next batch not started
 
-Date: 2026-09-28. **Batch F (editor geometry) is closed.** The owner reviewed it, committed
-it as **`b9c47a7` ("Batch F")** on `AD/editor_geometry`, and authorized the close-out with
-*"Changes reviewed, you can close out this batch and update handoff for the next session"*.
-The owner's review edits before committing trimmed comments only; behaviour is unchanged.
+Date: 2026-09-28. **Batch J (review §2.2, the reopened zone-content service boundary) is
+closed.** The owner reviewed it, committed it as **`6649def` ("Batch J start", the plan)**
+and **`3c0ad87` ("Batch J")** on `AD/performance`, and authorized the close-out with
+*"Changes have been reviewed, please proceed"*. The committed tree builds and passes the
+unit suite.
 
-Findings §1.13, §1.14, §1.15 and §2.1 are now **marked FIXED** in the
-[surviving review](backlog/review-gpt-6-astra-09-07.md). Its §9 row F is complete, and its
-progress line reads **16 fixed, 16 remaining** (0 High, 10 Medium, 6 Low). The durable
-record is [batch-f-editor-geometry.md](plans/batch-f-editor-geometry.md), marked CLOSED.
-Consult it only if Batch F behaviour is questioned. Do not reimplement, re-verify or
-re-review any of it.
+**§2.2 is marked FIXED** in the
+[surviving review](backlog/review-gpt-6-astra-09-07.md). Its §9 row J is complete, and
+its progress line reads **18 fixed, 14 remaining** (0 High, 8 Medium, 6 Low).
+
+The plan, [batch-j-zone-content-dto-boundary.md](plans/batch-j-zone-content-dto-boundary.md),
+is marked CLOSED; §3 below restates its settled decisions (J1–J9) in case it is deleted. The
+Batch G plan is already gone from the tree; §3 still restates G1–G9a. Do not recreate either
+plan, and do not reimplement, re-verify or re-review Batch J or Batch G.
 
 **Section 8 is preserved verbatim**, contradictions and all. Its Batch C phase/engine
-wording, and its "pending decisions" wording for §1.5, §1.11, §1.12 and §2.1, are
-**superseded**: all were settled, implemented and marked fixed. Everything else §8 retains
-as later scope remains **binding**, and governs batches from G on. Do not edit §8.
+wording, its "pending decisions" wording for §1.5, §1.11, §1.12 and §2.1, and its §2.2
+bullet ("zone-content DTO removal reopened … still need approval") are **superseded**: all
+were settled, implemented and marked fixed. Everything else §8 retains as later scope
+remains **binding**. Do not edit §8.
 
-Batches A/D, B, C, E and F are closed. A/D through E are merged to `master` (Batch E in
-PR #44, tagged `v0.3.9-alpha.2`). Batch F is pushed on `AD/editor_geometry` and is not yet
-merged. Do not revisit or re-verify closed batches.
+Batches A/D, B, C, E, F, G and J are closed. A/D through F are merged to `master` (Batch F
+as PR #48, `f78caeb`). Batches G and J are pushed on `AD/performance` and are not yet merged.
+Do not revisit or re-verify closed batches.
 
 ## 1. Session goal
 
-Plan, implement, verify and close Batch F from review §9: §1.13, §1.14, §1.15, plus the
-owner-approved optional §2.1. This closing turn marked the findings fixed and handed this
-file forward to Batch G.
+Plan, implement, verify and close Batch J from review §9: §2.2, where
+`internal/services/zone_content` consumed and built DTOs under an accepted allow-list
+exception the owner had reopened. The owner picked J over H in this session. This closing
+turn marked the finding fixed and handed this file forward.
 
 ## 2. Fixes applied
 
-All Batch F items are committed in `b9c47a7` and **marked FIXED**. They are closed; do not
-reopen them.
+### Batch J, committed in `3c0ad87` and **marked FIXED**. Closed; do not reopen.
 
-- **§1.13, deterministic obstacle routing.** One shared model,
-  [connectionCurveLayout.go](../internal/models/preview/connectionCurveLayout.go), computes
-  every curve. Obstacle `max`/`min` is order-independent, so map iteration can no longer
-  flip a curve. The review's repro gives `(350,260)` on every one of 200 builds.
-- **§1.14, stale edge identity.** `ensureGeometry` rebuilds dirty or resized geometry before
-  every hit test. The rebuild is wired into
-  [zoneEditorCanvas.go](../app/gui/dialogs/zoneEditorCanvas.go), plus `ensureManualPositions`
-  in [zoneEditorDialog.go](../app/gui/dialogs/zoneEditorDialog.go). The side is tracked in
-  [zoneEditorGeometryState.go](../app/gui/dialogs/zoneEditorGeometryState.go).
-- **§1.15, portal classification.** `Connection.IsEffectivePortal()`, in
-  [connection.go](../internal/models/template_model/template_variant_model/connection.go),
-  is the single classifier. It is used by
-  [previewLayoutService.go](../internal/services/preview_service/previewLayoutService.go)
-  and [connectionLineStyle.go](../app/gui/utils/connectionLineStyle.go).
-- **§2.1, shared curve geometry.** `preview.ConnectionCurveLayout.Build` is the only curve
-  builder for the editor, the Preview tab and the PNG export.
-- **§8 dropdown note.** The type dropdown no longer overwrites unlisted types each frame
-  ([zoneEditorConnectionProps.go](../app/gui/dialogs/zoneEditorConnectionProps.go)).
-- **Review follow-ups** (implementation review):
-  - Presses on a resize frame are resolved at the side they were aimed at.
-  - The type dropdown's `WasUpdated` flag is reset whenever a connection is synced.
+- **§2.2, the whole zone-content exception removed.**
+  - New [content_rule_model](../internal/models/content_rule_model/) package: `ContentRuleKey`
+    (5 consts) and `ContentRuleEditorKind` (3 consts) moved from `internal/dtos`, plus
+    `ContentRuleOption{Key, Name}`, flat `ContentRuleComposition` and
+    `ContentRuleDescription`.
+  - [zoneContentEditorService.go](../internal/services/zone_content/zoneContentEditorService.go):
+    `ComposeContentRule(ContentRuleComposition) (ContentRuleRow, bool)`;
+    `GetDefaultContentRules([]ContentRuleOption)`; markers and display name take
+    `[]ContentRuleDescription`. No `dtos` import; `validRule` deleted.
+  - [zoneContentHandler.go](../internal/handlers/zoneContentHandler.go) does every DTO ⇄
+    Model conversion and builds `ContentRuleCompositionResultDto{Rule, Valid}`.
+  - `internal/services/zone_content` removed from `dtoNamerAllowList` in
+    [layering_test.go](../test/unit/architecture/dependency/layering_test.go). Bonuses stays.
+
+### Batch G, committed in `35e0fab` and **marked FIXED** (prior session). Closed.
+
+All are committed in `35e0fab` and **marked FIXED**. They are closed; do not reopen them.
+
+- **§3.1, the graph summary cache.**
+  [zoneEditorGraphState.go](../app/gui/dialogs/zoneEditorGraphState.go) caches the
+  `ZoneEditorGraphDto` behind its own `graphDirty` flag, which is never shared with
+  `geometryDirty`.
+  - All seven structural mutators call `markGraphDirty`: `setEditingSet`,
+    `addConnection`, `deleteConnection`, `undoSessionEdits`, `addZoneAt`, `deleteZone`
+    and `applyQualityMutation`.
+  - `layoutStatus` in [zoneEditorDialog.go](../app/gui/dialogs/zoneEditorDialog.go)
+    rebuilds only when the flag is set, still through a fresh `derefConnections` copy.
+  - Idle frames make **0** handler calls, and each structural edit makes exactly **1**.
+- **The one-frame-late status line** (a pre-existing issue the owner chose to fix). The
+  status line is drawn before canvas input and side-panel writeback. The key in
+  [zoneEditorStatusKey.go](../app/gui/dialogs/zoneEditorStatusKey.go) captures the hint,
+  both add modes, the zone and connection counts, and the dirty flag.
+  `requestLateStatusRedraw` compares it at the end of `Body` and issues
+  `op.InvalidateCmd` when it changed. The key is stored unconditionally after any rebuild,
+  so redraws always settle, even in the error branch.
 
 ## 3. Features added / changed
 
-### Delivered in Batch F, committed and settled (full table D1–D13 in the plan)
+### Delivered in Batch J, committed and settled
 
-- **Exact curve agreement.** The editor, the Preview tab and the PNG export draw identical
-  control points, all built by `preview.ConnectionCurveLayout.Build`.
-  - Parallel spacing is **21px** everywhere; the editor's old 18px is gone.
-  - Obstacle bending (clearance `radius + 8`, padding `6`, chord margin `0.08`) now applies
-    in the Preview and the PNG too.
-- **Bending rules.**
-  - A single obstructed curve takes the shorter detour. It goes positive (up for a
-    left-to-right chord, in alphabetical endpoint order) only on an exact tie.
-  - N parallel obstructed curves keep slot order and split around the obstacle: even N gives
-    N/2 per side, and for odd N the extra curve goes to the shorter side. Outer curves step
-    21px further out.
-  - The detour is a midpoint offset. It clears every obstacle on the chosen side at the
-    curve's midpoint only, a documented approximation.
-- **Emission order and orientation.** Curves come out grouped by pair in first-seen order,
-  with `Start`/`End` in canonical endpoint order. The Preview's connection order changed
-  accordingly.
-- **Effective portal**, meaning a Portal type in any letter case or any placement rules:
-  - drawn with the portal colour in the editor, as in the Preview;
-  - drawn at `DefaultConnectionLineSmall` in the editor, while the selected curve stays
-    Large;
-  - drawn with the portal shape in the Preview for a lowercase `portal`.
-- **Type dropdown.**
-  - It shows the effective type and lists Direct, Portal, and the stored type when it is
-    unlisted. An empty type reads `(none)`.
-  - The type is written only on a real selection change.
-  - Choosing any non-Portal type clears both placement-rule lists; Portal keeps them.
-- **Hit tests** always resolve against geometry built from the live connection list.
+The owner decisions, restated here in case the plan is deleted:
+
+| ID | Decision |
+| --- | --- |
+| J1 | Remove the **whole** zone-content exception (all four DTO-bearing service methods); keep the bonuses exception. |
+| J2 | The composition unit is `ContentRuleRow`, not `ZoneContentRow`; the service returns `(ContentRuleRow, bool)`. |
+| J3 | `ContentRuleKey` and `ContentRuleEditorKind` live in the model package, not `internal/common`, because models may import only entities, helpers and registry. No `dtos` alias remains. |
+| J4 | New `internal/models/content_rule_model/`, one type per file. |
+| J5 | `ContentRuleComposition` is flat (`Key, Name, DistanceNames, DistanceIndex, IsGuarded, IsSoloEncounter, VariantIDs, VariantIndex`); the request DTO embeds it. |
+| J6 | `ContentRuleDescription{Key, DisplayText, Marker, VariantLabel, Valid, SavedRule}`; the description DTO embeds it. |
+| J7 | `ContentRuleOption{Key, Name}`; the option DTO embeds it and keeps `Description, Marker, EditorKind, EditorLabel`. The "default only when Guarded is offered" check stays. |
+| J8 | `ContentRuleCompositionResultDto{Rule, Valid}` stays; handler interfaces, `ContentRuleEditorOptionsDto` and `ContentRuleVariantOptionDto` are unchanged. |
+| J9 | The catalogue and describe logic stay in `contentRuleHandler`; business logic in a handler is recorded, not assigned. |
+
+- **Go 1.27 promoted-field literals.** The plan assumed nested literals
+  (`ContentRuleOption: content_rule_model.ContentRuleOption{...}`); Go 1.27 accepts promoted
+  fields directly and lint's `modernize/embedlit` rejects the nested form. Literals are flat;
+  only literals wrapping an existing model value keep the embedded key.
+- **No behaviour change.** No GUI golden moved; Wire, handler interfaces and constructors are
+  unchanged.
+
+### Delivered in Batch G, committed and settled
+
+The owner decisions, restated here because the plan has been deleted:
+
+| ID | Decision |
+| --- | --- |
+| G1 | Measure first, then fix. |
+| G2 | Acceptance is deterministic: idle frames make 0 `DescribeZoneEditorGraph` calls, and each structural edit makes exactly 1. Benchmarks are recorded with no percentage gate and no global allocation threshold. |
+| G3 | The O(z+c) isolation rewrite is adopted only if it is faster at 24 and 40 zones and within ±5% at 4 and 12. |
+| G4 | The cache lives in the dialog with its own dirty flag. The handler stays stateless. |
+| G5 | Handler calls are counted by a test-helper wrapper embedding `IGuiHandler`, with no new test exports. |
+| G6 | There is an untagged, GPU-free idle-frame benchmark. |
+| G7/G8 | Late status changes (hint, both add modes, counts, diagnostics) trigger an immediate `op.InvalidateCmd`. The layout order is unchanged. |
+| G9/G9a | Benchmarks run at 4/12/24/40 zones on **deterministic** fixtures, because generation uses the unseeded global `rand`. |
+
+- **The O(zones + connections) `FindIsolatedZones` rewrite was measured and rejected**
+  under G3. It was faster only at 24 zones (−19%) and 40 zones (−33%). It was slower at
+  4 zones (+292%) and 12 zones (+67%), and added 3 allocations per call. The nested loop
+  is unchanged. Do not re-propose it without new measurements.
+- **New untagged benchmarks** in
+  [zoneEditorGraph_test.go](../test/performance/zoneEditorGraph_test.go) run on fixed
+  4/12/24/40-zone graphs (G9a, deterministic because generation is unseeded): the
+  handler, the service, and a GPU-free dialog idle frame.
+- **Idle-frame result:** B/op fell from 4457–18478 to 3049–3073, now flat across graph
+  sizes, and allocations fell by 1–4 per frame. ns/op at 40 zones fell from 215030 to
+  190195. The other ns/op changes were within run-to-run noise: unchanged code varied up
+  to 9%.
+
+### Delivered in Batch F, committed and settled
+
+The shared curve builder (`preview.ConnectionCurveLayout.Build`, 21px spacing, obstacle
+bending everywhere), effective-portal classification, the type dropdown and live-list hit
+tests are committed, merged, and must not be reopened. The Batch F plan file is no longer
+in the tree; the merged code is the reference.
 
 ### Settled behavior that must stay preserved
 
@@ -116,160 +162,227 @@ reopen them.
 - All Batch F behavior above is committed and settled. The shared curve builder stays the
   single source of curves for the editor, the Preview and the PNG; do not reintroduce
   per-renderer curve math.
+- All Batch G behavior is committed and settled. The graph cache keeps its own dirty flag:
+  never fold it into `geometryDirty`, which hit tests clear mid-input. Any new edit that
+  replaces the zone or connection lists must call `markGraphDirty`. The status key must
+  stay built from the full state, and never from only the fields the branch drew,
+  otherwise the redraw never settles.
+- All Batch J behavior is committed and settled. `internal/services/zone_content` must not
+  name a DTO again, and the DTO allow-list only ever shrinks. New content-rule shapes go in
+  `content_rule_model`; conversion stays in the handlers.
 
 ## 4. File modifications
 
 **This closing turn is documentation only, in three files:**
-- [Surviving review](backlog/review-gpt-6-astra-09-07.md): §1.13, §1.14, §1.15 and §2.1
-  marked `✅ FIXED` in place, each with a Progress paragraph. The §9 row F is complete, and
-  the stale 2026-09-11 progress line was refreshed to 16 fixed / 16 remaining. Nothing was
-  renumbered.
-- [Batch F plan](plans/batch-f-editor-geometry.md): Deployment Plan marked CLOSED.
+- [Surviving review](backlog/review-gpt-6-astra-09-07.md): §2.2 marked `✅ FIXED` in place
+  with a Progress paragraph (J9 recorded, not assigned), the §2 architecture-inventory
+  bullet updated, the §9 row J completed, and the progress line refreshed to 18 fixed /
+  14 remaining. Nothing was renumbered, and the review's §8 hash is unchanged.
+- [Batch J plan](plans/batch-j-zone-content-dto-boundary.md): Phase 4, Final Recap and
+  Deployment Plan marked complete/CLOSED.
 - This handoff.
 
-**Batch F inventory, committed in `b9c47a7`:**
-**Production (new):**
-- `internal/models/preview/connectionCurve.go`: the curve value type.
-- `internal/models/preview/connectionCurveLayout.go`: the shared builder and curve tunables.
+**Batch J inventory, committed in `3c0ad87`** (plan in `6649def`):
+
+**Production (new):** [content_rule_model/](../internal/models/content_rule_model/):
+`contentRuleKey.go`, `contentRuleEditorKind.go`, `contentRuleOption.go`,
+`contentRuleComposition.go`, `contentRuleDescription.go`.
+
+**Production (deleted):** `internal/dtos/contentRuleKey.go`,
+`internal/dtos/contentRuleEditorKind.go`.
 
 **Production (edited):**
-- `internal/models/preview/previewConnection.go`: doc comment only.
-- `internal/models/template_model/template_variant_model/connection.go`: `IsEffectivePortal`.
-- `internal/services/connection_editor/zoneEditorGeometryService.go`: `buildEdges` now maps
-  the shared curves. The duplicate grouping, bending and tunables were removed.
-- `internal/services/connection_editor/zoneEditorService.go`: `ChangeConnectionType` clears
-  the rules.
-- `internal/services/preview_service/previewLayoutService.go`: uses the shared curves and the
-  effective classifier.
-- `app/gui/utils/connectionLineStyle.go`: `DrawsAsPortal` uses the effective check.
-- `app/gui/dialogs/zoneEditorCanvas.go`: portal width, `ensureGeometry`, and input handled
-  before the side update.
-- `app/gui/dialogs/zoneEditorGeometryState.go`: `geometrySide`.
-- `app/gui/dialogs/zoneEditorDialog.go`: `ensureManualPositions` refreshes the geometry.
-- `app/gui/dialogs/zoneEditorConnectionProps.go` and
-  `app/gui/dialogs/zoneEditorConnectionPropertiesState.go`: dropdown options, labels and
-  writeback.
+- `internal/dtos/`: `contentRuleOptionDto.go`, `contentRuleCompositionRequestDto.go`,
+  `contentRuleDescriptionDto.go` embed the models.
+- [zoneContentEditorService.go](../internal/services/zone_content/zoneContentEditorService.go)
+  and its interface: model signatures.
+- [zoneContentHandler.go](../internal/handlers/zoneContentHandler.go): conversions.
+- [contentRuleHandler.go](../internal/handlers/contentRuleHandler.go) and
+  [ruleDialog.go](../app/gui/dialogs/ruleDialog.go): model constants; the dialog fills
+  `Key`/`Name` instead of `Option`.
 
-**Production (deleted):** `internal/services/connection_editor/connectionPairKey.go`. The pair
-key is now a `[2]string` inside the shared model.
+**Test helpers:** `test/test_helpers/zoneContentEditorServiceMock.go` (new signatures) and
+`templateHandlerMock.go` (`ComposeContentRule` wraps the comma-ok pair).
 
-**Test-only exports (integration_test tag):**
-- `app/gui/dialogs/zoneEditorDialog_testexports.go`: `ConnectionTypeLabels` and
-  `SelectedConnectionTypeLabel`.
-- `app/gui/editor/window_testexports.go`: the same two methods, declared on
-  `IZoneEditorDialog`.
+**Tests:** listed in §5, plus the allow-list edit in `layering_test.go`. No goldens changed.
+
+**Not touched in Batch J:** `data/`, `internal/entities/template_entity/`,
+`internal/registry/`, the output path, generated Wire, handler interfaces, `guiHandler.go`,
+the bonuses service, dependencies, `.agent/backlog/test_observations.md` and
+`.agent/backlog/owner_findings.md` (its O15 entry stays, as fixed entries have in earlier
+batches; the review's §0 is the disposition of record).
+
+**Batch G inventory, committed in `35e0fab`:**
+
+**Production (new):**
+- [zoneEditorGraphState.go](../app/gui/dialogs/zoneEditorGraphState.go): the cached graph,
+  `graphDirty`, `shownStatus` and `markGraphDirty`.
+- [zoneEditorStatusKey.go](../app/gui/dialogs/zoneEditorStatusKey.go): the comparable
+  status key.
+
+**Production (edited):**
+- [zoneEditorDialog.go](../app/gui/dialogs/zoneEditorDialog.go): embeds the state, adds
+  the cached `layoutStatus`, `statusKey`, `requestLateStatusRedraw`, and 6 mutator marks.
+- [zoneEditorZoneProps.go](../app/gui/dialogs/zoneEditorZoneProps.go):
+  `applyQualityMutation` marks the graph (gofmt realigned one trailing comment).
 
 **Test helpers:**
-- `test/test_helpers/integration_common/appRunner.go`: `PressInOneFrame` and
-  `ApplyManualConnectionEdit`.
-- `test/test_helpers/integration_common/pointerGesture.go` (new).
-- `test/test_helpers/integration_common/zoneEditorHandler.go`: batch wrappers.
+- [appRunner.go](../test/test_helpers/integration_common/appRunner.go): a private
+  `newAppRunner` shared by `NewAppRunnerWithFileSystem` and the new
+  `NewAppRunnerWithGuiHandler`, plus `ImmediateRedrawRequested`.
+- [graphDescriptionCounter.go](../test/test_helpers/integration_common/graphDescriptionCounter.go)
+  (new, `integration_test`).
 
-**Tests:** listed in §5, plus one golden:
-`test/test_helpers/integration_common/snapshot/__snapshots__/zoneEditorActions_integration_test/TestWhenADragStartsOnAZoneInAddConnectionMode_AConnectionIsCreated_5.golden`.
-The Spawn-A to Spawn-B edge passes exactly over the Hub, so it now bends to the positive
-side on the tie.
+**Tests:** listed in §5. No goldens changed.
 
 **Agent docs:**
-- `.agent/plans/batch-f-editor-geometry.md` (new, durable).
-- `.agent/backlog/test_observations.md`: portal width cannot be pixel-tested, and dropdown
-  shaping is covered by the GUI suite.
-- `.agent/memories/gui-and-tests.md`: batch input, seeding manual connections, the `-update`
-  trap, and Dp rounding.
+- the Batch G plan (first version `a587617`, completed in `35e0fab`; since deleted by the
+  owner).
+- [test_observations.md](backlog/test_observations.md): records the GUI-only statements of
+  the graph cache.
+- `.agent/memories/gui-and-tests.md` (gitignored): redraw assertions, handler wrappers,
+  and dialog-direct limits.
 - This handoff.
 
-**Not touched:** `data/`, `internal/entities/template_entity/`, `internal/registry/`, the
-output path, generated Wire, topology code, dependencies, and
-`.agent/backlog/owner_findings.md`.
+**Not touched in Batch G:** `data/`, `internal/entities/template_entity/`,
+`internal/registry/`, the output path, generated Wire, `connectionEditorService.go`
+(reverted byte-identical), dependencies and `.agent/backlog/owner_findings.md`.
 
 ## 5. Tests added or updated
 
-**This closing turn added no tests and reran nothing**, because it changed documentation
-only. The owner's pre-commit edits trimmed comments only. The Batch F verification below is
-the evidence of record for `b9c47a7`.
+**This closing turn added no tests and reran nothing** beyond confirming that the committed
+`3c0ad87` builds and passes `go test ./test/unit/...`. The Batch J verification below is the
+evidence of record.
 
-**Unit tests** (each file mirrors its implementation path, one test file per public function):
-- New `test/unit/internal/models/preview/connectionCurveLayout/build_test.go` (22 tests) plus
-  `common_test.go`. It covers:
-  - the fan and spacing;
-  - reversed pairs, canonical orientation, grouped order and missing endpoints;
-  - stacked endpoints, and a chord shorter than 1px;
-  - single obstacles on either side, the on-chord tie, and the review repro repeated 200
-    times;
-  - obstacles on both sides;
-  - N = 2, 3 (each side shorter), 3 (tie) and 4 obstructed;
-  - the off-centre midpoint approximation, the chord margin, and the clearance boundary.
-- New `test/unit/.../template_variant_model/connection/isEffectivePortal_test.go`.
-- `zoneEditorService/changeConnectionType_test.go`: 5 new tests for rule clearing and
-  keeping, including lowercase `portal`.
-- `zoneEditorGeometryService/buildGeometry_test.go`: moved to 21px, plus a parity test.
-  `common_test.go` gained `controlPoints`.
-- `previewLayoutService/buildPreviewLayout_test.go`:
-  - 4 new tests: bending, parity, grouped order, and canonical `Start`;
-  - the lowercase-portal test was flipped to portal-shaped and renamed.
+### Batch J (`3c0ad87`)
 
-  `common_test.go` gained `obstructedManualZones`.
-- `connectionLineStyle/newEditorConnectionLineStyle_test.go`: 2 new rule-only portal cases.
+**Unit tests** (mirrored layout, triple-A, `t.Parallel()`, one assertion each):
+- `zoneContentEditorService/composeContentRule_test.go`, rewritten on the model: unknown key
+  rejected and empty row; distance `-1` / past-the-end rejected for both distance kinds;
+  out-of-range indices return an empty row; exact rows for road, town, variant, and guarded
+  and solo with `true` and `false` (stored as a non-nil `false`, not nil); all five valid
+  kinds accepted.
+- The other three service test files migrated to model inputs, same scenarios.
+- `zoneContentHandler/`: the embedded composition reaches the service; accept →
+  `{rule, true}`; reject → `{rule, false}` passed through; only Key/Name reach
+  `GetDefaultContentRules`; descriptions reach the service unwrapped and in order.
+- `contentRuleHandler/describeContentRule_test.go`: a table over all five rule names for
+  `contentRuleKeyFromName` (was 71.4%, now 100%).
+- `contentRuleHandler` and `guiHandler` tests: constant renames only.
 
-**Integration and GUI tests** (all tagged `integration_test && gui`; no new goldens):
-- New `test/integration/gui/zoneEditorConnectionType_integration_test.go`: 10 tests, one of
-  them a 4-case table.
-- `zoneEditorPointer_integration_test.go`: 5 batched-press tests. All five **failed on the
-  unfixed code**, and the failure modes are recorded in the plan.
-- `roadStyleVisuals_integration_test.go`: 3 pixel tests for rule-only portal colours.
-- `zoneEditorGeometry_integration_test.go`: 3 updated expectations.
+**Architecture gate:** a temporary blank `dtos` import in the service made
+`TestWhenDtoConsumersAreScanned_OnlyTheApiBoundaryAndAppNameADto` fail on that file; the
+file hash matched after removal and the test passed again.
 
-**Baseline** (before the first edit), Windows/amd64, Go 1.27.0, empty `GOFLAGS`: every check
-PASSED, coverage **74.9%**, tagged run root 3.498s / GUI 26.655s, lint 0 issues.
+**Baseline** (HEAD `33bff1f`): build PASS; coverage **74.5%** (6909 / 9261); `./test/...`
+PASS; tagged run PASS (root 3.429s, GUI 26.150s); testlayoutcheck PASS; gofmt clean; lint 0.
 
-**Final**, after the review fixes:
-- `go build ./...`: PASS.
-- `-p=2` unit coverage run: PASS, **74.6%** total. By deduplicated blocks the figure is
-  6911/9246, or 74.75%.
-- `go test ./test/...`: PASS.
-- `go test -tags='integration_test,gui' ./test/integration/...`: PASS, root 3.404s, GUI
-  27.049s.
-- `testlayoutcheck`: PASS. `gofmt -l`: clean.
-- `golangci-lint-v2 run ./... --issues-exit-code=1`: 0 issues. One run showed 3 stale-cache
-  `nolintlint` hits in untouched `editorState` tests; `golangci-lint-v2 cache clean` cleared
-  them.
+**Final** (Windows/amd64, Go 1.27.0, empty `GOFLAGS`): build and `go vet` under no tag,
+`integration_test` and `integration_test,gui` PASS; coverage **74.5%** (6915 / 9263: +2
+handler statements, +6 covered; every function in the three touched files at 100%);
+`./test/...` PASS; tagged run PASS (root 4.103s, GUI 33.104s), no `.failure` files;
+testlayoutcheck PASS; gofmt clean; lint **0 issues** after `--fix` (34 findings, all in this
+batch's files: gofmt/gci on the new files, golines, 18 `modernize/embedlit`).
 
-**Coverage decrease: accepted with the close-out.** It is above the §9 floor of 74.4%. Every
-touched non-GUI function is at 100%. The drop comes from collapsing the duplicated, fully
-covered curve code, and from new dialog statements that only the GUI suite exercises.
-**74.6% is the new baseline for Batch G.**
+**Reviews** (Claude Opus 5.5):
+- Plan: APPROVE WITH CHANGES; all 10 findings applied.
+- Implementation: APPROVE; 3 nits, all applied.
 
-**Not measured:** native Linux and Steam Deck (the WSL probe found no `go`/`pkg-config`
-earlier), in-game behaviour, and any coverage-profile fingerprint.
+### Batch G (`35e0fab`, prior session)
 
-**Reviews:**
-- GPT-6 Sol plan review: REJECT on the first draft; all findings were addressed and one was
-  declined with a reason.
-- Claude Opus 5.5 implementation review: APPROVE WITH CHANGES. Its 1 minor and 4 nits were
-  resolved, or noted where no change was made (see the plan's Phase 5).
+**Unit tests** (mirrored layout, triple-A, `t.Parallel()`):
+- `connectionEditorService/findIsolatedZones_test.go`: 6 new tests. They lock the `nil`
+  result, input order, `To`-only references, unknown endpoints, duplicate names and
+  self-loops.
+- `zoneEditorHandler/describeZoneEditorGraph_test.go`: 1 new test for a `nil` isolated
+  result.
+
+**GUI integration** (`integration_test && gui`):
+[zoneEditorGraphCache_integration_test.go](../test/integration/gui/zoneEditorGraphCache_integration_test.go),
+with 20 tests:
+- Call counts:
+  - opening the editor makes 1 call, and idle frames make 0;
+  - 8 structural edits make 1 each;
+  - 4 non-structural edits make 0 each.
+- 2 isolation correctness tests.
+- 3 window-harness redraw tests: the positive case, an empty-canvas negative control, and
+  convergence.
+- 1 dialog-direct error-state convergence test.
+
+Each group was shown to fail under a temporary production mutation, reverted afterwards.
+
+**Baseline** (unchanged code, HEAD `a587617`):
+- build: PASS;
+- coverage: **74.6%**;
+- `go test ./test/...`: PASS;
+- tagged run: PASS, root 6.453s, GUI 47.423s (machine load);
+- `testlayoutcheck`: PASS; `gofmt`: clean;
+- lint: 0 issues.
+
+**Final** (Windows/amd64, Go 1.27.0, empty `GOFLAGS`):
+- build: PASS;
+- `-p=2` coverage: PASS, **74.5%**. Covered statements are unchanged at 6911, and the
+  denominator grew 9246 → 9261 with 15 GUI-only dialog statements. **Accepted by the
+  owner with the close-out. 74.5% is the new baseline for the next batch.**
+- `go test ./test/...`: PASS;
+- tagged run: PASS, root 3.322s, GUI 32.380s;
+- the new GUI tests at `-count=5`: PASS;
+- `testlayoutcheck`: PASS; `gofmt -l`: clean;
+- lint: **0 issues**, after fixing 4 new ones: `funcorder` ×2, `gochecknoglobals` and
+  `funlen`.
+
+**Reviews** (Claude Opus 5.5):
+- Plan: APPROVE WITH CHANGES. All 12 findings were applied, and G9a was owner-approved.
+- Implementation: APPROVE WITH CHANGES. The 1 minor finding and 3 of the 4 nits were
+  applied. Nit 5 was declined with a reason, and one out-of-scope observation was
+  recorded (see §7).
+
+**Not measured:** native Linux, Steam Deck, the race detector (cgo is off locally), and
+in-game behaviour.
 
 ## 6. Git status snapshot
 
-The branch is **`AD/editor_geometry`**, HEAD **`b9c47a7` ("Batch F")**, level with
-`origin/AD/editor_geometry`. The history on top of `master` (`4143bdd`) is `b9fb53e`
-("Agent"), then `3e49ca2` and `4a72813` (plan snapshots), then `b9c47a7`. Batch F is not
-yet merged to `master`.
+The branch is **`AD/performance`**, HEAD **`3c0ad87` ("Batch J")**, level with
+`origin/AD/performance`. The history on top of `master` (`f78caeb`, Batch F #48) is
+`a587617` ("plan"), `35e0fab` ("Batch G"), `33bff1f` ("docs"), `6649def` ("Batch J
+start"), then `3c0ad87`. Batches G and J are not yet merged to `master`.
 
 The tree was clean when this closing turn began. `git status --short` now shows only this
 turn's three documentation edits, all unstaged:
 
 ```text
  M .agent/backlog/review-gpt-6-astra-09-07.md
- M .agent/plans/batch-f-editor-geometry.md
+ M .agent/plans/batch-j-zone-content-dto-boundary.md
  M .agent/session-carry-forward.md
 ```
 
-`.agent/memories/` is gitignored and does not show.
+`.agent/memories/` and `tmp/` are gitignored.
 
 **The assistant performed no staging, unstaging, commit, push, stash, branch switch or
-worktree change in this turn.**
+worktree change in this session.**
 
 ## 7. Rejections / things the user declined
+
+- **Batch J.**
+  - Rejected designs: keeping `ContentRuleKey` in `internal/common` (breaks models'
+    import rule), a `dtos` type alias, nesting the option inside `ContentRuleComposition`,
+    `*ContentRuleRow` or a result-struct model instead of comma-ok, deleting the result
+    DTO, narrowing the descriptions to plain strings, and dropping the Guarded check in
+    `GetDefaultContentRules`.
+  - Moving the `contentRuleHandler` catalogue/describe logic into `content_rules` was
+    declined for this batch (J9): recorded, not assigned.
+  - The plan's nested-literal instruction was superseded by Go 1.27 promoted-field literals
+    (see §3). An interim `funlen` helper extraction in `contentRuleHandler.go` was reverted.
+- **Batch G.**
+  - The O(z+c) isolation rewrite failed G3 and was reverted, with the numbers recorded.
+  - Dialog-direct invalidate tests were planned but proved infeasible: the canvas offset
+    depends on the toolbar height. The window harness was used instead, with a settle loop
+    and a negative control.
+  - Implementation review nit 5 (the open-editor test's Act only reads the counter) was
+    declined, because opening the editor is the action.
+  - Recorded, not assigned: the toolbar's "Delete selected" enabled state is still one
+    frame late after a canvas selection, as at HEAD, because `hasSelection` is not in the
+    status key. It is out of §3.1 scope.
 
 - **Batch F, settled by the owner.**
   - Editor-only obstacle bending, and dropping obstacle bending entirely, were both
@@ -299,11 +412,9 @@ worktree change in this turn.**
   - Topology retirement (Batch K) stays out of scope.
   - No opportunistic DTO, schema, package, allocation or output-path work.
   - Never claim unobserved engine outcomes.
-- **§8 verification encoding.** Use explicit UTF-8 for Git stdout and disk reads, because
-  PowerShell 5.1 mis-decodes. Git stores this file LF-normalized while the worktree is
-  CRLF. Before and after this edit, §8's UTF-8 SHA-256 (from `## 8.` up to `## 9.`) is
-  `35D5F4F36C0492166B202DC78828A0F0594906FA3A08A899F554D8A68D118E13`.
 - **Recorded, not assigned:**
+  - `contentRuleHandler` holds the content-rule option catalogue and describe logic
+    (business logic in a handler; J9).
   - A service comment still names the legacy rebuild entry point.
   - A zero-edge tournament count remark.
   - The defensive selected-pointer rebinding branch.
@@ -347,104 +458,73 @@ Other pending decisions: arena/manual invalidation and effective-mode aliases (�
 
 ## 9. Next recommended actions
 
-**Batch F is closed, with no open Batch F questions and no blockers.** The next unit of
-work is **Batch G, measured performance: review §3.1**, taken from the surviving review's §9
-table rather than from §8. Nothing has been planned or implemented for Batch G, and no code
-may be written before the gates below are cleared.
+**Batch J is closed, with no open Batch J questions and no blockers.** The owner merges
+`AD/performance` to `master` and decides when to delete the Batch J plan. Neither is an
+agent action.
 
-**§3.1 in brief.** The zone editor's status line re-runs graph diagnostics on every frame.
-`layoutStatus` in [zoneEditorDialog.go](../app/gui/dialogs/zoneEditorDialog.go) calls
-`derefConnections(this.working)`, which allocates a slice, and then
-`DescribeZoneEditorGraph` ([zoneEditorHandler.go](../internal/handlers/zoneEditorHandler.go)).
-Its `FindIsolatedZones` ([connectionEditorService.go](../internal/services/connection_editor/connectionEditorService.go))
-is O(zones × connections). The review's proposed fix:
-- cache a graph summary, invalidated by structural changes;
-- keep in mind that toolbar buttons are handled before canvas input, so a cached summary
-  must still be correct on the next frame;
-- optionally make isolation detection O(zones + connections) with a referenced-name set;
-- **measure first** with an untagged public-API benchmark at
-  `test/performance/zoneEditorGraph_test.go`, and count handler calls on idle versus
-  mutation frames through GUI integration.
+The next unit of work is the **owner's choice** among the remaining batches of the
+surviving review's §9 table (14 items left):
+- **H: CI/tooling hardening,** §6.2, §6.3 and §6.5. This is next in table order, and the
+  items are independent configuration changes:
+  - linter version alignment;
+  - LF attributes for module and checksum files, with owner-approved normalization of
+    those four paths only;
+  - release-tag input validation.
 
-**Owner constraint from the review:** do not reintroduce the rejected global Gio
-allocation threshold, or clone-free live state pointers.
-
-**Batch F context that affects G:** `geometryDirty` is now also cleared by `ensureGeometry`
-from inside hit tests, in the middle of input handling. A graph-summary cache must **not**
-piggyback on that flag. It needs its own invalidation, or it will miss changes that a hit
-test has already absorbed.
+  Each has open owner decisions recorded in its review item.
+- **I: docs,** §7.1 and §7.2.
+- **K–P:** topology retirement, the compact-state investigation, the persistence format,
+  panel/state organization, naming and lookup, and the Vec2 audit. The binding scope for
+  each is in §8's retained decisions.
 
 Routing for the next session, in order:
-
-1. Read [AGENTS.md](../AGENTS.md), this handoff, then review §3.1 and the §9 `G` row.
-2. **Inspect the current code and tests yourself**, because the review's line numbers
-   predate Batch F:
-   - [zoneEditorDialog.go](../app/gui/dialogs/zoneEditorDialog.go) (`layoutStatus`,
-     `derefConnections` and every `working` mutator);
-   - [zoneEditorCanvas.go](../app/gui/dialogs/zoneEditorCanvas.go) (`ensureGeometry`);
-   - [zoneEditorHandler.go](../internal/handlers/zoneEditorHandler.go);
-   - [connectionEditorService.go](../internal/services/connection_editor/connectionEditorService.go);
-   - [findIsolatedZones_test.go](../test/unit/internal/services/connection_editor/connectionEditorService/findIsolatedZones_test.go);
-   - [describeZoneEditorGraph_test.go](../test/unit/internal/handlers/zoneEditorHandler/describeZoneEditorGraph_test.go);
-   - the existing benchmarks under `test/performance/`.
-3. **Ask the owner** the undecided questions:
-   - Is measurement alone enough, or should the batch also implement the fix?
-   - What measured improvement justifies the fix?
-   - Is the O(zones + connections) isolation rewrite in scope?
-   - Where should the summary cache live: the dialog, or behind the handler?
-   - Is a GUI handler-call count acceptable as an idle-frame assertion?
-4. Summarize the scope back to the owner and get approval.
-5. Write a **new durable Batch G plan** under `.agent/plans/`, get an independent review
-   and explicit plan approval, and capture a fresh baseline before the first edit.
+1. Read [AGENTS.md](../AGENTS.md), this handoff, then the chosen items and their §9 row.
+2. Inspect the current code yourself, because review line numbers predate Batches F, G and J.
+3. Ask the owner every open decision in the items, summarize the scope, and get approval.
+4. Write a new durable plan under `.agent/plans/`, get an independent review and explicit
+   plan approval, and capture a fresh baseline (coverage 74.5%, 6915 / 9263) before the
+   first edit.
 
 **Deployment.** Nothing is deployed and nothing is authorized to be. The owner alone
-stages, commits, merges and releases. Batch F still awaits the owner's merge to `master`.
-No schema migration, dependency installation, Wire regeneration or output-directory
-change is required or pending. Native Linux and Steam Deck execution remain unmeasured.
+stages, commits, merges and releases. Batches G and J still await the owner's merge to
+`master`. No schema migration, dependency installation, Wire regeneration or
+output-directory change is required or pending. Native Linux and Steam Deck execution
+remain unmeasured.
 
 ## 10. Carry-forward prompt
 
 > Read [AGENTS.md](../AGENTS.md) first, then [this handoff](session-carry-forward.md). It
 > is self-contained.
 >
-> **Batch F is CLOSED.** The owner reviewed it and committed it as `b9c47a7`. Findings
-> §1.13, §1.14, §1.15 and §2.1 are marked **FIXED** in the
-> [surviving review](backlog/review-gpt-6-astra-09-07.md), whose §9 table shows batch `F`
-> complete, with 16 fixed and 16 remaining. Coverage of 74.6% was accepted and is the new
-> baseline. Do not reimplement, re-verify or re-review Batch F, and do not reopen its
-> owner decisions (D1–D13 in [the closed plan](plans/batch-f-editor-geometry.md)).
+> **Batch J is CLOSED.** The owner reviewed it and committed it as `6649def` (plan) and
+> `3c0ad87` on `AD/performance`, which (with Batch G, `35e0fab`) is not yet merged to
+> `master` (`f78caeb`). Review §2.2 is marked **FIXED** in the
+> [surviving review](backlog/review-gpt-6-astra-09-07.md), whose §9 table shows batch `J`
+> complete, with 18 fixed and 14 remaining. Coverage stays at the 74.5% baseline. The
+> Batch J plan is CLOSED; §3 of this handoff restates its settled decisions (J1–J9) and
+> Batch G's (G1–G9a). Do not reimplement, re-verify or re-review Batch J or Batch G.
 >
-> **State:** branch `AD/editor_geometry`, HEAD `b9c47a7`, level with origin, not yet merged
-> to `master`. The only working-tree changes are the closing turn's three documentation
-> edits: the review, the plan and this handoff. The assistant performed no Git mutation;
-> preserve the owner's state exactly.
+> **State:** the only working-tree changes are the closing turn's three documentation
+> edits: the review, the Batch J plan and this handoff. The assistant performed no Git
+> mutation; preserve the owner's state exactly.
 >
-> **Next work is Batch G, measured performance, review §3.1:** zone-editor graph
-> diagnostics are rebuilt on every frame. **No Batch G plan or implementation exists yet,
-> and none may be written before these gates, in order:**
-> 1. Read review §3.1 and §9.
-> 2. Inspect the current code yourself (list in §9 above). Batch F moved lines.
-> 3. Ask the owner: measure-only or also fix; the improvement threshold; the scope of the
->    O(n) isolation rewrite; where the cache lives; and whether GUI handler-call counts are
->    acceptable.
-> 4. Summarize the scope and get approval.
-> 5. Write a durable Batch G plan, get an independent review and explicit plan approval.
-> 6. Capture a fresh baseline before the first edit.
+> **Next work is the owner's choice of batch from review §9.** H (CI/tooling: §6.2,
+> §6.3, §6.5) is next in order. No plan exists yet. Follow the gates in §9: read,
+> inspect, ask, summarize, plan, independent review, plan approval, fresh baseline.
 >
-> Do not reuse `geometryDirty` for the summary cache: hit tests clear it. Do not
-> reintroduce the global Gio allocation threshold, or clone-free live state pointers.
->
-> **Verification on record** (Batch F final code, Windows/amd64, Go 1.27.0, empty
-> `GOFLAGS`; not rerun at close-out):
-> - build: PASS;
-> - `-p=2` unit coverage run: PASS, 74.6%;
+> **Verification on record** (Batch J final code, Windows/amd64, Go 1.27.0, empty
+> `GOFLAGS`; the committed tree was re-checked with build + unit tests at close-out):
+> - build and tagged `go vet`: PASS;
+> - coverage: PASS, 74.5% (6915 / 9263);
 > - `go test ./test/...`: PASS;
-> - tagged `integration_test,gui` run: PASS, root 3.404s, GUI 27.049s;
-> - `testlayoutcheck`: PASS; `gofmt`: clean;
-> - lint: 0 issues. If stale `nolintlint` hits appear, run `golangci-lint-v2 cache clean`
->   first.
+> - tagged `integration_test,gui` run: PASS, root 4.103s, GUI 33.104s;
+> - `testlayoutcheck`: PASS; `gofmt`: clean; lint: 0 issues.
 >
-> **Native Linux and Steam Deck are UNAVAILABLE.** No in-game result is claimed.
+> **Native Linux, Steam Deck and the race detector are UNAVAILABLE.** No in-game result is
+> claimed.
+>
+> **Go 1.27 literals:** promoted fields of embedded structs are set directly in composite
+> literals; `modernize/embedlit` rejects the nested form.
 >
 > **GUI snapshots:** never keep a blanket `-update`, because it rewrites about 280 goldens.
 > Accept only the `.failure` files a plain run produces.
@@ -461,11 +541,11 @@ change is required or pending. Native Linux and Steam Deck execution remain unme
 >   introduce fake unit seams.
 > - Keep plans durable and resumable.
 >
-> **Out of scope:** Batch K topology retirement, direct `GeneratorConfig` rejection, DTO
-> cleanup, schema and package work, allocation tuning beyond §3.1, and every settled
-> alternative in §7. §8 stays verbatim. Its Batch C wording and its pending-decision wording
-> for §1.5, §1.11, §1.12 and §2.1 are superseded; its retained later-scope decisions remain
-> binding.
+> **Out of scope** unless the owner selects that batch: Batch K topology retirement,
+> direct `GeneratorConfig` rejection, DTO cleanup, schema and package work, allocation
+> tuning, and every settled alternative in §7. §8 stays verbatim. Its Batch C wording,
+> its pending-decision wording for §1.5, §1.11, §1.12 and §2.1, and its §2.2 bullet are
+> superseded; its retained later-scope decisions remain binding.
 >
 > **Preserve:**
 > - explicit Portal Road `false`/`nil` and valid approaches;
@@ -474,6 +554,9 @@ change is required or pending. Native Linux and Steam Deck execution remain unme
 > - independent internal roads, nil-state content/road preservation, and source cloning;
 > - the single reusable half-opacity PNG edge mask, and the Preview-only legend;
 > - the shared curve builder, as the single source of curves;
-> - hit tests resolving against the live connection list.
+> - hit tests resolving against the live connection list;
+> - the graph cache's own dirty flag (`markGraphDirty` on every edit that replaces the
+>   zone or connection lists), and a status key built from the full state;
+> - `internal/services/zone_content` naming no DTO, with conversion in the handlers.
 >
 > This handoff contains the full continuation context.

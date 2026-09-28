@@ -5,6 +5,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/content_rule_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
 	"github.com/stretchr/testify/assert"
@@ -18,35 +19,35 @@ func TestWhenContentHasNoVariants_ReturnsBaseOptionsInDialogOrder(t *testing.T) 
 	expected := dtos.ContentRuleEditorOptionsDto{
 		Rules: []dtos.ContentRuleOptionDto{
 			{
-				Key:         dtos.ContentRuleKeyDistanceToRoad,
+				Key:         content_rule_model.ContentRuleKeyDistanceToRoad,
 				Name:        content_rules.RuleDistanceToRoadName,
 				Description: content_rules.RuleDistanceToRoadDescription,
 				Marker:      content_rules.RuleDistanceToRoadMarker,
-				EditorKind:  dtos.ContentRuleEditorKindDistance,
+				EditorKind:  content_rule_model.ContentRuleEditorKindDistance,
 				EditorLabel: "Distance",
 			},
 			{
-				Key:         dtos.ContentRuleKeyDistanceToTown,
+				Key:         content_rule_model.ContentRuleKeyDistanceToTown,
 				Name:        content_rules.RuleDistanceToTownName,
 				Description: content_rules.RuleDistanceToTownDescription,
 				Marker:      content_rules.RuleDistanceToTownMarker,
-				EditorKind:  dtos.ContentRuleEditorKindDistance,
+				EditorKind:  content_rule_model.ContentRuleEditorKindDistance,
 				EditorLabel: "Distance",
 			},
 			{
-				Key:         dtos.ContentRuleKeyGuarded,
+				Key:         content_rule_model.ContentRuleKeyGuarded,
 				Name:        content_rules.RuleGuardedName,
 				Description: content_rules.RuleGuardedDescription,
 				Marker:      content_rules.RuleGuardedMarker,
-				EditorKind:  dtos.ContentRuleEditorKindBoolean,
+				EditorKind:  content_rule_model.ContentRuleEditorKindBoolean,
 				EditorLabel: "Guarded",
 			},
 			{
-				Key:         dtos.ContentRuleKeySoloEncounter,
+				Key:         content_rule_model.ContentRuleKeySoloEncounter,
 				Name:        content_rules.RuleSoloEncounterName,
 				Description: content_rules.RuleSoloEncounterDescription,
 				Marker:      content_rules.RuleSoloEncounterMarker,
-				EditorKind:  dtos.ContentRuleEditorKindBoolean,
+				EditorKind:  content_rule_model.ContentRuleEditorKindBoolean,
 				EditorLabel: "Solo encounter",
 			},
 		},
@@ -70,11 +71,11 @@ func TestWhenContentHasVariants_AppendsVariantRule(t *testing.T) {
 		Name: "Dragon Utopia",
 	}
 	expectedRule := dtos.ContentRuleOptionDto{
-		Key:         dtos.ContentRuleKeyVariant,
+		Key:         content_rule_model.ContentRuleKeyVariant,
 		Name:        content_rules.RuleVariantName,
 		Description: content_rules.RuleVariantDescription,
 		Marker:      content_rules.RuleVariantMarker,
-		EditorKind:  dtos.ContentRuleEditorKindVariant,
+		EditorKind:  content_rule_model.ContentRuleEditorKindVariant,
 		EditorLabel: "Variant",
 	}
 

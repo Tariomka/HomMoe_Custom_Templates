@@ -10,10 +10,15 @@
 
 **Finding count:** **32 actionable items: 8 High, 17 Medium, 7 Low.** This includes owner-requested architecture/product work scoped on 2026-09-08, not just proved defects. Informational observations and prior-item dispositions are not included in that count. Findings are source-verified unless a runtime reproduction is explicitly recorded. Performance claims are reasoned, not benchmark measurements. In-game behavior was not tested.
 
-**Current progress (2026-09-28):** **16 fixed, 16 remaining**: 0 High, 10 Medium,
-6 Low. Batches A/D, B, C, E and F are owner-committed and closed; Batch F closed with
+**Current progress (2026-09-28):** **18 fixed, 14 remaining**: 0 High, 8 Medium,
+6 Low. Batches A/D, B, C, E, F, G and J are owner-committed and closed; Batch F closed with
 owner commit `b9c47a7` on 2026-09-28, independent review and Windows verification,
-coverage **74.6%** (owner-accepted, GUI-only decrease) and lint zero. Batch C's
+coverage **74.6%** (owner-accepted, GUI-only decrease) and lint zero. Batch G closed with
+owner commit `35e0fab` on 2026-09-28, independent plan/implementation reviews and Windows
+verification, coverage **74.5%** (owner-accepted: covered statements unchanged, 15 GUI-only
+statements added) and lint zero. Batch J closed with owner commit `3c0ad87` on 2026-09-28,
+independent plan/implementation reviews and Windows verification, coverage **74.5%**
+(covered statements 6909 → 6915) and lint zero. Batch C's
 owner-reported Steam Deck acceptance is recorded separately in §10 and does not
 establish a native Linux application build or unrelated engine behavior.
 The original audit measurements above remain historical.
@@ -413,7 +418,7 @@ changed.
 
 ### Architecture inventory and non-findings
 
-- Layering gates pass. Model-bearing DTOs and GUI-held models are intentional. `file_service` entity conversion and migrator entity access remain accepted. The owner has reopened the zone-content DTO exception in §2.2; the current tests still permit it until that work is implemented.
+- Layering gates pass. Model-bearing DTOs and GUI-held models are intentional. `file_service` entity conversion and migrator entity access remain accepted. The zone-content DTO exception reopened in §2.2 was removed by Batch J (`3c0ad87`); only the bonuses exception remains on the DTO allow-list.
 - `TemplateMapper` is the largest inspected production implementation: 648 physical lines, 590 nonblank lines. `ZoneEditorDialog` is 530 physical lines, 498 nonblank lines. Large catalog literals are not god objects.
 - No actionable configured `dupl`, `funlen`, or `gocognit` findings were emitted. Existing method-split dialog/panel files are not automatically debt. TUI/web folders contain README placeholders and are not claimed implemented front ends.
 - `PreviewLayoutService.layout` is mutable per-call scratch state shared by consumers. Current GUI calls are serialized; no current concurrent caller was established. Treat concurrent PNG rendering as requiring a call-local layout refactor and a race test, **not** as an already observed production race. Likewise generator `SetConfiguration`/`Generate` is a serialized protocol.
@@ -428,7 +433,21 @@ Decomposition guidance for work already justified elsewhere, not additional numb
 | ZoneEditorDialog.layoutStatus | Cached graph summary plus rendering | §3.1; avoid redoing graph analysis in a label closure. |
 | buildEdges/buildPreviewConnections | Common endpoint-pair geometry, explicit render policy | §2.1; do not abstract intentional differences blindly. |
 
-### 2.2 🟠 Owner-reopened zone-content DTO removal remains unimplemented
+### 2.2 ✅ FIXED — Owner-reopened zone-content DTO removal
+
+**Progress (2026-09-28).** Owner commit `3c0ad87` removes the **whole** zone-content
+exception: `internal/services/zone_content` is off `dtoNamerAllowList`, and the bonuses
+entry is unchanged. The service now speaks models from the new
+`internal/models/content_rule_model` package, which also takes over `ContentRuleKey` and
+`ContentRuleEditorKind` from `dtos` (models may not import `internal/common`).
+`ComposeContentRule` takes a flat `ContentRuleComposition` and returns
+`(ContentRuleRow, bool)`, so the unit is `ContentRuleRow`, not `ZoneContentRow`. The
+other three methods take `[]ContentRuleOption` / `[]ContentRuleDescription`. The option,
+request and description DTOs embed those models. `zoneContentHandler` does every
+conversion and builds `ContentRuleCompositionResultDto`. Handler interfaces, Wire and
+behaviour are unchanged, and no golden moved. A temporary `dtos` import in the service
+fails the gate. Recorded, not assigned: `contentRuleHandler` still holds the option
+catalogue and describe logic, which is business logic in a handler.
 
 **Evidence.** [ZoneContentEditorService](../../internal/services/zone_content/zoneContentEditorService.go#L22-L49) exposes `ComposeContentRule(request dtos.ContentRuleCompositionRequestDto) dtos.ContentRuleCompositionResultDto`; [validRule](../../internal/services/zone_content/zoneContentEditorService.go#L120-L122) constructs the result DTO, while [zoneContentHandler](../../internal/handlers/zoneContentHandler.go#L27-L30) simply forwards it. Other service methods also consume DTO option/description shapes. [The architecture gate](../../test/unit/architecture/dependency/layering_test.go#L59-L69) currently calls this an accepted exception. When shown that conflict, the owner explicitly selected **“Reopen the DTO removal request.”**
 
@@ -510,7 +529,20 @@ Decomposition guidance for work already justified elsewhere, not additional numb
 
 ## §3 Performance
 
-### 3.1 🟠 Editor graph diagnostics are rebuilt on every frame despite geometry caching
+### 3.1 ✅ FIXED — Editor graph diagnostics are rebuilt on every frame despite geometry caching
+
+**Progress (2026-09-28).** Owner commit `35e0fab` caches the status line's
+`ZoneEditorGraphDto` in the dialog. Its own `graphDirty` flag is set by the seven
+mutators that replace the zone or connection lists, and it never shares
+`geometryDirty`. Idle frames make 0 handler calls, and each structural edit makes
+exactly 1. By owner decision, the pre-existing one-frame-late status is fixed too:
+a status key built from the full state is compared at the end of `Body`, and
+`op.InvalidateCmd` is issued when a canvas or side-panel edit changed it. The optional
+O(zones + connections) isolation rewrite was benchmarked and rejected: +292% at 4 zones
+and +67% at 12, against −19% at 24 and −33% at 40, with 3 added allocations. New
+untagged benchmarks live in `test/performance/zoneEditorGraph_test.go`. Idle-frame
+B/op fell from 4457–18478 to about 3050, now flat in graph size, with no percentage
+gate and no global allocation threshold.
 
 **Evidence.** [layoutStatus](../../app/gui/dialogs/zoneEditorDialog.go#L231-L256) calls `derefConnections(this.working)` and `DescribeZoneEditorGraph(...)` on each layout. [derefConnections](../../app/gui/dialogs/zoneEditorDialog.go#L524-L530) allocates a connection slice. [DescribeZoneEditorGraph](../../internal/handlers/zoneEditorHandler.go#L85-L92) constructs both checks, while [FindIsolatedZones](../../internal/services/connection_editor/connectionEditorService.go#L45-L62) scans connections once per zone. Canvas geometry already has a [dirty gate](../../app/gui/dialogs/zoneEditorCanvas.go#L61-L67).
 
@@ -641,10 +673,10 @@ The configured run includes existing exclusions (protected registry duplication,
 | D: manual state lifecycle | §1.8, §1.9 | Complete in Batch A. Retain compare-before-mutation tests if C changes road rebuilding. |
 | E: effective modes and guard propagation | §1.5, §1.11, §1.12 | Complete: owner commits `1b4658c` and `2062932`, Windows verification and independent review; findings marked fixed 2026-09-12. Accepted 74.9% coverage; native Linux unavailable. |
 | F: editor geometry | §1.13, §1.14, §1.15; optionally §2.1 | Complete: owner commit `b9c47a7` with §2.1 approved into scope, Windows verification and independent plan/implementation reviews; findings marked fixed 2026-09-28. Accepted 74.6% coverage; native Linux unavailable. |
-| G: measured performance | §3.1 | Establish public-API/GUI baseline before caching; no flaky global allocation threshold. |
+| G: measured performance | §3.1 | Complete: owner commit `35e0fab`, Windows verification and independent plan/implementation reviews; finding marked fixed 2026-09-28. Accepted 74.5% coverage (covered statements unchanged); native Linux unavailable. |
 | H: CI/tooling hardening | §6.2, §6.3, §6.5 | Independent configuration changes: linter alignment, Windows/Linux EOL checks, and safe release-tag validation. |
 | I: docs | §7.1, §7.2 | Can run independently after owner approves retirement scope. |
-| J: reopened service boundary | §2.2 | Confirm the composition result/API and exception-removal scope first; preserve bonuses exception. Independent from geometry and road fixes. |
+| J: reopened service boundary | §2.2 | Complete: owner commit `3c0ad87`, whole zone-content exception removed (bonuses kept), Windows verification and independent plan/implementation reviews; finding marked fixed 2026-09-28. Coverage 74.5% (covered statements 6909 → 6915); native Linux unavailable. |
 | K: topology retirement | §2.3 | Inventory shared builders before removal; reject retired saved IDs, reroute surviving tournament fallbacks to balanced generation, and coordinate §1.12. |
 | L: compact-state investigation | §2.4 | Can begin independently; owner reviews live/persisted feasibility and reconstruction semantics before implementation or schema design. |
 | M: coordinated persistence format | §2.5, §2.6; approved outcome of §2.4 only | Follow L's decision gate. One migration plan, supported legacy loading, typed entries, and explicit root-versus-section wire assertions. |

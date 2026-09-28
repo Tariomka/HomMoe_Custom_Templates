@@ -7,6 +7,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/content_rule_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
@@ -27,11 +28,11 @@ func TestWhenContentHasNoVariants_OffersOnlyTheFixedRules(t *testing.T) {
 	options := handler.GetContentRuleEditorOptions(content)
 
 	// Assert
-	assert.Equal(t, []dtos.ContentRuleKey{
-		dtos.ContentRuleKeyDistanceToRoad,
-		dtos.ContentRuleKeyDistanceToTown,
-		dtos.ContentRuleKeyGuarded,
-		dtos.ContentRuleKeySoloEncounter,
+	assert.Equal(t, []content_rule_model.ContentRuleKey{
+		content_rule_model.ContentRuleKeyDistanceToRoad,
+		content_rule_model.ContentRuleKeyDistanceToTown,
+		content_rule_model.ContentRuleKeyGuarded,
+		content_rule_model.ContentRuleKeySoloEncounter,
 	}, ruleKeysOf(options))
 }
 
@@ -48,7 +49,7 @@ func TestWhenContentHasVariants_AppendsTheVariantRule(t *testing.T) {
 	options := handler.GetContentRuleEditorOptions(content)
 
 	// Assert
-	assert.Equal(t, dtos.ContentRuleKeyVariant, ruleKeysOf(options)[len(options.Rules)-1])
+	assert.Equal(t, content_rule_model.ContentRuleKeyVariant, ruleKeysOf(options)[len(options.Rules)-1])
 }
 
 func TestWhenContentHasVariants_FlattensThemIntoOptions(t *testing.T) {
@@ -99,17 +100,17 @@ func TestWhenEditorOptionsAreBuilt_DescribesEachFixedRule(t *testing.T) {
 
 	// Assert
 	assert.Equal(t, dtos.ContentRuleOptionDto{
-		Key:         dtos.ContentRuleKeyGuarded,
+		Key:         content_rule_model.ContentRuleKeyGuarded,
 		Name:        content_rules.RuleGuardedName,
 		Description: content_rules.RuleGuardedDescription,
 		Marker:      content_rules.RuleGuardedMarker,
-		EditorKind:  dtos.ContentRuleEditorKindBoolean,
+		EditorKind:  content_rule_model.ContentRuleEditorKindBoolean,
 		EditorLabel: "Guarded",
 	}, options.Rules[2])
 }
 
-func ruleKeysOf(options dtos.ContentRuleEditorOptionsDto) []dtos.ContentRuleKey {
-	keys := make([]dtos.ContentRuleKey, 0, len(options.Rules))
+func ruleKeysOf(options dtos.ContentRuleEditorOptionsDto) []content_rule_model.ContentRuleKey {
+	keys := make([]content_rule_model.ContentRuleKey, 0, len(options.Rules))
 	for _, rule := range options.Rules {
 		keys = append(keys, rule.Key)
 	}

@@ -5,6 +5,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/content_rule_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/stretchr/testify/assert"
@@ -16,7 +17,7 @@ func TestWhenSavedRuleIsValid_ReturnsDisplayTextAndMarker(t *testing.T) {
 	handler := newProductionGuiHandler()
 	savedRule := editor_state_model.ContentRuleRow{Name: "Distance to road", DistanceName: "Far"}
 	expected := dtos.ContentRuleDescriptionDto{
-		Key:         dtos.ContentRuleKeyDistanceToRoad,
+		Key:         content_rule_model.ContentRuleKeyDistanceToRoad,
 		DisplayText: "Distance to road: Far",
 		Marker:      "R",
 		Valid:       true,
@@ -55,7 +56,7 @@ func TestWhenVariantRuleIsValid_ReturnsVariantLabel(t *testing.T) {
 	}
 	savedRule := editor_state_model.ContentRuleRow{Name: "Variant", VariantID: &variantID}
 	expected := dtos.ContentRuleDescriptionDto{
-		Key:          dtos.ContentRuleKeyVariant,
+		Key:          content_rule_model.ContentRuleKeyVariant,
 		DisplayText:  "Variant: Large Guard",
 		VariantLabel: "Large Guard",
 		Valid:        true,

@@ -3,7 +3,7 @@ package zoneContentEditorService_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/content_rule_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zone_content"
 	"github.com/stretchr/testify/assert"
 )
@@ -14,7 +14,7 @@ func TestWhenSeveralRulesCarryMarkers_TheyAreJoinedWithASeparator(t *testing.T) 
 	service := zone_content.NewZoneContentEditorService()
 
 	// Act
-	markers := service.GetContentRuleMarkers([]dtos.ContentRuleDescriptionDto{
+	markers := service.GetContentRuleMarkers([]content_rule_model.ContentRuleDescription{
 		{Valid: true, Marker: "G"},
 		{Valid: true, Marker: "R"},
 	})
@@ -29,7 +29,7 @@ func TestWhenARuleIsInvalid_ItsMarkerIsSkipped(t *testing.T) {
 	service := zone_content.NewZoneContentEditorService()
 
 	// Act
-	markers := service.GetContentRuleMarkers([]dtos.ContentRuleDescriptionDto{
+	markers := service.GetContentRuleMarkers([]content_rule_model.ContentRuleDescription{
 		{Valid: false, Marker: "G"},
 		{Valid: true, Marker: "R"},
 	})
@@ -44,7 +44,7 @@ func TestWhenARuleHasNoMarker_ItIsSkipped(t *testing.T) {
 	service := zone_content.NewZoneContentEditorService()
 
 	// Act
-	markers := service.GetContentRuleMarkers([]dtos.ContentRuleDescriptionDto{
+	markers := service.GetContentRuleMarkers([]content_rule_model.ContentRuleDescription{
 		{Valid: true},
 		{Valid: true, Marker: "S"},
 	})

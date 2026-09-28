@@ -20,6 +20,15 @@ public APIs in unit tests, so per-file coverage gaps here are intentional.
   The non-nil selected-index rebinding branch is defensive: selecting a zone clears
   the connection selection, so current real inputs cannot enter that branch.
 
+- app/gui/dialogs/zoneEditorDialog.go, zoneEditorGraphState.go and
+  zoneEditorStatusKey.go - Batch G's status-line graph cache (`layoutStatus`,
+  `statusKey`, `markGraphDirty` in the seven structural mutators,
+  `requestLateStatusRedraw` at the end of `Body`). They are covered by
+  test/integration/gui/zoneEditorGraphCache_integration_test.go, which counts
+  handler calls per frame and reads the aux router's wakeup. In the unit profile
+  they add 15 uncovered statements (covered 6911 unchanged, denominator
+  9246 -> 9261, reported total 74.6% -> 74.5%).
+
 - app/gui/program.go - `StartApplication`, `eventLoop` and
   `getAndConfigureWindow` are the Gio bootstrap: they create a real
   `app.Window`, block in `app.Main`, read `os.Args` process-wide and call

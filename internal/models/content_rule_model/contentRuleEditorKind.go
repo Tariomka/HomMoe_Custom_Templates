@@ -1,4 +1,4 @@
-package dtos
+package content_rule_model
 
 type ContentRuleEditorKind string
 

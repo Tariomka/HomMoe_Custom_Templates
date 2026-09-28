@@ -319,7 +319,8 @@ func (this *TemplateHandlerMock) GetSpellCountLabel(count int) string {
 func (this *TemplateHandlerMock) ComposeContentRule(
 	request dtos.ContentRuleCompositionRequestDto,
 ) dtos.ContentRuleCompositionResultDto {
-	return zone_content.NewZoneContentEditorService().ComposeContentRule(request)
+	rule, valid := zone_content.NewZoneContentEditorService().ComposeContentRule(request.ContentRuleComposition)
+	return dtos.ContentRuleCompositionResultDto{Rule: rule, Valid: valid}
 }
 
 func (this *TemplateHandlerMock) UpsertContentRule(
