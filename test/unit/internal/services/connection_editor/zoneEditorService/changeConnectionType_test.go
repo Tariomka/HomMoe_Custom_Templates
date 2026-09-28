@@ -132,3 +132,78 @@ func TestWhenTypeChanges_LeavesTheConnectionsOtherFieldsAlone(t *testing.T) {
 	// Assert
 	assert.Equal(t, expected, connection)
 }
+
+func TestWhenAPortalBecomesDirect_ItsSourcePlacementRulesAreCleared(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	connection := portalWithPlacementRules()
+
+	// Act
+	test_helpers.NewZoneEditorService().ChangeConnectionType(&connection, "Direct", true)
+
+	// Assert
+	assert.Nil(t, connection.PortalPlacementRulesFrom)
+}
+
+func TestWhenAPortalBecomesDirect_ItsTargetPlacementRulesAreCleared(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	connection := portalWithPlacementRules()
+
+	// Act
+	test_helpers.NewZoneEditorService().ChangeConnectionType(&connection, "Direct", true)
+
+	// Assert
+	assert.Nil(t, connection.PortalPlacementRulesTo)
+}
+
+func TestWhenAPortalBecomesProximity_ItStopsBeingAnEffectivePortal(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	connection := portalWithPlacementRules()
+
+	// Act
+	test_helpers.NewZoneEditorService().ChangeConnectionType(&connection, "Proximity", true)
+
+	// Assert
+	assert.False(t, connection.IsEffectivePortal())
+}
+
+func TestWhenTypeBecomesPortal_ThePlacementRulesAreKept(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	connection := portalWithPlacementRules()
+	connection.ConnectionType = "Proximity"
+	expected := portalWithPlacementRules().PortalPlacementRulesFrom
+
+	// Act
+	test_helpers.NewZoneEditorService().ChangeConnectionType(&connection, "Portal", true)
+
+	// Assert
+	assert.Equal(t, expected, connection.PortalPlacementRulesFrom)
+}
+
+func TestWhenTypeBecomesALowerCasedPortal_ThePlacementRulesAreKept(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	connection := portalWithPlacementRules()
+	expected := portalWithPlacementRules().PortalPlacementRulesTo
+
+	// Act
+	test_helpers.NewZoneEditorService().ChangeConnectionType(&connection, "portal", true)
+
+	// Assert
+	assert.Equal(t, expected, connection.PortalPlacementRulesTo)
+}
+
+// portalWithPlacementRules is a portal carrying placement rules on both ends,
+// which is what the generator's topology portals look like.
+func portalWithPlacementRules() template_model.Connection {
+	return template_model.Connection{
+		From:                     "Spawn-A",
+		To:                       "Spawn-B",
+		ConnectionType:           "Portal",
+		PortalPlacementRulesFrom: []template_model.PlacementRule{{Type: "MainObject"}},
+		PortalPlacementRulesTo:   []template_model.PlacementRule{{Type: "MainObject"}},
+	}
+}

@@ -1,7 +1,6 @@
 package preview_service
 
 import (
-	"math"
 	"strings"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_topologies"
@@ -59,7 +58,7 @@ func (this *PreviewLayoutService) BuildPreviewLayout(
 	this.dispatchClusterLayout(zones, variant.Connections, topology, side)
 
 	this.buildPreviewZones(variant.Zones)
-	this.layout.Connections = this.buildPreviewConnections(variant.Connections, this.layout.Positions)
+	this.layout.Connections = this.buildPreviewConnections(variant.Connections)
 
 	layout := *this.layout
 	this.layout = nil
@@ -155,65 +154,21 @@ func applyMainObjects(zone template_model.Zone, previewZone *preview.Zone) {
 	}
 }
 
-// buildPreviewConnections turns the variant's connections into drawable preview
-// edges - only those whose endpoints survived the layout. Connections sharing
-// the same unordered endpoint pair are grouped and each is given a
-// perpendicular bulge so they do not collapse onto a single overlapping line;
-// a lone edge keeps its control point on the midpoint and therefore renders
-// straight.
 func (this *PreviewLayoutService) buildPreviewConnections(
-	connections []template_model.Connection,
-	positions map[string]data.Vec2[float64]) []preview.Connection {
-	type pairKey struct{ start, end string }
-	sortedKey := func(connection template_model.Connection) pairKey {
-		if connection.From > connection.To {
-			return pairKey{connection.To, connection.From}
-		}
-
-		return pairKey{connection.From, connection.To}
-	}
-
-	visible := func(connection template_model.Connection) bool {
-		_, okFrom := positions[connection.From]
-		_, okTo := positions[connection.To]
-		return okFrom && okTo
-	}
-
-	counts := make(map[pairKey]int)
-	for _, connection := range connections {
-		if visible(connection) {
-			counts[sortedKey(connection)]++
-		}
-	}
-
-	result := make([]preview.Connection, 0, len(connections))
-	indexInPair := make(map[pairKey]int)
-
-	const spacingBetweenEdges = 21.0
-	for _, connection := range connections {
-		if !visible(connection) {
-			continue
-		}
-
-		key := sortedKey(connection)
-		index := indexInPair[key]
-		indexInPair[key]++
-
-		startPoint := positions[key.start]
-		endPoint := positions[key.end]
-		delta := endPoint.Subtract(startPoint)
-		distance := math.Max(math.Hypot(delta.X, delta.Y), 1)
-		spread := (float64(index) - float64(counts[key]-1)/2.0) * spacingBetweenEdges
-		// Ctrl offset is 2× the desired bulge: a quadratic Bézier's midpoint
-		// sits halfway between the chord midpoint and the control point.
-		ctrl := startPoint.Add(endPoint).MultiplyScalar(0.5).
-			Add(delta.RotateClockwise().MultiplyScalar(2.0 * spread / distance))
+	connections []template_model.Connection) []preview.Connection {
+	curves := preview.ConnectionCurveLayout{
+		Positions:  this.layout.Positions,
+		ZoneRadius: this.layout.ZoneRadius,
+	}.Build(connections)
+	result := make([]preview.Connection, 0, len(curves))
+	for _, curve := range curves {
+		connection := connections[curve.ConnectionIndex]
 		result = append(
 			result,
 			preview.Connection{
-				Start:          startPoint,
-				End:            endPoint,
-				Ctrl:           ctrl,
+				Start:          curve.Start,
+				End:            curve.End,
+				Ctrl:           curve.Control,
 				Type:           getPreviewConnectionType(connection),
 				HasRoad:        connection.HasRoad(),
 				ExplicitPortal: connection.IsExplicitPortal(),
@@ -222,17 +177,12 @@ func (this *PreviewLayoutService) buildPreviewConnections(
 	return result
 }
 
-// getPreviewConnectionType maps a template connection onto the drawable preview
-// type. A connection also counts as a portal when it merely carries portal
-// placement rules, because the in-game generator treats it as one.
 func getPreviewConnectionType(connection template_model.Connection) preview.ConnectionType {
-	connectionTypes := registry.GetConnectionTypeValues()
-	if connection.ConnectionType == connectionTypes.Portal ||
-		len(connection.PortalPlacementRulesFrom) > 0 ||
-		len(connection.PortalPlacementRulesTo) > 0 {
+	if connection.IsEffectivePortal() {
 		return preview.ConnectionTypePortal
 	}
 
+	connectionTypes := registry.GetConnectionTypeValues()
 	switch connection.ConnectionType {
 	case connectionTypes.GladiatorArena:
 		return preview.ConnectionTypeGladiatorArena

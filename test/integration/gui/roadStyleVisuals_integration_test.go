@@ -325,6 +325,76 @@ func TestWhenARoadedEdgeIsSelected_ItKeepsItsRoadColour(t *testing.T) {
 		edgeStyleCensus(frame, zoneEditor, edge))
 }
 
+// A roaded connection that only carries portal placement rules is a portal in
+// the game, so the editor has to paint it as one, exactly as the preview does.
+//
+//nolint:paralleltest // Driving the window needs exclusive access to the single headless GPU window.
+func TestWhenADirectConnectionCarriesPortalRules_TheEditorPaintsItAsARoadedPortal(t *testing.T) {
+	// Arrange
+	runner, zoneEditor := openZoneEditorWithEditedHubPortal(t, true, withType(directConnectionTypeLabel))
+	zoneEditor.ClickZone(hubZoneName)
+	edge := canvasEdge(t, zoneEditor, hubZoneName, spawnAZoneName)
+
+	// Act
+	frame := runner.CaptureFrame()
+
+	// Assert
+	assert.Equal(t,
+		map[string]bool{
+			roadedStyle:         false,
+			roadlessStyle:       false,
+			roadedPortalStyle:   true,
+			roadlessPortalStyle: false,
+		},
+		edgeStyleCensus(frame, zoneEditor, edge))
+}
+
+// The same connection in the preview, which has always drawn it as a portal:
+// both of the layout's edges are now portals, and nothing is drawn as direct.
+//
+//nolint:paralleltest // Driving the window needs exclusive access to the single headless GPU window.
+func TestWhenADirectConnectionCarriesPortalRules_ThePreviewPaintsItAsARoadedPortal(t *testing.T) {
+	// Arrange
+	runner, zoneEditor := openZoneEditorWithEditedHubPortal(t, true, withType(directConnectionTypeLabel))
+	zoneEditor.ClickCancel()
+
+	// Act
+	frame := runner.CaptureFrame()
+
+	// Assert
+	assert.Equal(t,
+		map[string]bool{
+			roadedStyle:         false,
+			roadlessStyle:       false,
+			roadedPortalStyle:   true,
+			roadlessPortalStyle: false,
+		},
+		styleCensus(frame, integration_common.PreviewCanvasRect()))
+}
+
+// Without a road flag of its own a rule-only portal is still roadless, because
+// the road default follows the explicit Portal type alone.
+//
+//nolint:paralleltest // Driving the window needs exclusive access to the single headless GPU window.
+func TestWhenARoadlessDirectConnectionCarriesPortalRules_TheEditorKeepsTheRoadlessColour(t *testing.T) {
+	// Arrange
+	runner, zoneEditor := openZoneEditorWithEditedHubPortal(t, false, withType(directConnectionTypeLabel))
+	edge := canvasEdge(t, zoneEditor, hubZoneName, spawnAZoneName)
+
+	// Act
+	frame := runner.CaptureFrame()
+
+	// Assert
+	assert.Equal(t,
+		map[string]bool{
+			roadedStyle:         false,
+			roadlessStyle:       true,
+			roadedPortalStyle:   false,
+			roadlessPortalStyle: false,
+		},
+		edgeStyleCensus(frame, zoneEditor, edge))
+}
+
 //nolint:paralleltest // Driving the window needs exclusive access to the single headless GPU window.
 func TestWhenAnEdgeIsNotSelected_ItIsPaintedAtTheNormalWidth(t *testing.T) {
 	// Arrange

@@ -63,3 +63,37 @@ func TestWhenAnEditedPortalIsFlaggedRoadless_TheStyleReportsARoadlessPortal(t *t
 		utils.ConnectionLineStyle{ExplicitPortal: true, DrawsAsPortal: true},
 		style)
 }
+
+// Placement rules make the connection a portal in the game, exactly as the
+// preview draws it, without making it an explicit Portal for road defaults.
+func TestWhenARoadedDirectConnectionCarriesPlacementRules_TheStyleDrawsItAsAPortal(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	road := true
+	connection := template_model.Connection{
+		ConnectionType:           "Direct",
+		Road:                     &road,
+		PortalPlacementRulesFrom: []template_model.PlacementRule{{Type: "MainObject"}},
+	}
+
+	// Act
+	style := utils.NewEditorConnectionLineStyle(connection)
+
+	// Assert
+	assert.Equal(t, utils.ConnectionLineStyle{HasRoad: true, DrawsAsPortal: true}, style)
+}
+
+func TestWhenAnUnflaggedDirectConnectionCarriesPlacementRules_TheStyleStaysRoadless(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	connection := template_model.Connection{
+		ConnectionType:         "Direct",
+		PortalPlacementRulesTo: []template_model.PlacementRule{{Type: "MainObject"}},
+	}
+
+	// Act
+	style := utils.NewEditorConnectionLineStyle(connection)
+
+	// Assert
+	assert.Equal(t, utils.ConnectionLineStyle{DrawsAsPortal: true}, style)
+}

@@ -439,6 +439,7 @@ func (this *ZoneEditorDialog) ensureManualPositions() {
 	if this.side <= 0 {
 		return
 	}
+	this.ensureGeometry()
 	this.geometryDirty = true
 	for i := range this.zones {
 		if this.zones[i].ManualPosition != nil {

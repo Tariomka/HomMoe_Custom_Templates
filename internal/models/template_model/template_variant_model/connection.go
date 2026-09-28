@@ -39,6 +39,13 @@ func (this Connection) IsExplicitPortal() bool {
 	return strings.EqualFold(this.ConnectionType, registry.GetConnectionTypeValues().Portal)
 }
 
+// IsEffectivePortal reports whether the game treats the connection as a portal.
+func (this Connection) IsEffectivePortal() bool {
+	return this.IsExplicitPortal() ||
+		len(this.PortalPlacementRulesFrom) > 0 ||
+		len(this.PortalPlacementRulesTo) > 0
+}
+
 func (this Connection) HasRoad() bool {
 	if this.Road != nil {
 		return *this.Road

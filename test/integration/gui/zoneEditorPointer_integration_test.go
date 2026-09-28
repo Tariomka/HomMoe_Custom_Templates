@@ -184,3 +184,93 @@ func TestWhenAZoneIsDraggedInsideTheDeadZone_ItDoesNotMove(t *testing.T) {
 func shiftedBy(position models.Position, distance float64) models.Position {
 	return data.NewVec2(position.X+distance, position.Y+distance)
 }
+
+// The canvas drains every queued pointer event before it draws, so the tests
+// below deliver several presses in one frame. Each gesture is aimed at the curve
+// on screen when it was queued, and every press has to resolve to the
+// connection it was aimed at, whatever an earlier press in the same frame did.
+// The Geometric Hub layout lays its two portals out in list order, so deleting
+// the first one is what shifted the second one's stale index.
+
+// Both presses land: this is also the proof the harness delivers several
+// presses to the canvas within one frame.
+//
+//nolint:paralleltest // Driving the window needs exclusive access to the single headless GPU window.
+func TestWhenTwoCurvesAreRightClickedInOneFrame_BothConnectionsAreDeleted(t *testing.T) {
+	// Arrange
+	_, zoneEditor := openZoneEditor(t, geometricHubLayout, false)
+	first := zoneEditor.EdgeRightClick(hubToSpawnAName)
+	second := zoneEditor.EdgeRightClick(hubToSpawnBName)
+
+	// Act
+	zoneEditor.PressInOneFrame(first, second)
+
+	// Assert
+	assert.Empty(t, zoneEditor.Dialog().EditedConnectionNames())
+}
+
+//nolint:paralleltest // Driving the window needs exclusive access to the single headless GPU window.
+func TestWhenOneCurveIsRightClickedTwiceInOneFrame_OnlyThatConnectionIsDeleted(t *testing.T) {
+	// Arrange
+	_, zoneEditor := openZoneEditor(t, geometricHubLayout, false)
+	press := zoneEditor.EdgeRightClick(hubToSpawnAName)
+
+	// Act
+	zoneEditor.PressInOneFrame(press, press)
+
+	// Assert
+	assert.Equal(t, []string{hubToSpawnBName}, zoneEditor.Dialog().EditedConnectionNames())
+}
+
+//nolint:paralleltest // Driving the window needs exclusive access to the single headless GPU window.
+func TestWhenACurveIsClickedRightAfterAnotherIsDeletedInOneFrame_TheClickedOneIsSelected(t *testing.T) {
+	// Arrange
+	_, zoneEditor := openZoneEditor(t, geometricHubLayout, false)
+	deletion := zoneEditor.EdgeRightClick(hubToSpawnAName)
+	selection := zoneEditor.EdgeClick(hubToSpawnBName)
+
+	// Act
+	zoneEditor.PressInOneFrame(deletion, selection)
+
+	// Assert
+	assert.Equal(t, hubToSpawnBName, zoneEditor.Dialog().SelectedConnection())
+}
+
+// The toolbar's buttons are handled before the canvas in the same frame, so the
+// deletion they make lands before the queued canvas press is resolved.
+//
+//nolint:paralleltest // Driving the window needs exclusive access to the single headless GPU window.
+func TestWhenACurveIsClickedRightAfterDeleteSelectedInOneFrame_TheClickedOneIsSelected(t *testing.T) {
+	// Arrange
+	_, zoneEditor := openZoneEditor(t, geometricHubLayout, false)
+	zoneEditor.ClickConnection(hubToSpawnAName)
+	deletion := zoneEditor.DeleteSelectedButtonClick()
+	selection := zoneEditor.EdgeClick(hubToSpawnBName)
+
+	// Act
+	zoneEditor.PressInOneFrame(deletion, selection)
+
+	// Assert
+	assert.Equal(t, hubToSpawnBName, zoneEditor.Dialog().SelectedConnection())
+}
+
+// Undo swaps in fresh copies of every connection, so a press aimed at the only
+// curve left on screen has to resolve to that connection's restored copy rather
+// than to whichever copy now sits at the old index.
+//
+//nolint:paralleltest // Driving the window needs exclusive access to the single headless GPU window.
+func TestWhenACurveIsClickedRightAfterUndoInOneFrame_TheClickedOneIsSelected(t *testing.T) {
+	// Arrange
+	_, zoneEditor := openZoneEditor(t, geometricHubLayout, false)
+	zoneEditor.RightClickEdge(hubToSpawnAName)
+	require.Equal(t, []string{hubToSpawnBName}, zoneEditor.Dialog().EditedConnectionNames(),
+		"the first portal must be gone for the undo below to restore it")
+	undo := zoneEditor.UndoButtonClick()
+	selection := zoneEditor.EdgeClick(hubToSpawnBName)
+
+	// Act
+	zoneEditor.PressInOneFrame(undo, selection)
+
+	// Assert
+	assert.Equal(t, hubToSpawnBName, zoneEditor.Dialog().SelectedConnection())
+}

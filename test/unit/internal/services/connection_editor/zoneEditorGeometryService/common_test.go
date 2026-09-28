@@ -69,3 +69,12 @@ func connectionIndices(edges []models.ZoneEditorEdge) []int {
 
 	return indices
 }
+
+func controlPoints(edges []models.ZoneEditorEdge) []models.Position {
+	points := make([]models.Position, 0, len(edges))
+	for _, edge := range edges {
+		points = append(points, edge.ControlPoint)
+	}
+
+	return points
+}

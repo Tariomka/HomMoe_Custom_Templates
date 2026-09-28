@@ -52,19 +52,12 @@ func (this *ZoneEditorDialog) layoutCanvas(gtx layout.Context, theme *material.T
 	area := clip.Rect{Max: canvasSize}.Push(gtx.Ops)
 	event.Op(gtx.Ops, &this.canvasTag)
 	area.Pop()
-	// Handle pointer input BEFORE recomputing geometry so edits (new
-	// connections/zones, drags) are reflected in this very frame. Hit testing
-	// uses the previous frame's geometry, which is exactly what is on screen.
-	sideChanged := this.side != side
-	this.side = side
-	this.handlePointer(gtx)
 
-	// Every mutator raises geometryDirty, so an idle dialog skips the full
-	// BuildPreviewLayout + edge-grouping pass and redraws cached geometry.
-	if this.geometryDirty || sideChanged {
-		this.recomputeGeometry(side)
-		this.geometryDirty = false
-	}
+	// Handle pointer input BEFORE recomputing geometry so edits
+	this.handlePointer(gtx)
+	this.side = side
+
+	this.ensureGeometry()
 
 	if len(this.geometry.Positions) == 0 {
 		return layout.Dimensions{Size: outer}
@@ -164,6 +157,7 @@ func (this *ZoneEditorDialog) onRelease(pos models.Position) {
 }
 
 func (this *ZoneEditorDialog) hitTestNode(pos models.Position) string {
+	this.ensureGeometry()
 	return this.zoneHandler.HitTestZoneEditorNode(dtos.ZoneEditorHitTestRequestDto{
 		Position:   pos,
 		Positions:  this.geometry.Positions,
@@ -172,6 +166,7 @@ func (this *ZoneEditorDialog) hitTestNode(pos models.Position) string {
 }
 
 func (this *ZoneEditorDialog) hitTestEdge(pos models.Position) *template_model.Connection {
+	this.ensureGeometry()
 	edgeIndex := this.zoneHandler.HitTestZoneEditorEdge(pos, this.geometry.Edges)
 	if edgeIndex < 0 {
 		return nil
@@ -190,16 +185,26 @@ func (this *ZoneEditorDialog) edgeConnection(edge models.ZoneEditorEdge) *templa
 	return this.working[edge.ConnectionIndex]
 }
 
-// recomputeGeometry rebuilds node positions and curved-edge control points via
-// the geometry service, which places nodes exactly as the preview tab does.
+// recomputeGeometry rebuilds node positions and curved-edge control points.
 func (this *ZoneEditorDialog) recomputeGeometry(side int) {
 	this.side = side
+	this.geometrySide = side
 	this.geometry = this.zoneHandler.BuildZoneEditorGeometry(dtos.ZoneEditorGeometryRequestDto{
 		Zones:       this.zones,
 		Connections: derefConnections(this.working),
 		Topology:    this.topology,
 		CanvasSide:  side,
 	})
+}
+
+// ensureGeometry rebuilds the cached geometry for geometry multi-recomputation.
+func (this *ZoneEditorDialog) ensureGeometry() {
+	if this.side <= 0 || (!this.geometryDirty && this.geometrySide == this.side) {
+		return
+	}
+
+	this.recomputeGeometry(this.side)
+	this.geometryDirty = false
 }
 
 func (this *ZoneEditorDialog) drawEdges(gtx layout.Context, theme *material.Theme) {

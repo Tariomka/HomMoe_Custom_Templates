@@ -17,7 +17,10 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
 
-const customGuardPresetLabel = "Custom"
+const (
+	customGuardPresetLabel  = "Custom"
+	noneConnectionTypeLabel = "(none)"
+)
 
 func (this *ZoneEditorDialog) propertyRows(theme *material.Theme) []layout.Widget {
 	connection := this.selected
@@ -71,10 +74,18 @@ func (this *ZoneEditorDialog) syncPropsFromConnection() {
 	if connection == nil {
 		return
 	}
-	this.typeDropdown.SetItems(common_connections.GetConnectionTypes())
-	if !this.typeDropdown.SelectByName(connection.ConnectionType) {
-		this.typeDropdown.SelectByName(registry.GetConnectionTypeValues().Direct)
+	this.typeValues = connectionTypeOptions(connection.ConnectionType)
+	typeLabels := make([]string, len(this.typeValues))
+	for index, value := range this.typeValues {
+		typeLabels[index] = connectionTypeLabel(value)
 	}
+	this.typeDropdown.SetItems(typeLabels)
+	this.typeDropdown.WasUpdated = false
+	displayedType := connection.ConnectionType
+	if connection.IsEffectivePortal() {
+		displayedType = registry.GetConnectionTypeValues().Portal
+	}
+	this.typeDropdown.SelectByName(connectionTypeLabel(displayedType))
 	this.guardZoneDropdown.SetItems([]string{connection.From, connection.To})
 	if !this.guardZoneDropdown.SelectByName(connection.GuardZone) {
 		this.guardZoneDropdown.SelectByName(connection.From)
@@ -106,17 +117,14 @@ func (this *ZoneEditorDialog) writebackProps() {
 	if connection == nil {
 		return
 	}
-	typeItems := common_connections.GetConnectionTypes()
-	if index := this.typeDropdown.GetSelectedIndex(); index >= 0 && index < len(typeItems) {
-		if this.typeDropdown.WasUpdated {
+	if this.typeDropdown.WasUpdated {
+		if index := this.typeDropdown.GetSelectedIndex(); index >= 0 && index < len(this.typeValues) {
 			*connection = this.zoneHandler.ChangeZoneEditorConnectionType(
 				dtos.ZoneEditorConnectionTypeRequestDto{
 					Connection:     *connection,
-					ConnectionType: typeItems[index],
+					ConnectionType: this.typeValues[index],
 					GenerateRoads:  this.generateRoads,
 				})
-		} else {
-			connection.ConnectionType = typeItems[index]
 		}
 	}
 	zoneItems := []string{connection.From, connection.To}
@@ -198,3 +206,24 @@ func matchWeeklyLabel(value float64) string {
 }
 
 func formatIncrement(value float64) string { return strconv.FormatFloat(value, 'g', -1, 64) }
+
+// connectionTypeOptions lists the types the dropdown offers a connection: the
+// editable ones, plus the connection's own type when it is none of them, so
+// selecting a connection never silently rewrites a type it cannot show.
+func connectionTypeOptions(storedType string) []string {
+	options := common_connections.GetConnectionTypes()
+	connectionTypes := registry.GetConnectionTypeValues()
+	if storedType != connectionTypes.Direct && !strings.EqualFold(storedType, connectionTypes.Portal) {
+		options = append(options, storedType)
+	}
+
+	return options
+}
+
+func connectionTypeLabel(connectionType string) string {
+	if connectionType == "" {
+		return noneConnectionTypeLabel
+	}
+
+	return connectionType
+}

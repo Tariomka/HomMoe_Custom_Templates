@@ -216,3 +216,25 @@ func (this *ZoneEditorDialog) GuardPresetLabels() []string {
 func (this *ZoneEditorDialog) SelectedGuardPresetLabel() string {
 	return this.selectedGuardPresetLabel()
 }
+
+// ConnectionTypeLabels returns the options the type dropdown offers the
+// selected connection. ONLY FOR INTEGRATION TEST USE
+func (this *ZoneEditorDialog) ConnectionTypeLabels() []string {
+	labels := make([]string, 0, len(this.typeValues))
+	for _, value := range this.typeValues {
+		labels = append(labels, connectionTypeLabel(value))
+	}
+
+	return labels
+}
+
+// SelectedConnectionTypeLabel returns the type the dropdown is showing for the
+// selected connection. ONLY FOR INTEGRATION TEST USE
+func (this *ZoneEditorDialog) SelectedConnectionTypeLabel() string {
+	index := this.typeDropdown.GetSelectedIndex()
+	if index < 0 || index >= len(this.typeValues) {
+		return ""
+	}
+
+	return connectionTypeLabel(this.typeValues[index])
+}

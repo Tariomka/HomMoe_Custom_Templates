@@ -114,7 +114,7 @@ func TestWhenTwoConnectionsSharePair_TheirCurvesSpreadSymmetrically(t *testing.T
 	controlPoints := []f32.Point{edges[0].ControlPoint, edges[1].ControlPoint}
 
 	// Assert
-	assert.Equal(t, []f32.Point{f32.Pt(272, 290), f32.Pt(308, 290)}, controlPoints)
+	assert.Equal(t, []f32.Point{f32.Pt(269, 290), f32.Pt(311, 290)}, controlPoints)
 }
 
 //nolint:paralleltest // Driving the window needs exclusive access to the single headless GPU window.
@@ -126,11 +126,11 @@ func TestWhenAnEdgeIsLaidOut_ItsLabelSitsOnTheCurveMidpoint(t *testing.T) {
 	edge := findEdge(t, zoneEditor.Dialog().EdgeGeometries(), "Ring-A-B")
 
 	// Assert
-	assert.Equal(t, data.NewVec2(281.0, 290.0), edge.MidPoint)
+	assert.Equal(t, data.NewVec2(279.5, 290.0), edge.MidPoint)
 }
 
-// The hub sits exactly on the chord between the two spawns, so the pseudo edge
-// joining them has to bow far enough sideways to clear it.
+// The hub sits exactly on the chord between the two spawns, so the two edges
+// joining them split around it, and the pseudo edge bows far enough to clear it.
 //
 //nolint:paralleltest // Driving the window needs exclusive access to the single headless GPU window.
 func TestWhenAZoneSitsNearTheChord_TheCurveBulgesClearOfIt(t *testing.T) {
@@ -141,7 +141,7 @@ func TestWhenAZoneSitsNearTheChord_TheCurveBulgesClearOfIt(t *testing.T) {
 	edge := findEdge(t, zoneEditor.Dialog().EdgeGeometries(), "Pseudo-A-B")
 
 	// Assert
-	assert.Equal(t, f32.Pt(181.02856, 290), edge.ControlPoint)
+	assert.Equal(t, f32.Pt(199.02856, 290), edge.ControlPoint)
 }
 
 //nolint:paralleltest // Driving the window needs exclusive access to the single headless GPU window.

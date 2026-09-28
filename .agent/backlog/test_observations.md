@@ -5,6 +5,14 @@ public APIs in unit tests, so per-file coverage gaps here are intentional.
 
 ## Gio-UI-heavy code (integration-suite territory, no unit tests)
 
+- app/gui/dialogs/zoneEditorCanvas.go `drawEdges` - Batch F draws effective portals at
+  `DefaultConnectionLineSmall` (1.5dp), matching the Preview tab. At the headless
+  harness's 1x scale `gtx.Dp` rounds both 1.5dp and 2dp to 2px, so a pixel test
+  cannot tell a portal from a direct edge by width. The colour half of the same
+  change is pixel-tested in roadStyleVisuals_integration_test.go.
+  The type dropdown shaping (`connectionTypeOptions`, `connectionTypeLabel`) is
+  covered by test/integration/gui/zoneEditorConnectionType_integration_test.go.
+
 - app/gui/dialogs/zoneEditorZoneProps.go and zoneEditorConnectionProps.go - Batch E
   quality-mutation installation and Custom preset synchronization are covered by
   test/integration/gui/zoneEditorProperties_integration_test.go. They remain 0% in
