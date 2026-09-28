@@ -123,7 +123,8 @@ harness is one locked helper with a delivery proof, and the dropdown reselection
 are spelled out. One finding was declined with a reason: the claim that hidden pair
 members shift slots cannot happen, because every member of a pair shares both endpoint
 names (P2). The reviewer computed the repro control point independently as `(350, 260)`,
-matching P3. Owner plan approval: _pending_.
+matching P3. Owner plan approval: **approved 2026-09-28**, with the instruction to run
+Phases 0 to 5 without stopping, because the owner will review everything at once.
 
 ## Phase 0: Baseline
 Status: Not started
