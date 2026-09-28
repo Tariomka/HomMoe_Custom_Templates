@@ -10,10 +10,13 @@
 
 **Finding count:** **32 actionable items: 8 High, 17 Medium, 7 Low.** This includes owner-requested architecture/product work scoped on 2026-09-08, not just proved defects. Informational observations and prior-item dispositions are not included in that count. Findings are source-verified unless a runtime reproduction is explicitly recorded. Performance claims are reasoned, not benchmark measurements. In-game behavior was not tested.
 
-**Current progress (2026-09-28):** **16 fixed, 16 remaining**: 0 High, 10 Medium,
-6 Low. Batches A/D, B, C, E and F are owner-committed and closed; Batch F closed with
+**Current progress (2026-09-28):** **17 fixed, 15 remaining**: 0 High, 9 Medium,
+6 Low. Batches A/D, B, C, E, F and G are owner-committed and closed; Batch F closed with
 owner commit `b9c47a7` on 2026-09-28, independent review and Windows verification,
-coverage **74.6%** (owner-accepted, GUI-only decrease) and lint zero. Batch C's
+coverage **74.6%** (owner-accepted, GUI-only decrease) and lint zero. Batch G closed with
+owner commit `35e0fab` on 2026-09-28, independent plan/implementation reviews and Windows
+verification, coverage **74.5%** (owner-accepted: covered statements unchanged, 15 GUI-only
+statements added) and lint zero. Batch C's
 owner-reported Steam Deck acceptance is recorded separately in §10 and does not
 establish a native Linux application build or unrelated engine behavior.
 The original audit measurements above remain historical.
@@ -510,7 +513,20 @@ Decomposition guidance for work already justified elsewhere, not additional numb
 
 ## §3 Performance
 
-### 3.1 🟠 Editor graph diagnostics are rebuilt on every frame despite geometry caching
+### 3.1 ✅ FIXED — Editor graph diagnostics are rebuilt on every frame despite geometry caching
+
+**Progress (2026-09-28).** Owner commit `35e0fab` caches the status line's
+`ZoneEditorGraphDto` in the dialog. Its own `graphDirty` flag is set by the seven
+mutators that replace the zone or connection lists, and it never shares
+`geometryDirty`. Idle frames make 0 handler calls, and each structural edit makes
+exactly 1. By owner decision, the pre-existing one-frame-late status is fixed too:
+a status key built from the full state is compared at the end of `Body`, and
+`op.InvalidateCmd` is issued when a canvas or side-panel edit changed it. The optional
+O(zones + connections) isolation rewrite was benchmarked and rejected: +292% at 4 zones
+and +67% at 12, against −19% at 24 and −33% at 40, with 3 added allocations. New
+untagged benchmarks live in `test/performance/zoneEditorGraph_test.go`. Idle-frame
+B/op fell from 4457–18478 to about 3050, now flat in graph size, with no percentage
+gate and no global allocation threshold.
 
 **Evidence.** [layoutStatus](../../app/gui/dialogs/zoneEditorDialog.go#L231-L256) calls `derefConnections(this.working)` and `DescribeZoneEditorGraph(...)` on each layout. [derefConnections](../../app/gui/dialogs/zoneEditorDialog.go#L524-L530) allocates a connection slice. [DescribeZoneEditorGraph](../../internal/handlers/zoneEditorHandler.go#L85-L92) constructs both checks, while [FindIsolatedZones](../../internal/services/connection_editor/connectionEditorService.go#L45-L62) scans connections once per zone. Canvas geometry already has a [dirty gate](../../app/gui/dialogs/zoneEditorCanvas.go#L61-L67).
 
@@ -641,7 +657,7 @@ The configured run includes existing exclusions (protected registry duplication,
 | D: manual state lifecycle | §1.8, §1.9 | Complete in Batch A. Retain compare-before-mutation tests if C changes road rebuilding. |
 | E: effective modes and guard propagation | §1.5, §1.11, §1.12 | Complete: owner commits `1b4658c` and `2062932`, Windows verification and independent review; findings marked fixed 2026-09-12. Accepted 74.9% coverage; native Linux unavailable. |
 | F: editor geometry | §1.13, §1.14, §1.15; optionally §2.1 | Complete: owner commit `b9c47a7` with §2.1 approved into scope, Windows verification and independent plan/implementation reviews; findings marked fixed 2026-09-28. Accepted 74.6% coverage; native Linux unavailable. |
-| G: measured performance | §3.1 | Establish public-API/GUI baseline before caching; no flaky global allocation threshold. |
+| G: measured performance | §3.1 | Complete: owner commit `35e0fab`, Windows verification and independent plan/implementation reviews; finding marked fixed 2026-09-28. Accepted 74.5% coverage (covered statements unchanged); native Linux unavailable. |
 | H: CI/tooling hardening | §6.2, §6.3, §6.5 | Independent configuration changes: linter alignment, Windows/Linux EOL checks, and safe release-tag validation. |
 | I: docs | §7.1, §7.2 | Can run independently after owner approves retirement scope. |
 | J: reopened service boundary | §2.2 | Confirm the composition result/API and exception-removal scope first; preserve bonuses exception. Independent from geometry and road fixes. |

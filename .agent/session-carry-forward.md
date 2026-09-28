@@ -1,34 +1,37 @@
-# Carry-forward: Batch G implemented, awaiting owner review
+# Carry-forward: Batch G closed, next batch not started
 
-Date: 2026-09-28. **Batch G (review §3.1, measured performance) is implemented and
-verified on Windows, but not committed.** The owner approved the plan and amendment G9a
-with *"You can capture the baseline and proceed. Go through all of the Phases and I will
-review everything at the end"*. Every change is unstaged in the working tree of
-`AD/performance`. The durable record is
-[batch-g-editor-graph-diagnostics.md](plans/batch-g-editor-graph-diagnostics.md): owner
-decisions G1–G9a, phase summaries, before/after benchmark medians, and both reviews.
+Date: 2026-09-28. **Batch G (review §3.1, measured performance) is closed.** The owner
+reviewed it, committed it as **`35e0fab` ("Batch G")** on `AD/performance`, and authorized
+the close-out with *"Reviewed, you can mark the item as done (finish Phase 6) and update
+the carry forward"*. The committed code matches the reviewed working tree.
 
-**§3.1 is NOT yet marked FIXED** in the
-[surviving review](backlog/review-gpt-6-astra-09-07.md). Its fix-session protocol marks an
-item only after the owner commits, so the progress line still reads 16 fixed, 16 remaining.
+**§3.1 is marked FIXED** in the
+[surviving review](backlog/review-gpt-6-astra-09-07.md). Its §9 row G is complete, and
+its progress line reads **17 fixed, 15 remaining** (0 High, 9 Medium, 6 Low).
+
+The plan, [batch-g-editor-graph-diagnostics.md](plans/batch-g-editor-graph-diagnostics.md),
+is marked CLOSED. **The owner will delete it once `AD/performance` reaches `master`**, so
+this handoff restates everything the plan settled (§3). Do not recreate the plan, and do
+not reimplement, re-verify or re-review Batch G.
 
 **Section 8 is preserved verbatim**, contradictions and all. Its Batch C phase/engine
 wording, and its "pending decisions" wording for §1.5, §1.11, §1.12 and §2.1, are
 **superseded**: all were settled, implemented and marked fixed. Everything else §8 retains
 as later scope remains **binding**. Do not edit §8.
 
-Batches A/D, B, C, E and F are closed and merged to `master`. Batch F went in as PR #48,
-`f78caeb`. Do not revisit or re-verify closed batches.
+Batches A/D, B, C, E, F and G are closed. A/D through F are merged to `master` (Batch F as
+PR #48, `f78caeb`). Batch G is pushed on `AD/performance` and is not yet merged. Do not
+revisit or re-verify closed batches.
 
 ## 1. Session goal
 
-Plan, implement and verify Batch G from review §9: §3.1, where the zone editor's
-status line rebuilt its graph diagnostics on every frame. The owner reviews everything at
-the end.
+Plan, implement, verify and close Batch G from review §9: §3.1, where the zone editor's
+status line rebuilt its graph diagnostics on every frame. This closing turn marked the
+finding fixed and handed this file forward.
 
 ## 2. Fixes applied
 
-All are uncommitted, pending owner review.
+All are committed in `35e0fab` and **marked FIXED**. They are closed; do not reopen them.
 
 - **§3.1, the graph summary cache.**
   [zoneEditorGraphState.go](../app/gui/dialogs/zoneEditorGraphState.go) caches the
@@ -50,20 +53,33 @@ All are uncommitted, pending owner review.
 
 ## 3. Features added / changed
 
-### Batch G, uncommitted (decisions G1–G9a in the plan)
+### Delivered in Batch G, committed and settled
 
-- **Measure first, then fix.** There is no percentage gate and no global allocation
-  threshold. Acceptance is the deterministic call-count criterion (G2).
+The owner decisions, restated here because the plan will be deleted:
+
+| ID | Decision |
+| --- | --- |
+| G1 | Measure first, then fix. |
+| G2 | Acceptance is deterministic: idle frames make 0 `DescribeZoneEditorGraph` calls, and each structural edit makes exactly 1. Benchmarks are recorded with no percentage gate and no global allocation threshold. |
+| G3 | The O(z+c) isolation rewrite is adopted only if it is faster at 24 and 40 zones and within ±5% at 4 and 12. |
+| G4 | The cache lives in the dialog with its own dirty flag. The handler stays stateless. |
+| G5 | Handler calls are counted by a test-helper wrapper embedding `IGuiHandler`, with no new test exports. |
+| G6 | There is an untagged, GPU-free idle-frame benchmark. |
+| G7/G8 | Late status changes (hint, both add modes, counts, diagnostics) trigger an immediate `op.InvalidateCmd`. The layout order is unchanged. |
+| G9/G9a | Benchmarks run at 4/12/24/40 zones on **deterministic** fixtures, because generation uses the unseeded global `rand`. |
+
 - **The O(zones + connections) `FindIsolatedZones` rewrite was measured and rejected**
   under G3. It was faster only at 24 zones (−19%) and 40 zones (−33%). It was slower at
   4 zones (+292%) and 12 zones (+67%), and added 3 allocations per call. The nested loop
-  is byte-identical to HEAD.
+  is unchanged. Do not re-propose it without new measurements.
 - **New untagged benchmarks** in
   [zoneEditorGraph_test.go](../test/performance/zoneEditorGraph_test.go) run on fixed
   4/12/24/40-zone graphs (G9a, deterministic because generation is unseeded): the
   handler, the service, and a GPU-free dialog idle frame.
 - **Idle-frame result:** B/op fell from 4457–18478 to 3049–3073, now flat across graph
-  sizes, and allocations fell by 1–4 per frame. Full medians are in the plan.
+  sizes, and allocations fell by 1–4 per frame. ns/op at 40 zones fell from 215030 to
+  190195. The other ns/op changes were within run-to-run noise: unchanged code varied up
+  to 9%.
 
 ### Delivered in Batch F, committed and settled
 
@@ -102,13 +118,23 @@ in the tree; the merged code is the reference.
 - All Batch F behavior above is committed and settled. The shared curve builder stays the
   single source of curves for the editor, the Preview and the PNG; do not reintroduce
   per-renderer curve math.
-- Batch G (once committed): the graph cache keeps its own dirty flag. Never fold it into
-  `geometryDirty`, which hit tests clear mid-input. The status key must stay built from
-  the full state, and never from only the fields the branch drew.
+- All Batch G behavior is committed and settled. The graph cache keeps its own dirty flag:
+  never fold it into `geometryDirty`, which hit tests clear mid-input. Any new edit that
+  replaces the zone or connection lists must call `markGraphDirty`. The status key must
+  stay built from the full state, and never from only the fields the branch drew,
+  otherwise the redraw never settles.
 
 ## 4. File modifications
 
-Everything below is unstaged on `AD/performance`.
+**This closing turn is documentation only, in three files:**
+- [Surviving review](backlog/review-gpt-6-astra-09-07.md): §3.1 marked `✅ FIXED` in place
+  with a Progress paragraph, the §9 row G completed, and the progress line refreshed to
+  17 fixed / 15 remaining. Nothing was renumbered, and the review's §8 hash is unchanged.
+- [Batch G plan](plans/batch-g-editor-graph-diagnostics.md): Phase 6, Final Recap and
+  Deployment Plan marked complete/CLOSED.
+- This handoff.
+
+**Batch G inventory, committed in `35e0fab`:**
 
 **Production (new):**
 - [zoneEditorGraphState.go](../app/gui/dialogs/zoneEditorGraphState.go): the cached graph,
@@ -132,20 +158,22 @@ Everything below is unstaged on `AD/performance`.
 **Tests:** listed in §5. No goldens changed.
 
 **Agent docs:**
-- [the Batch G plan](plans/batch-g-editor-graph-diagnostics.md): the owner committed the
-  first version as `a587617`. The working copy adds the approvals, review records and phase
-  summaries.
+- [the Batch G plan](plans/batch-g-editor-graph-diagnostics.md) (first version `a587617`,
+  completed in `35e0fab`, closed in this turn; the owner will delete it after the merge).
 - [test_observations.md](backlog/test_observations.md): records the GUI-only statements of
   the graph cache.
 - `.agent/memories/gui-and-tests.md` (gitignored): redraw assertions, handler wrappers,
   and dialog-direct limits.
 - This handoff.
 
-**Not touched:** `data/`, `internal/entities/template_entity/`, `internal/registry/`, the
-output path, generated Wire, `connectionEditorService.go` (reverted byte-identical),
-dependencies, the review document and `.agent/backlog/owner_findings.md`.
+**Not touched in Batch G:** `data/`, `internal/entities/template_entity/`,
+`internal/registry/`, the output path, generated Wire, `connectionEditorService.go`
+(reverted byte-identical), dependencies and `.agent/backlog/owner_findings.md`.
 
 ## 5. Tests added or updated
+
+**This closing turn added no tests and reran nothing**, because it changed documentation
+only. The Batch G verification below is the evidence of record for `35e0fab`.
 
 **Unit tests** (mirrored layout, triple-A, `t.Parallel()`):
 - `connectionEditorService/findIsolatedZones_test.go`: 6 new tests. They lock the `nil`
@@ -179,8 +207,8 @@ Each group was shown to fail under a temporary production mutation, reverted aft
 **Final** (Windows/amd64, Go 1.27.0, empty `GOFLAGS`):
 - build: PASS;
 - `-p=2` coverage: PASS, **74.5%**. Covered statements are unchanged at 6911, and the
-  denominator grew 9246 → 9261 with 15 GUI-only dialog statements. **This needs owner
-  acceptance.**
+  denominator grew 9246 → 9261 with 15 GUI-only dialog statements. **Accepted by the
+  owner with the close-out. 74.5% is the new baseline for the next batch.**
 - `go test ./test/...`: PASS;
 - tagged run: PASS, root 3.322s, GUI 32.380s;
 - the new GUI tests at `-count=5`: PASS;
@@ -199,29 +227,23 @@ in-game behaviour.
 
 ## 6. Git status snapshot
 
-The branch is **`AD/performance`**, HEAD **`a587617` ("plan")**, level with
-`origin/AD/performance`, on top of `master` `f78caeb` (Batch F, #48). `git status --short`:
+The branch is **`AD/performance`**, HEAD **`35e0fab` ("Batch G")**, level with
+`origin/AD/performance`. The history on top of `master` (`f78caeb`, Batch F #48) is
+`a587617` ("plan"), then `35e0fab`. Batch G is not yet merged to `master`.
+
+The tree was clean when this closing turn began. `git status --short` now shows only this
+turn's three documentation edits, all unstaged:
 
 ```text
- M .agent/backlog/test_observations.md
+ M .agent/backlog/review-gpt-6-astra-09-07.md
  M .agent/plans/batch-g-editor-graph-diagnostics.md
  M .agent/session-carry-forward.md
- M app/gui/dialogs/zoneEditorDialog.go
- M app/gui/dialogs/zoneEditorZoneProps.go
- M test/test_helpers/integration_common/appRunner.go
- M test/unit/internal/handlers/zoneEditorHandler/describeZoneEditorGraph_test.go
- M test/unit/internal/services/connection_editor/connectionEditorService/findIsolatedZones_test.go
-?? app/gui/dialogs/zoneEditorGraphState.go
-?? app/gui/dialogs/zoneEditorStatusKey.go
-?? test/integration/gui/zoneEditorGraphCache_integration_test.go
-?? test/performance/zoneEditorGraph_test.go
-?? test/test_helpers/integration_common/graphDescriptionCounter.go
 ```
 
 `.agent/memories/` and `tmp/` (the raw benchmark output) are gitignored.
 
 **The assistant performed no staging, unstaging, commit, push, stash, branch switch or
-worktree change.**
+worktree change in this turn.**
 
 ## 7. Rejections / things the user declined
 
@@ -314,66 +336,68 @@ Other pending decisions: arena/manual invalidation and effective-mode aliases (�
 
 ## 9. Next recommended actions
 
-**Batch G is implemented and waiting on the owner.** Nothing may be reopened or reworked
-without owner direction. In order:
+**Batch G is closed, with no open Batch G questions and no blockers.** The owner merges
+`AD/performance` to `master`, then deletes the Batch G plan. Neither is an agent action.
 
-1. **The owner reviews** the working tree (§6) and decides whether to accept coverage
-   **74.5%**: covered statements are unchanged, and 15 GUI-only statements were added.
-2. **Owner feedback**, if any: apply it within §3.1 scope only, rerun the affected checks
-   (the plan's Phase 6 list), and update the plan's summaries.
-3. **After the owner commits** (a close-out turn):
-   - mark §3.1 `✅ FIXED` in place in the review with a Progress paragraph naming the
-     commit;
-   - update the §9 `G` row to complete;
-   - set the progress line to **17 fixed, 15 remaining** (0 High, 9 Medium, 6 Low);
-   - mark the plan CLOSED and refresh this handoff.
+The next unit of work is the **owner's choice** among the remaining batches of the
+surviving review's §9 table (15 items left):
+- **H: CI/tooling hardening,** §6.2, §6.3 and §6.5. This is next in table order, and the
+  items are independent configuration changes:
+  - linter version alignment;
+  - LF attributes for module and checksum files, with owner-approved normalization of
+    those four paths only;
+  - release-tag input validation.
 
-   Do not renumber, and do not edit this handoff's §8.
-4. **Then the next batch from review §9**, which is the owner's choice:
-   - H: CI/tooling, §6.2/§6.3/§6.5;
-   - I: docs, §7.1/§7.2;
-   - J: the §2.2 service boundary;
-   - and so on.
+  Each has open owner decisions recorded in its review item.
+- **I: docs,** §7.1 and §7.2.
+- **J: the reopened service boundary,** §2.2.
+- **K–P:** topology retirement, the compact-state investigation, the persistence format,
+  panel/state organization, naming and lookup, and the Vec2 audit. The binding scope for
+  each is in §8's retained decisions.
 
-   Follow the same gates: read, inspect, ask, summarize, plan, independent review, plan
-   approval, baseline.
+Routing for the next session, in order:
+1. Read [AGENTS.md](../AGENTS.md), this handoff, then the chosen items and their §9 row.
+2. Inspect the current code yourself, because review line numbers predate Batches F and G.
+3. Ask the owner every open decision in the items, summarize the scope, and get approval.
+4. Write a new durable plan under `.agent/plans/`, get an independent review and explicit
+   plan approval, and capture a fresh baseline (coverage 74.5%) before the first edit.
 
 **Deployment.** Nothing is deployed and nothing is authorized to be. The owner alone
-stages, commits, merges and releases. No schema migration, dependency installation, Wire
-regeneration or output-directory change is required or pending. Native Linux and Steam
-Deck execution remain unmeasured.
+stages, commits, merges and releases. Batch G still awaits the owner's merge to `master`.
+No schema migration, dependency installation, Wire regeneration or output-directory
+change is required or pending. Native Linux and Steam Deck execution remain unmeasured.
 
 ## 10. Carry-forward prompt
 
 > Read [AGENTS.md](../AGENTS.md) first, then [this handoff](session-carry-forward.md). It
 > is self-contained.
 >
-> **Batch G (review §3.1) is IMPLEMENTED and VERIFIED on Windows, and NOT committed.**
-> Every change is unstaged on branch `AD/performance` (HEAD `a587617`, on `master`
-> `f78caeb`). The durable record is
-> [the Batch G plan](plans/batch-g-editor-graph-diagnostics.md), with owner decisions
-> G1–G9a, phase summaries, benchmarks and reviews. §3.1 is **not** yet marked FIXED:
-> that happens only after the owner commits.
+> **Batch G is CLOSED.** The owner reviewed it and committed it as `35e0fab` on
+> `AD/performance`, which is not yet merged to `master` (`f78caeb`). Review §3.1 is
+> marked **FIXED** in the [surviving review](backlog/review-gpt-6-astra-09-07.md), whose
+> §9 table shows batch `G` complete, with 17 fixed and 15 remaining. Coverage of 74.5%
+> was accepted and is the new baseline. The Batch G plan is CLOSED and will be deleted by
+> the owner after the merge; §3 of this handoff restates its settled decisions (G1–G9a).
+> Do not reimplement, re-verify or re-review Batch G.
 >
-> **What changed:**
-> - The zone editor caches its status-line graph diagnostics behind its own `graphDirty`
->   flag, set by 7 structural mutators and never shared with `geometryDirty`.
-> - Any status change made after the toolbar was drawn requests an immediate redraw
->   (`op.InvalidateCmd`), through a status key built from the full state.
-> - The O(z+c) isolation rewrite was measured and rejected under G3.
+> **State:** the only working-tree changes are the closing turn's three documentation
+> edits: the review, the plan and this handoff. The assistant performed no Git mutation;
+> preserve the owner's state exactly.
 >
-> **Verification on record** (Windows/amd64, Go 1.27.0, empty `GOFLAGS`):
+> **Next work is the owner's choice of batch from review §9.** H (CI/tooling: §6.2,
+> §6.3, §6.5) is next in order. No plan exists yet. Follow the gates in §9: read,
+> inspect, ask, summarize, plan, independent review, plan approval, fresh baseline.
+>
+> **Verification on record** (Batch G final code, Windows/amd64, Go 1.27.0, empty
+> `GOFLAGS`; not rerun at close-out):
 > - build: PASS;
-> - `-p=2` coverage: 74.5% (covered statements unchanged; needs owner acceptance);
+> - `-p=2` coverage: PASS, 74.5%;
 > - `go test ./test/...`: PASS;
-> - tagged `integration_test,gui` run: PASS;
+> - tagged `integration_test,gui` run: PASS, root 3.322s, GUI 32.380s;
 > - `testlayoutcheck`: PASS; `gofmt`: clean; lint: 0 issues.
 >
 > **Native Linux, Steam Deck and the race detector are UNAVAILABLE.** No in-game result is
 > claimed.
->
-> **Next:** wait for owner review. Apply feedback within §3.1 only. After the owner
-> commits, close out as in §9 step 3.
 >
 > **GUI snapshots:** never keep a blanket `-update`, because it rewrites about 280 goldens.
 > Accept only the `.failure` files a plain run produces.
@@ -390,11 +414,11 @@ Deck execution remain unmeasured.
 >   introduce fake unit seams.
 > - Keep plans durable and resumable.
 >
-> **Out of scope:** Batch K topology retirement, direct `GeneratorConfig` rejection, DTO
-> cleanup, schema and package work, allocation tuning beyond §3.1, and every settled
-> alternative in §7. §8 stays verbatim. Its Batch C wording and its pending-decision wording
-> for §1.5, §1.11, §1.12 and §2.1 are superseded; its retained later-scope decisions remain
-> binding.
+> **Out of scope** unless the owner selects that batch: Batch K topology retirement,
+> direct `GeneratorConfig` rejection, DTO cleanup, schema and package work, allocation
+> tuning, and every settled alternative in §7. §8 stays verbatim. Its Batch C wording
+> and its pending-decision wording for §1.5, §1.11, §1.12 and §2.1 are superseded; its
+> retained later-scope decisions remain binding.
 >
 > **Preserve:**
 > - explicit Portal Road `false`/`nil` and valid approaches;
@@ -404,6 +428,7 @@ Deck execution remain unmeasured.
 > - the single reusable half-opacity PNG edge mask, and the Preview-only legend;
 > - the shared curve builder, as the single source of curves;
 > - hit tests resolving against the live connection list;
-> - the graph cache's own dirty flag, and a status key built from the full state.
+> - the graph cache's own dirty flag (`markGraphDirty` on every edit that replaces the
+>   zone or connection lists), and a status key built from the full state.
 >
 > This handoff contains the full continuation context.
