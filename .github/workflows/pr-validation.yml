@@ -16,7 +16,7 @@ env:
   coverage_file: coverage.txt
   coverage_artifact: code-coverage
   coverage_percentage_threshold: 70.0
-  coverage_decreased_allowed: 2.5
+  coverage_decreased_allowed: -2.5
 
 jobs:
   check-go-mod:
@@ -215,7 +215,7 @@ jobs:
 
           IS_VIOLATED=$(awk -v d="$COV_DELTA" -v a="$ALLOWED_DECREASE" 'BEGIN {print (d < a) ? 1 : 0}')
           if [ "$IS_VIOLATED" -eq 1 ]; then
-            echo "Coverage decreased by ${POSITIVE_DELTA#-}%!"
+            echo "Coverage decreased by ${COV_DELTA#-}%!"
             exit 1
           fi
 
