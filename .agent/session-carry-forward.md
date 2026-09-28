@@ -1,40 +1,36 @@
-# Carry-forward: Batch F implemented, awaiting owner review and commit
+# Carry-forward: Batch F closed, Batch G not started
 
-Date: 2026-09-28. **Batch F (editor geometry) is implemented and verified** in the working
-tree of `AD/editor_geometry`, and is **uncommitted**. The owner said they would review
-everything at once after all phases were done. The durable plan is
-[batch-f-editor-geometry.md](plans/batch-f-editor-geometry.md). It holds the binding owner
-decisions D1–D13, the design P1–P6, per-phase summaries, every changed golden with its
-reason, and the review dispositions. Read it before touching anything in this batch.
+Date: 2026-09-28. **Batch F (editor geometry) is closed.** The owner reviewed it, committed
+it as **`b9c47a7` ("Batch F")** on `AD/editor_geometry`, and authorized the close-out with
+*"Changes reviewed, you can close out this batch and update handoff for the next session"*.
+The owner's review edits before committing trimmed comments only; behaviour is unchanged.
 
-The review findings §1.13, §1.14, §1.15 and §2.1 are **not yet marked FIXED**, and the
-[surviving review](backlog/review-gpt-6-astra-09-07.md)'s §9 row F is **not yet complete**.
-Under the review's protocol, both happen only after the owner commits.
+Findings §1.13, §1.14, §1.15 and §2.1 are now **marked FIXED** in the
+[surviving review](backlog/review-gpt-6-astra-09-07.md). Its §9 row F is complete, and its
+progress line reads **16 fixed, 16 remaining** (0 High, 10 Medium, 6 Low). The durable
+record is [batch-f-editor-geometry.md](plans/batch-f-editor-geometry.md), marked CLOSED.
+Consult it only if Batch F behaviour is questioned. Do not reimplement, re-verify or
+re-review any of it.
 
 **Section 8 is preserved verbatim**, contradictions and all. Its Batch C phase/engine
-wording and its "pending decisions" wording for §1.5/§1.11/§1.12 and §2.1 are
-**superseded**: all four were settled and implemented. Everything else §8 retains as later
-scope remains **binding**, and governs batches after F. Do not edit §8.
+wording, and its "pending decisions" wording for §1.5, §1.11, §1.12 and §2.1, are
+**superseded**: all were settled, implemented and marked fixed. Everything else §8 retains
+as later scope remains **binding**, and governs batches from G on. Do not edit §8.
 
-Batches A/D, B, C and E are closed and merged to `master` (Batch E in PR #44, tagged
-`v0.3.9-alpha.2`). Do not revisit, re-verify or retrieve retired documents from those
-batches.
+Batches A/D, B, C, E and F are closed. A/D through E are merged to `master` (Batch E in
+PR #44, tagged `v0.3.9-alpha.2`). Batch F is pushed on `AD/editor_geometry` and is not yet
+merged. Do not revisit or re-verify closed batches.
 
 ## 1. Session goal
 
-Plan and implement Batch F from review §9: §1.13 deterministic obstacle routing, §1.14
-stale edge identity under batched pointer events, §1.15 portal classification, and the
-owner-approved optional §2.1 shared curve geometry. The batch also absorbed the §8
-dropdown-normalization note.
-
-The owner answered every scoping question and approved the scope and the plan. The plan
-passed an independent GPT-6 Sol review (first draft rejected, findings folded in). The
-owner instructed the agent to run Phases 0–5 without stopping.
+Plan, implement, verify and close Batch F from review §9: §1.13, §1.14, §1.15, plus the
+owner-approved optional §2.1. This closing turn marked the findings fixed and handed this
+file forward to Batch G.
 
 ## 2. Fixes applied
 
-All of these are implemented and tested, and passed an independent Claude Opus 5.5 review.
-They are uncommitted and not yet marked FIXED.
+All Batch F items are committed in `b9c47a7` and **marked FIXED**. They are closed; do not
+reopen them.
 
 - **§1.13, deterministic obstacle routing.** One shared model,
   [connectionCurveLayout.go](../internal/models/preview/connectionCurveLayout.go), computes
@@ -50,6 +46,8 @@ They are uncommitted and not yet marked FIXED.
   is the single classifier. It is used by
   [previewLayoutService.go](../internal/services/preview_service/previewLayoutService.go)
   and [connectionLineStyle.go](../app/gui/utils/connectionLineStyle.go).
+- **§2.1, shared curve geometry.** `preview.ConnectionCurveLayout.Build` is the only curve
+  builder for the editor, the Preview tab and the PNG export.
 - **§8 dropdown note.** The type dropdown no longer overwrites unlisted types each frame
   ([zoneEditorConnectionProps.go](../app/gui/dialogs/zoneEditorConnectionProps.go)).
 - **Review follow-ups** (implementation review):
@@ -58,7 +56,7 @@ They are uncommitted and not yet marked FIXED.
 
 ## 3. Features added / changed
 
-### Delivered in Batch F (all owner-decided; full table D1–D13 in the plan)
+### Delivered in Batch F, committed and settled (full table D1–D13 in the plan)
 
 - **Exact curve agreement.** The editor, the Preview tab and the PNG export draw identical
   control points, all built by `preview.ConnectionCurveLayout.Build`.
@@ -115,9 +113,21 @@ They are uncommitted and not yet marked FIXED.
   hatch. It is never persisted, and no fallback authorizes an unrelated directory.
 - All Batch E behavior (effective-mode invalidation, the two-player tournament lock, guard
   propagation and Custom) is committed and settled. Do not reopen it.
+- All Batch F behavior above is committed and settled. The shared curve builder stays the
+  single source of curves for the editor, the Preview and the PNG; do not reintroduce
+  per-renderer curve math.
 
 ## 4. File modifications
 
+**This closing turn is documentation only, in three files:**
+- [Surviving review](backlog/review-gpt-6-astra-09-07.md): §1.13, §1.14, §1.15 and §2.1
+  marked `✅ FIXED` in place, each with a Progress paragraph. The §9 row F is complete, and
+  the stale 2026-09-11 progress line was refreshed to 16 fixed / 16 remaining. Nothing was
+  renumbered.
+- [Batch F plan](plans/batch-f-editor-geometry.md): Deployment Plan marked CLOSED.
+- This handoff.
+
+**Batch F inventory, committed in `b9c47a7`:**
 **Production (new):**
 - `internal/models/preview/connectionCurve.go`: the curve value type.
 - `internal/models/preview/connectionCurveLayout.go`: the shared builder and curve tunables.
@@ -170,10 +180,13 @@ side on the tie.
 
 **Not touched:** `data/`, `internal/entities/template_entity/`, `internal/registry/`, the
 output path, generated Wire, topology code, dependencies, and
-`.agent/backlog/owner_findings.md`. The surviving review is deliberately unmarked until the
-owner commits.
+`.agent/backlog/owner_findings.md`.
 
 ## 5. Tests added or updated
+
+**This closing turn added no tests and reran nothing**, because it changed documentation
+only. The owner's pre-commit edits trimmed comments only. The Batch F verification below is
+the evidence of record for `b9c47a7`.
 
 **Unit tests** (each file mirrors its implementation path, one test file per public function):
 - New `test/unit/internal/models/preview/connectionCurveLayout/build_test.go` (22 tests) plus
@@ -221,9 +234,10 @@ PASSED, coverage **74.9%**, tagged run root 3.498s / GUI 26.655s, lint 0 issues.
   `nolintlint` hits in untouched `editorState` tests; `golangci-lint-v2 cache clean` cleared
   them.
 
-**Coverage decrease: needs owner acceptance.** It is above the §9 floor of 74.4%. Every
+**Coverage decrease: accepted with the close-out.** It is above the §9 floor of 74.4%. Every
 touched non-GUI function is at 100%. The drop comes from collapsing the duplicated, fully
 covered curve code, and from new dialog statements that only the GUI suite exercises.
+**74.6% is the new baseline for Batch G.**
 
 **Not measured:** native Linux and Steam Deck (the WSL probe found no `go`/`pkg-config`
 earlier), in-game behaviour, and any coverage-profile fingerprint.
@@ -236,32 +250,24 @@ earlier), in-game behaviour, and any coverage-profile fingerprint.
 
 ## 6. Git status snapshot
 
-The branch is **`AD/editor_geometry`**, HEAD `4a72813` ("plan"), level with
-`origin/AD/editor_geometry`. During the session the owner committed two plan snapshots,
-`3e49ca2` and `4a72813`, on top of `b9fb53e` ("Agent"). Batch E already reached `master` as
-`2d18f9e` (PR #44). The previous handoff's `AD/modes_and_guard_propagation` state is
-historical, and its staged plan deletion is gone.
+The branch is **`AD/editor_geometry`**, HEAD **`b9c47a7` ("Batch F")**, level with
+`origin/AD/editor_geometry`. The history on top of `master` (`4143bdd`) is `b9fb53e`
+("Agent"), then `3e49ca2` and `4a72813` (plan snapshots), then `b9c47a7`. Batch F is not
+yet merged to `master`.
 
-Nothing is staged. `git status --short` at hand-off shows 35 entries, all unstaged:
-- **Modified:** the production, testexport, helper, test and golden files listed in §4,
-  plus `.agent/backlog/test_observations.md`, this handoff, and the plan. The plan is
-  tracked, and the working copy holds all phase summaries beyond the owner's `4a72813`
-  snapshot.
-- **Deleted:** `D internal/services/connection_editor/connectionPairKey.go`.
-- **Untracked:**
-  - `internal/models/preview/connectionCurve.go`
-  - `internal/models/preview/connectionCurveLayout.go`
-  - `test/integration/gui/zoneEditorConnectionType_integration_test.go`
-  - `test/test_helpers/integration_common/pointerGesture.go`
-  - `test/unit/internal/models/preview/connectionCurveLayout/`
-  - `test/unit/.../connection/isEffectivePortal_test.go`
+The tree was clean when this closing turn began. `git status --short` now shows only this
+turn's three documentation edits, all unstaged:
 
-`.agent/memories/` is gitignored, so it does not show.
+```text
+ M .agent/backlog/review-gpt-6-astra-09-07.md
+ M .agent/plans/batch-f-editor-geometry.md
+ M .agent/session-carry-forward.md
+```
+
+`.agent/memories/` is gitignored and does not show.
 
 **The assistant performed no staging, unstaging, commit, push, stash, branch switch or
-worktree change.** The one index-safe restore it ran was `git restore --worktree` on the
-snapshot directory. It only reverted the goldens the agent's own `-update` run had just
-rewritten, never owner content.
+worktree change in this turn.**
 
 ## 7. Rejections / things the user declined
 
@@ -295,7 +301,7 @@ rewritten, never owner content.
   - Never claim unobserved engine outcomes.
 - **§8 verification encoding.** Use explicit UTF-8 for Git stdout and disk reads, because
   PowerShell 5.1 mis-decodes. Git stores this file LF-normalized while the worktree is
-  CRLF. Before this edit, §8's UTF-8 SHA-256 (from `## 8.` up to `## 9.`) was
+  CRLF. Before and after this edit, §8's UTF-8 SHA-256 (from `## 8.` up to `## 9.`) is
   `35D5F4F36C0492166B202DC78828A0F0594906FA3A08A899F554D8A68D118E13`.
 - **Recorded, not assigned:**
   - A service comment still names the legacy rebuild entry point.
@@ -341,68 +347,102 @@ Other pending decisions: arena/manual invalidation and effective-mode aliases (�
 
 ## 9. Next recommended actions
 
-**Batch F is implemented, verified and awaiting the owner.** In order:
+**Batch F is closed, with no open Batch F questions and no blockers.** The next unit of
+work is **Batch G, measured performance: review §3.1**, taken from the surviving review's §9
+table rather than from §8. Nothing has been planned or implemented for Batch G, and no code
+may be written before the gates below are cleared.
 
-1. **Owner review of the whole batch.** Start from the plan's Final Recap and phase
-   summaries, [batch-f-editor-geometry.md](plans/batch-f-editor-geometry.md).
-2. **Owner decision on coverage.** Accept **74.6%** against the 74.9% baseline; it is above
-   the §9 floor of 74.4%, and the cause is explained in §5. If it is not accepted, the only
-   lever is GUI-only dialog code, which unit tests cannot reach without fake seams.
-3. **Owner stages and commits.** The agent never does this.
-4. **After the commit, and only then,** mark review §1.13, §1.14, §1.15 and §2.1 **FIXED**
-   in place, set the §9 row `F` to complete, and refresh this handoff. Follow the review's
-   own marking protocol and never renumber.
-5. **Optional engine check by the owner.** Load a template whose connections carry
-   placement rules, and one where the editor cleared them via a type change, and confirm
-   the game still treats them as expected. Nothing about the `.rmg.json` schema changed.
-6. **Then the next batch from review §9:** **G, measured performance (§3.1)**, unless the
-   owner reprioritizes. §9 row P (Vec2 audit) said to coordinate with F. That is no longer
-   blocking: the shared builder already uses `Vec2` operations throughout.
+**§3.1 in brief.** The zone editor's status line re-runs graph diagnostics on every frame.
+`layoutStatus` in [zoneEditorDialog.go](../app/gui/dialogs/zoneEditorDialog.go) calls
+`derefConnections(this.working)`, which allocates a slice, and then
+`DescribeZoneEditorGraph` ([zoneEditorHandler.go](../internal/handlers/zoneEditorHandler.go)).
+Its `FindIsolatedZones` ([connectionEditorService.go](../internal/services/connection_editor/connectionEditorService.go))
+is O(zones × connections). The review's proposed fix:
+- cache a graph summary, invalidated by structural changes;
+- keep in mind that toolbar buttons are handled before canvas input, so a cached summary
+  must still be correct on the next frame;
+- optionally make isolation detection O(zones + connections) with a referenced-name set;
+- **measure first** with an untagged public-API benchmark at
+  `test/performance/zoneEditorGraph_test.go`, and count handler calls on idle versus
+  mutation frames through GUI integration.
+
+**Owner constraint from the review:** do not reintroduce the rejected global Gio
+allocation threshold, or clone-free live state pointers.
+
+**Batch F context that affects G:** `geometryDirty` is now also cleared by `ensureGeometry`
+from inside hit tests, in the middle of input handling. A graph-summary cache must **not**
+piggyback on that flag. It needs its own invalidation, or it will miss changes that a hit
+test has already absorbed.
+
+Routing for the next session, in order:
+
+1. Read [AGENTS.md](../AGENTS.md), this handoff, then review §3.1 and the §9 `G` row.
+2. **Inspect the current code and tests yourself**, because the review's line numbers
+   predate Batch F:
+   - [zoneEditorDialog.go](../app/gui/dialogs/zoneEditorDialog.go) (`layoutStatus`,
+     `derefConnections` and every `working` mutator);
+   - [zoneEditorCanvas.go](../app/gui/dialogs/zoneEditorCanvas.go) (`ensureGeometry`);
+   - [zoneEditorHandler.go](../internal/handlers/zoneEditorHandler.go);
+   - [connectionEditorService.go](../internal/services/connection_editor/connectionEditorService.go);
+   - [findIsolatedZones_test.go](../test/unit/internal/services/connection_editor/connectionEditorService/findIsolatedZones_test.go);
+   - [describeZoneEditorGraph_test.go](../test/unit/internal/handlers/zoneEditorHandler/describeZoneEditorGraph_test.go);
+   - the existing benchmarks under `test/performance/`.
+3. **Ask the owner** the undecided questions:
+   - Is measurement alone enough, or should the batch also implement the fix?
+   - What measured improvement justifies the fix?
+   - Is the O(zones + connections) isolation rewrite in scope?
+   - Where should the summary cache live: the dialog, or behind the handler?
+   - Is a GUI handler-call count acceptable as an idle-frame assertion?
+4. Summarize the scope back to the owner and get approval.
+5. Write a **new durable Batch G plan** under `.agent/plans/`, get an independent review
+   and explicit plan approval, and capture a fresh baseline before the first edit.
 
 **Deployment.** Nothing is deployed and nothing is authorized to be. The owner alone
-stages, commits and releases. No schema migration, dependency installation, Wire
-regeneration or output-directory change is required or pending. Native Linux and Steam
-Deck execution remain unmeasured.
+stages, commits, merges and releases. Batch F still awaits the owner's merge to `master`.
+No schema migration, dependency installation, Wire regeneration or output-directory
+change is required or pending. Native Linux and Steam Deck execution remain unmeasured.
 
 ## 10. Carry-forward prompt
 
-> Read [AGENTS.md](../AGENTS.md) first. Then read [this handoff](session-carry-forward.md)
-> and the Batch F plan, [batch-f-editor-geometry.md](plans/batch-f-editor-geometry.md).
+> Read [AGENTS.md](../AGENTS.md) first, then [this handoff](session-carry-forward.md). It
+> is self-contained.
 >
-> **Batch F is IMPLEMENTED AND VERIFIED, NOT YET COMMITTED.** It covers review §1.13
-> deterministic obstacle routing, §1.14 stale edge identity under batched pointer events,
-> §1.15 portal classification, the owner-approved optional §2.1 shared curve geometry, and
-> the §8 dropdown note. All phases 0–5 are complete. The owner is reviewing the whole batch
-> at once. Do not reimplement, re-scope or re-review it, and do not reopen the owner
-> decisions D1–D13 recorded in the plan.
+> **Batch F is CLOSED.** The owner reviewed it and committed it as `b9c47a7`. Findings
+> §1.13, §1.14, §1.15 and §2.1 are marked **FIXED** in the
+> [surviving review](backlog/review-gpt-6-astra-09-07.md), whose §9 table shows batch `F`
+> complete, with 16 fixed and 16 remaining. Coverage of 74.6% was accepted and is the new
+> baseline. Do not reimplement, re-verify or re-review Batch F, and do not reopen its
+> owner decisions (D1–D13 in [the closed plan](plans/batch-f-editor-geometry.md)).
 >
-> **State:** branch `AD/editor_geometry`, HEAD `4a72813` ("plan"), level with origin. Every
-> Batch F change sits unstaged in the working tree (35 status entries; see §6). The
-> assistant performed no staging, commit or push; preserve the owner's state exactly.
+> **State:** branch `AD/editor_geometry`, HEAD `b9c47a7`, level with origin, not yet merged
+> to `master`. The only working-tree changes are the closing turn's three documentation
+> edits: the review, the plan and this handoff. The assistant performed no Git mutation;
+> preserve the owner's state exactly.
 >
-> **Your first job depends on what the owner reports:**
-> - **If they committed:** mark review §1.13, §1.14, §1.15 and §2.1 **FIXED** in place, set
->   the §9 row `F` to complete, and refresh this handoff. Follow the review's own protocol
->   and never renumber.
-> - **If they asked for changes:** make exactly those changes, and keep the plan's phase
->   summaries current.
-> - **Either way, first confirm** whether they accept coverage at **74.6%**, against the
->   74.9% baseline and the §9 floor of 74.4%. The decrease is GUI-only, and every touched
->   non-GUI function is at 100%.
+> **Next work is Batch G, measured performance, review §3.1:** zone-editor graph
+> diagnostics are rebuilt on every frame. **No Batch G plan or implementation exists yet,
+> and none may be written before these gates, in order:**
+> 1. Read review §3.1 and §9.
+> 2. Inspect the current code yourself (list in §9 above). Batch F moved lines.
+> 3. Ask the owner: measure-only or also fix; the improvement threshold; the scope of the
+>    O(n) isolation rewrite; where the cache lives; and whether GUI handler-call counts are
+>    acceptable.
+> 4. Summarize the scope and get approval.
+> 5. Write a durable Batch G plan, get an independent review and explicit plan approval.
+> 6. Capture a fresh baseline before the first edit.
 >
-> After that, the next batch is **G, measured performance (§3.1)**. Follow the usual gates:
-> read, inspect the code yourself, ask the owner, write a durable plan, get an independent
-> review, get plan approval, capture a baseline.
+> Do not reuse `geometryDirty` for the summary cache: hit tests clear it. Do not
+> reintroduce the global Gio allocation threshold, or clone-free live state pointers.
 >
-> **Verification on record** (Windows/amd64, Go 1.27.0, empty `GOFLAGS`, final code):
+> **Verification on record** (Batch F final code, Windows/amd64, Go 1.27.0, empty
+> `GOFLAGS`; not rerun at close-out):
 > - build: PASS;
 > - `-p=2` unit coverage run: PASS, 74.6%;
 > - `go test ./test/...`: PASS;
 > - tagged `integration_test,gui` run: PASS, root 3.404s, GUI 27.049s;
 > - `testlayoutcheck`: PASS; `gofmt`: clean;
-> - `golangci-lint-v2 run ./... --issues-exit-code=1`: 0 issues, after a
->   `golangci-lint-v2 cache clean` that cleared stale hits;
-> - Wire: not regenerated, because no constructor changed.
+> - lint: 0 issues. If stale `nolintlint` hits appear, run `golangci-lint-v2 cache clean`
+>   first.
 >
 > **Native Linux and Steam Deck are UNAVAILABLE.** No in-game result is claimed.
 >
@@ -422,9 +462,10 @@ Deck execution remain unmeasured.
 > - Keep plans durable and resumable.
 >
 > **Out of scope:** Batch K topology retirement, direct `GeneratorConfig` rejection, DTO
-> cleanup, schema and package work, allocation tuning, and every settled alternative in §7.
-> §8 stays verbatim. Its Batch C wording and its pending-decision wording for §1.5, §1.11,
-> §1.12 and §2.1 are superseded; its retained later-scope decisions remain binding.
+> cleanup, schema and package work, allocation tuning beyond §3.1, and every settled
+> alternative in §7. §8 stays verbatim. Its Batch C wording and its pending-decision wording
+> for §1.5, §1.11, §1.12 and §2.1 are superseded; its retained later-scope decisions remain
+> binding.
 >
 > **Preserve:**
 > - explicit Portal Road `false`/`nil` and valid approaches;
@@ -432,6 +473,7 @@ Deck execution remain unmeasured.
 >   classification never feeds roads);
 > - independent internal roads, nil-state content/road preservation, and source cloning;
 > - the single reusable half-opacity PNG edge mask, and the Preview-only legend;
-> - the shared curve builder, as the single source of curves.
+> - the shared curve builder, as the single source of curves;
+> - hit tests resolving against the live connection list.
 >
 > This handoff contains the full continuation context.

@@ -10,12 +10,12 @@
 
 **Finding count:** **32 actionable items: 8 High, 17 Medium, 7 Low.** This includes owner-requested architecture/product work scoped on 2026-09-08, not just proved defects. Informational observations and prior-item dispositions are not included in that count. Findings are source-verified unless a runtime reproduction is explicitly recorded. Performance claims are reasoned, not benchmark measurements. In-game behavior was not tested.
 
-**Current progress (2026-09-11):** **9 fixed, 23 remaining**: 1 High, 15 Medium,
-7 Low. Batch C code/tests are owner-committed through `0a55306`; whole-batch
-independent review and Windows verification pass, coverage **75.1%**, lint zero.
-Owner confirms in-app visuals and correct road values in-engine on Steam Deck;
-Batch C is closed. Owner-reported acceptance is recorded separately in §10 and
-does not establish a native Linux application build or unrelated engine behavior.
+**Current progress (2026-09-28):** **16 fixed, 16 remaining**: 0 High, 10 Medium,
+6 Low. Batches A/D, B, C, E and F are owner-committed and closed; Batch F closed with
+owner commit `b9c47a7` on 2026-09-28, independent review and Windows verification,
+coverage **74.6%** (owner-accepted, GUI-only decrease) and lint zero. Batch C's
+owner-reported Steam Deck acceptance is recorded separately in §10 and does not
+establish a native Linux application build or unrelated engine behavior.
 The original audit measurements above remain historical.
 
 **Fix-session protocol:** ask → plan → owner approves → implement and verify → owner commits → mark the stable item `✅ FIXED`. Owner-confirmed scope below is not permission to implement before the per-item plan is approved. Protected-directory changes remain owner-approved and owner-applied only. Each future change must follow the test layout, AAA, `t.Parallel()`, testify, coverage, build, and tag requirements in [AGENTS.md](../../AGENTS.md). Proposed new test paths below are deliberately not hyperlinks until the files exist.
@@ -335,7 +335,16 @@ topology fallback behavior remain unchanged. Verification caveats are under §1.
 
 **Owner decision.** Confirm whether to remember the previous non-tournament count in session view state. Topology retirement is separately scoped in §2.3; new tournament designs from O06 are not part of this constraint fix.
 
-### 1.13 🟠 Symmetric obstacles make connection curves nondeterministic
+### 1.13 ✅ FIXED — Symmetric obstacles make connection curves nondeterministic
+
+**Progress (2026-09-28).** Owner commit `b9c47a7` replaces the editor's bulge
+selection with the shared `preview.ConnectionCurveLayout` model, whose obstacle
+detours are order-independent `max`/`min` values. A single obstructed curve takes
+the shorter detour and bends to the positive normal only on an exact tie;
+obstructed parallel curves split around the obstacle. The review repro now yields
+control point `(350,260)` on all 200 rebuilds with rotated map construction. The
+detour remains a midpoint approximation and does not route around zones outside
+the chord clearance.
 
 **Evidence.** [obstacleBulge](../../internal/services/connection_editor/zoneEditorGeometryService.go#L237-L260) ranges a position map and selects a winner only when `math.Abs(signed) > bestMagnitude`. Equal-magnitude obstacles on opposite sides therefore choose whichever map entry is visited first.
 
@@ -347,7 +356,14 @@ topology fallback behavior remain unchanged. Verification caveats are under §1.
 
 **Owner decision.** Choose the preferred tie direction; do not claim this solves all overlapping-obstacle routing.
 
-### 1.14 🟠 Batched pointer events can resolve stale edge indices after deletion
+### 1.14 ✅ FIXED — Batched pointer events can resolve stale edge indices after deletion
+
+**Progress (2026-09-28).** Owner commit `b9c47a7` rebuilds dirty or resized
+geometry before every hit test, so a cached `ConnectionIndex` always indexes the
+list it was built from. Five real-input GUI tests queue several presses into one
+frame: two edges, the same edge twice, delete-then-select, toolbar Delete, and
+Undo. All five failed on the previous code and pass now. No unit-only exports were
+added.
 
 **Evidence.** [handlePointer](../../app/gui/dialogs/zoneEditorCanvas.go#L81-L109) drains all events before the [geometry rebuild](../../app/gui/dialogs/zoneEditorCanvas.go#L56-L67). [edgeConnection](../../app/gui/dialogs/zoneEditorCanvas.go#L185-L192) indexes the current working slice by a cached `ConnectionIndex`. [deleteConnection](../../app/gui/dialogs/zoneEditorDialog.go#L359-L371) compacts that slice and only marks geometry dirty.
 
@@ -357,7 +373,15 @@ topology fallback behavior remain unchanged. Verification caveats are under §1.
 
 **Owner decision.** None; geometry-to-object identity must survive input batching.
 
-### 1.15 🟠 Editor and preview classify portal connections differently
+### 1.15 ✅ FIXED — Editor and preview classify portal connections differently
+
+**Progress (2026-09-28).** Owner commit `b9c47a7` adds the single model-level
+classifier `Connection.IsEffectivePortal()`: Portal in any letter case, or any
+placement rules. It drives the preview shape and the editor colour and width,
+while the road tri-state still follows explicit Portals only. By owner decision,
+a real dropdown change away from Portal clears both placement-rule lists. The
+dropdown shows the effective type, lists unlisted stored types and writes only on
+an actual change, which also removes the per-frame overwrite of unlisted types.
 
 **Evidence.** [drawEdges](../../app/gui/dialogs/zoneEditorCanvas.go#L209-L221) recognizes `strings.EqualFold(connection.ConnectionType, "Portal")`. [getPreviewConnectionType](../../internal/services/preview_service/previewLayoutService.go#L224-L243) also classifies connections with `PortalPlacementRulesFrom`/`To` as portals. The latter comment explicitly states the game treats those as portals.
 
@@ -369,7 +393,15 @@ topology fallback behavior remain unchanged. Verification caveats are under §1.
 
 ## §2 Architecture, product scope, and duplication
 
-### 2.1 🟡 Connection-curve construction is duplicated with divergent visual policies
+### 2.1 ✅ FIXED — Connection-curve construction is duplicated with divergent visual policies
+
+**Progress (2026-09-28).** Owner commit `b9c47a7` makes
+`preview.ConnectionCurveLayout.Build` the only curve builder for the editor, the
+Preview tab and the PNG export. By owner decision the three views agree exactly:
+21px parallel spacing and obstacle bending everywhere, with editor-only hit
+tolerance and label point kept outside the model. Exactly one zone-editor golden
+changed (the on-chord tie now bends positive); no Preview or PNG expectation
+changed.
 
 **Evidence.** [editor buildEdges](../../internal/services/connection_editor/zoneEditorGeometryService.go#L151-L197) canonicalizes endpoint order, groups pair edges, computes normal/spread/control/midpoint, uses `parallelEdgeGapPx = 18.0`, and applies `obstacleBulge`. [preview buildPreviewConnections](../../internal/services/preview_service/previewLayoutService.go#L164-L234) repeats the grouping/canonicalization/control-point construction with `spacingBetweenEdges = 21.0` and no obstacle deflection. This is a manual structural comparison, not a dupl-reported issue.
 
@@ -608,7 +640,7 @@ The configured run includes existing exclusions (protected registry duplication,
 | C: road and graph invariants | §1.4, §1.6, §1.10 | Complete: owner-committed code, automated verification/review and owner Steam Deck engine acceptance, 2026-09-11. No reimplementation or further closeout. |
 | D: manual state lifecycle | §1.8, §1.9 | Complete in Batch A. Retain compare-before-mutation tests if C changes road rebuilding. |
 | E: effective modes and guard propagation | §1.5, §1.11, §1.12 | Complete: owner commits `1b4658c` and `2062932`, Windows verification and independent review; findings marked fixed 2026-09-12. Accepted 74.9% coverage; native Linux unavailable. |
-| F: editor geometry | §1.13, §1.14, §1.15; optionally §2.1 | Determinism first; batched real-input tests; shared classification; owner approval before visual-policy consolidation. |
+| F: editor geometry | §1.13, §1.14, §1.15; optionally §2.1 | Complete: owner commit `b9c47a7` with §2.1 approved into scope, Windows verification and independent plan/implementation reviews; findings marked fixed 2026-09-28. Accepted 74.6% coverage; native Linux unavailable. |
 | G: measured performance | §3.1 | Establish public-API/GUI baseline before caching; no flaky global allocation threshold. |
 | H: CI/tooling hardening | §6.2, §6.3, §6.5 | Independent configuration changes: linter alignment, Windows/Linux EOL checks, and safe release-tag validation. |
 | I: docs | §7.1, §7.2 | Can run independently after owner approves retirement scope. |

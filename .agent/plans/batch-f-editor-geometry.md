@@ -443,6 +443,11 @@ connection list.
 curves the other way.
 
 ## Deployment Plan
+**CLOSED 2026-09-28.** The owner reviewed the batch, committed it as `b9c47a7` ("Batch F"),
+and authorized the close-out. The owner's review edits trimmed comments only; behaviour is
+unchanged. Review §1.13, §1.14, §1.15 and §2.1 are now marked FIXED, and §9 row F is
+complete. Coverage of 74.6% was accepted with the close-out.
+
 Nothing is deployed, and nothing is pending on anyone but the owner.
 1. Review the working tree: `git status --short` lists the batch's files and
    `.agent/backlog/test_observations.md`.
