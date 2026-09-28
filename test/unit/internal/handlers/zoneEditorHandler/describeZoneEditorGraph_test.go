@@ -39,3 +39,17 @@ func TestWhenGraphIsDescribed_ReturnsTheIsolatedZoneCount(t *testing.T) {
 	// Assert
 	assert.Equal(t, len(isolated), graph.IsolatedZoneCount)
 }
+
+func TestWhenNoIsolatedZonesAreFound_ReturnsAZeroIsolatedCount(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	fixture := newZoneEditorHandlerFixture()
+	fixture.connectionEditor.On("ComputeHasErrors", mock.Anything, mock.Anything).Return(false)
+	fixture.connectionEditor.On("FindIsolatedZones", mock.Anything, mock.Anything).Return([]string(nil))
+
+	// Act
+	graph := fixture.handler.DescribeZoneEditorGraph(nil, nil)
+
+	// Assert
+	assert.Zero(t, graph.IsolatedZoneCount)
+}

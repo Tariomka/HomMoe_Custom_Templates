@@ -7,6 +7,7 @@ import (
 
 	"gioui.org/font"
 	"gioui.org/layout"
+	"gioui.org/op"
 	"gioui.org/op/clip"
 	"gioui.org/op/paint"
 	"gioui.org/unit"
@@ -34,6 +35,7 @@ import (
 // discards.
 type ZoneEditorDialog struct {
 	zoneEditorGeometryState
+	zoneEditorGraphState
 	zoneEditorInteractionState
 	zoneEditorSnapState
 	zoneEditorSidePanelState
@@ -171,6 +173,7 @@ func (this *ZoneEditorDialog) Body(gtx layout.Context, theme *material.Theme) (l
 		layout.Rigid(widgets.NewVerticalSpacerWidget(8)),
 		layout.Rigid(this.layoutFooter(theme)),
 	)
+	this.requestLateStatusRedraw(gtx)
 	return dims, false
 }
 
@@ -197,6 +200,7 @@ func (this *ZoneEditorDialog) setEditingSet(zones []template_model.Zone, connect
 		this.original = append(this.original, clone)
 	}
 	this.geometryDirty = true
+	this.markGraphDirty()
 }
 
 func (this *ZoneEditorDialog) layoutToolbar(theme *material.Theme) layout.Widget {
@@ -230,8 +234,12 @@ func (this *ZoneEditorDialog) layoutToolbar(theme *material.Theme) layout.Widget
 
 func (this *ZoneEditorDialog) layoutStatus(theme *material.Theme) layout.Widget {
 	return func(gtx layout.Context) layout.Dimensions {
-		connections := derefConnections(this.working)
-		graph := this.zoneHandler.DescribeZoneEditorGraph(this.zones, connections)
+		if this.graphDirty {
+			this.graph = this.zoneHandler.DescribeZoneEditorGraph(this.zones, derefConnections(this.working))
+			this.graphDirty = false
+		}
+		this.shownStatus = this.statusKey()
+		graph := this.graph
 		if graph.HasErrors {
 			label := material.Body2(theme, "‼ A connection references a missing zone - fix before export.")
 			label.Color = themes.ColorsBase.Error
@@ -239,7 +247,7 @@ func (this *ZoneEditorDialog) layoutStatus(theme *material.Theme) layout.Widget 
 			label.MaxLines = 2
 			return label.Layout(gtx)
 		}
-		message := fmt.Sprintf("%d zones · %d connections", len(this.zones), len(connections))
+		message := fmt.Sprintf("%d zones · %d connections", len(this.zones), len(this.working))
 		switch {
 		case this.hint != "":
 			message = this.hint
@@ -251,7 +259,7 @@ func (this *ZoneEditorDialog) layoutStatus(theme *material.Theme) layout.Widget 
 			message = fmt.Sprintf(
 				"%d zones · %d connections · %d isolated zone(s)",
 				len(this.zones),
-				len(connections),
+				len(this.working),
 				graph.IsolatedZoneCount)
 		}
 		label := material.Body2(theme, message)
@@ -259,6 +267,25 @@ func (this *ZoneEditorDialog) layoutStatus(theme *material.Theme) layout.Widget 
 		label.TextSize = unit.Sp(12)
 		label.MaxLines = 2
 		return label.Layout(gtx)
+	}
+}
+
+func (this *ZoneEditorDialog) statusKey() zoneEditorStatusKey {
+	return zoneEditorStatusKey{
+		hint:            this.hint,
+		addMode:         this.addMode,
+		addZoneMode:     this.addZoneMode,
+		zoneCount:       len(this.zones),
+		connectionCount: len(this.working),
+		graphDirty:      this.graphDirty,
+	}
+}
+
+// requestLateStatusRedraw asks for the next frame straight away when the canvas
+// or side panel changed what the status line shows after the toolbar drew it.
+func (this *ZoneEditorDialog) requestLateStatusRedraw(gtx layout.Context) {
+	if this.statusKey() != this.shownStatus {
+		gtx.Execute(op.InvalidateCmd{})
 	}
 }
 
@@ -355,6 +382,7 @@ func (this *ZoneEditorDialog) addConnection(from, to string) {
 	this.selectConnection(&connection)
 	this.syncedFor = nil
 	this.geometryDirty = true
+	this.markGraphDirty()
 }
 
 func (this *ZoneEditorDialog) deleteConnection(connection *template_model.Connection) {
@@ -369,6 +397,7 @@ func (this *ZoneEditorDialog) deleteConnection(connection *template_model.Connec
 		this.syncedFor = nil
 	}
 	this.geometryDirty = true
+	this.markGraphDirty()
 }
 
 // undoSessionEdits restores the zones and connections the editor started from,
@@ -386,6 +415,7 @@ func (this *ZoneEditorDialog) undoSessionEdits() {
 	this.syncedFor = nil
 	this.syncedZoneFor = ""
 	this.geometryDirty = true
+	this.markGraphDirty()
 }
 
 // revertToBase shows a freshly generated, manual-edit-free layout. Nothing is
@@ -491,6 +521,7 @@ func (this *ZoneEditorDialog) addZoneAt(pos models.Position) {
 	zone.ManualPosition = new(data.NewVec2(x, y))
 	this.zones = append(this.zones, zone)
 	this.geometryDirty = true
+	this.markGraphDirty()
 	this.selectZone(zone.Name)
 	this.syncedZoneFor = ""
 	this.hint = fmt.Sprintf("Added %s - connect it with “Add connection”.", zone.Name)
@@ -514,6 +545,7 @@ func (this *ZoneEditorDialog) deleteZone(name string) {
 		this.working = append(this.working, &mutation.Connections[i])
 	}
 	this.geometryDirty = true
+	this.markGraphDirty()
 	this.selected = nil
 	this.syncedFor = nil
 	if this.selectedZone == name {

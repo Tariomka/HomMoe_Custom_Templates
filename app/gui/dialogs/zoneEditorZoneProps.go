@@ -118,5 +118,6 @@ func (this *ZoneEditorDialog) applyQualityMutation(mutation dtos.ZoneEditorMutat
 
 	this.zones = mutation.Zones
 	this.geometryDirty = true // tier color / castle glyph live in previewZones
-	this.syncedZoneFor = ""   // re-sync dependent fields next frame
+	this.markGraphDirty()
+	this.syncedZoneFor = "" // re-sync dependent fields next frame
 }

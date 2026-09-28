@@ -103,9 +103,22 @@ func NewAppRunner(tb testing.TB) *AppRunner {
 // installed would otherwise succeed. Everything else is built by the real
 // composition root.
 func NewAppRunnerWithFileSystem(tb testing.TB, fileSystem handler_interfaces.IFileSystemHandler) *AppRunner {
+	return newAppRunner(tb, composition.InitializeGuiHandler(), fileSystem)
+}
+
+// NewAppRunnerWithGuiHandler is NewAppRunner over a caller-supplied GUI handler,
+// such as a call-counting wrapper.
+func NewAppRunnerWithGuiHandler(tb testing.TB, gui handler_interfaces.IGuiHandler) *AppRunner {
+	return newAppRunner(tb, gui, composition.InitializeFileSystemHandler())
+}
+
+func newAppRunner(
+	tb testing.TB,
+	gui handler_interfaces.IGuiHandler,
+	fileSystem handler_interfaces.IFileSystemHandler) *AppRunner {
 	runner := &AppRunner{
 		App: editor.NewWindow(
-			composition.InitializeGuiHandler(),
+			gui,
 			fileSystem,
 			composition.InitializeRegenerationHandler()),
 		theme: themes.NewTheme(),
@@ -456,6 +469,17 @@ func (this *AppRunner) Status() (string, bool) {
 	this.mu.Lock()
 	defer this.mu.Unlock()
 	return this.App.GetStateDriver().GetStatus()
+}
+
+// ImmediateRedrawRequested reports whether a frame since the last call asked for
+// another one straight away, or input is still queued, and clears that request
+// (lock-guarded). A request for a later frame, such as a caret blink, does not count.
+func (this *AppRunner) ImmediateRedrawRequested() bool {
+	this.tb.Helper()
+	this.mu.Lock()
+	defer this.mu.Unlock()
+	at, requested := this.router.WakeupTime()
+	return requested && at.IsZero()
 }
 
 // SetStatus overwrites the status message, so a test can tell a message the
