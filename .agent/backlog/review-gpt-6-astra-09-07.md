@@ -433,7 +433,7 @@ Decomposition guidance for work already justified elsewhere, not additional numb
 | ZoneEditorDialog.layoutStatus | Cached graph summary plus rendering | §3.1; avoid redoing graph analysis in a label closure. |
 | buildEdges/buildPreviewConnections | Common endpoint-pair geometry, explicit render policy | §2.1; do not abstract intentional differences blindly. |
 
-### 2.2 ✅ FIXED — Owner-reopened zone-content DTO removal remains unimplemented
+### 2.2 ✅ FIXED — Owner-reopened zone-content DTO removal
 
 **Progress (2026-09-28).** Owner commit `3c0ad87` removes the **whole** zone-content
 exception: `internal/services/zone_content` is off `dtoNamerAllowList`, and the bonuses
