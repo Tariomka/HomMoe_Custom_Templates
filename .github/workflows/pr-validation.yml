@@ -209,7 +209,9 @@ jobs:
 
       - name: Fail if coverage drops
         if: ${{ steps.coverage.outputs.coverage_trend == 'decreased' && steps.coverage.outputs.coverage_delta < env.coverage_decreased_allowed }}
-        run: echo "Coverage decreased!" && exit 1
+        run: |
+          COV_DELTA=$(( ${{ steps.coverage.outputs.coverage_delta }} * -1 ))
+          echo "Coverage decreased by ${COV_DELTA}%!" && exit 1
 
       - name: Enforce minimum coverage
         run: |
