@@ -1,35 +1,56 @@
-# Carry-forward: Batch G closed, next batch not started
+# Carry-forward: Batch J closed, next batch not started
 
-Date: 2026-09-28. **Batch G (review §3.1, measured performance) is closed.** The owner
-reviewed it, committed it as **`35e0fab` ("Batch G")** on `AD/performance`, and authorized
-the close-out with *"Reviewed, you can mark the item as done (finish Phase 6) and update
-the carry forward"*. The committed code matches the reviewed working tree.
+Date: 2026-09-28. **Batch J (review §2.2, the reopened zone-content service boundary) is
+closed.** The owner reviewed it, committed it as **`6649def` ("Batch J start", the plan)**
+and **`3c0ad87` ("Batch J")** on `AD/performance`, and authorized the close-out with
+*"Changes have been reviewed, please proceed"*. The committed tree builds and passes the
+unit suite.
 
-**§3.1 is marked FIXED** in the
-[surviving review](backlog/review-gpt-6-astra-09-07.md). Its §9 row G is complete, and
-its progress line reads **17 fixed, 15 remaining** (0 High, 9 Medium, 6 Low).
+**§2.2 is marked FIXED** in the
+[surviving review](backlog/review-gpt-6-astra-09-07.md). Its §9 row J is complete, and
+its progress line reads **18 fixed, 14 remaining** (0 High, 8 Medium, 6 Low).
 
-The plan, [batch-g-editor-graph-diagnostics.md](plans/batch-g-editor-graph-diagnostics.md),
-is marked CLOSED. **The owner will delete it once `AD/performance` reaches `master`**, so
-this handoff restates everything the plan settled (§3). Do not recreate the plan, and do
-not reimplement, re-verify or re-review Batch G.
+The plan, [batch-j-zone-content-dto-boundary.md](plans/batch-j-zone-content-dto-boundary.md),
+is marked CLOSED; §3 below restates its settled decisions (J1–J9) in case it is deleted. The
+Batch G plan is already gone from the tree; §3 still restates G1–G9a. Do not recreate either
+plan, and do not reimplement, re-verify or re-review Batch J or Batch G.
 
 **Section 8 is preserved verbatim**, contradictions and all. Its Batch C phase/engine
-wording, and its "pending decisions" wording for §1.5, §1.11, §1.12 and §2.1, are
-**superseded**: all were settled, implemented and marked fixed. Everything else §8 retains
-as later scope remains **binding**. Do not edit §8.
+wording, its "pending decisions" wording for §1.5, §1.11, §1.12 and §2.1, and its §2.2
+bullet ("zone-content DTO removal reopened … still need approval") are **superseded**: all
+were settled, implemented and marked fixed. Everything else §8 retains as later scope
+remains **binding**. Do not edit §8.
 
-Batches A/D, B, C, E, F and G are closed. A/D through F are merged to `master` (Batch F as
-PR #48, `f78caeb`). Batch G is pushed on `AD/performance` and is not yet merged. Do not
-revisit or re-verify closed batches.
+Batches A/D, B, C, E, F, G and J are closed. A/D through F are merged to `master` (Batch F
+as PR #48, `f78caeb`). Batches G and J are pushed on `AD/performance` and are not yet merged.
+Do not revisit or re-verify closed batches.
 
 ## 1. Session goal
 
-Plan, implement, verify and close Batch G from review §9: §3.1, where the zone editor's
-status line rebuilt its graph diagnostics on every frame. This closing turn marked the
-finding fixed and handed this file forward.
+Plan, implement, verify and close Batch J from review §9: §2.2, where
+`internal/services/zone_content` consumed and built DTOs under an accepted allow-list
+exception the owner had reopened. The owner picked J over H in this session. This closing
+turn marked the finding fixed and handed this file forward.
 
 ## 2. Fixes applied
+
+### Batch J, committed in `3c0ad87` and **marked FIXED**. Closed; do not reopen.
+
+- **§2.2, the whole zone-content exception removed.**
+  - New [content_rule_model](../internal/models/content_rule_model/) package: `ContentRuleKey`
+    (5 consts) and `ContentRuleEditorKind` (3 consts) moved from `internal/dtos`, plus
+    `ContentRuleOption{Key, Name}`, flat `ContentRuleComposition` and
+    `ContentRuleDescription`.
+  - [zoneContentEditorService.go](../internal/services/zone_content/zoneContentEditorService.go):
+    `ComposeContentRule(ContentRuleComposition) (ContentRuleRow, bool)`;
+    `GetDefaultContentRules([]ContentRuleOption)`; markers and display name take
+    `[]ContentRuleDescription`. No `dtos` import; `validRule` deleted.
+  - [zoneContentHandler.go](../internal/handlers/zoneContentHandler.go) does every DTO ⇄
+    Model conversion and builds `ContentRuleCompositionResultDto{Rule, Valid}`.
+  - `internal/services/zone_content` removed from `dtoNamerAllowList` in
+    [layering_test.go](../test/unit/architecture/dependency/layering_test.go). Bonuses stays.
+
+### Batch G, committed in `35e0fab` and **marked FIXED** (prior session). Closed.
 
 All are committed in `35e0fab` and **marked FIXED**. They are closed; do not reopen them.
 
@@ -53,9 +74,32 @@ All are committed in `35e0fab` and **marked FIXED**. They are closed; do not reo
 
 ## 3. Features added / changed
 
+### Delivered in Batch J, committed and settled
+
+The owner decisions, restated here in case the plan is deleted:
+
+| ID | Decision |
+| --- | --- |
+| J1 | Remove the **whole** zone-content exception (all four DTO-bearing service methods); keep the bonuses exception. |
+| J2 | The composition unit is `ContentRuleRow`, not `ZoneContentRow`; the service returns `(ContentRuleRow, bool)`. |
+| J3 | `ContentRuleKey` and `ContentRuleEditorKind` live in the model package, not `internal/common`, because models may import only entities, helpers and registry. No `dtos` alias remains. |
+| J4 | New `internal/models/content_rule_model/`, one type per file. |
+| J5 | `ContentRuleComposition` is flat (`Key, Name, DistanceNames, DistanceIndex, IsGuarded, IsSoloEncounter, VariantIDs, VariantIndex`); the request DTO embeds it. |
+| J6 | `ContentRuleDescription{Key, DisplayText, Marker, VariantLabel, Valid, SavedRule}`; the description DTO embeds it. |
+| J7 | `ContentRuleOption{Key, Name}`; the option DTO embeds it and keeps `Description, Marker, EditorKind, EditorLabel`. The "default only when Guarded is offered" check stays. |
+| J8 | `ContentRuleCompositionResultDto{Rule, Valid}` stays; handler interfaces, `ContentRuleEditorOptionsDto` and `ContentRuleVariantOptionDto` are unchanged. |
+| J9 | The catalogue and describe logic stay in `contentRuleHandler`; business logic in a handler is recorded, not assigned. |
+
+- **Go 1.27 promoted-field literals.** The plan assumed nested literals
+  (`ContentRuleOption: content_rule_model.ContentRuleOption{...}`); Go 1.27 accepts promoted
+  fields directly and lint's `modernize/embedlit` rejects the nested form. Literals are flat;
+  only literals wrapping an existing model value keep the embedded key.
+- **No behaviour change.** No GUI golden moved; Wire, handler interfaces and constructors are
+  unchanged.
+
 ### Delivered in Batch G, committed and settled
 
-The owner decisions, restated here because the plan will be deleted:
+The owner decisions, restated here because the plan has been deleted:
 
 | ID | Decision |
 | --- | --- |
@@ -123,16 +167,50 @@ in the tree; the merged code is the reference.
   replaces the zone or connection lists must call `markGraphDirty`. The status key must
   stay built from the full state, and never from only the fields the branch drew,
   otherwise the redraw never settles.
+- All Batch J behavior is committed and settled. `internal/services/zone_content` must not
+  name a DTO again, and the DTO allow-list only ever shrinks. New content-rule shapes go in
+  `content_rule_model`; conversion stays in the handlers.
 
 ## 4. File modifications
 
 **This closing turn is documentation only, in three files:**
-- [Surviving review](backlog/review-gpt-6-astra-09-07.md): §3.1 marked `✅ FIXED` in place
-  with a Progress paragraph, the §9 row G completed, and the progress line refreshed to
-  17 fixed / 15 remaining. Nothing was renumbered, and the review's §8 hash is unchanged.
-- [Batch G plan](plans/batch-g-editor-graph-diagnostics.md): Phase 6, Final Recap and
+- [Surviving review](backlog/review-gpt-6-astra-09-07.md): §2.2 marked `✅ FIXED` in place
+  with a Progress paragraph (J9 recorded, not assigned), the §2 architecture-inventory
+  bullet updated, the §9 row J completed, and the progress line refreshed to 18 fixed /
+  14 remaining. Nothing was renumbered, and the review's §8 hash is unchanged.
+- [Batch J plan](plans/batch-j-zone-content-dto-boundary.md): Phase 4, Final Recap and
   Deployment Plan marked complete/CLOSED.
 - This handoff.
+
+**Batch J inventory, committed in `3c0ad87`** (plan in `6649def`):
+
+**Production (new):** [content_rule_model/](../internal/models/content_rule_model/):
+`contentRuleKey.go`, `contentRuleEditorKind.go`, `contentRuleOption.go`,
+`contentRuleComposition.go`, `contentRuleDescription.go`.
+
+**Production (deleted):** `internal/dtos/contentRuleKey.go`,
+`internal/dtos/contentRuleEditorKind.go`.
+
+**Production (edited):**
+- `internal/dtos/`: `contentRuleOptionDto.go`, `contentRuleCompositionRequestDto.go`,
+  `contentRuleDescriptionDto.go` embed the models.
+- [zoneContentEditorService.go](../internal/services/zone_content/zoneContentEditorService.go)
+  and its interface: model signatures.
+- [zoneContentHandler.go](../internal/handlers/zoneContentHandler.go): conversions.
+- [contentRuleHandler.go](../internal/handlers/contentRuleHandler.go) and
+  [ruleDialog.go](../app/gui/dialogs/ruleDialog.go): model constants; the dialog fills
+  `Key`/`Name` instead of `Option`.
+
+**Test helpers:** `test/test_helpers/zoneContentEditorServiceMock.go` (new signatures) and
+`templateHandlerMock.go` (`ComposeContentRule` wraps the comma-ok pair).
+
+**Tests:** listed in §5, plus the allow-list edit in `layering_test.go`. No goldens changed.
+
+**Not touched in Batch J:** `data/`, `internal/entities/template_entity/`,
+`internal/registry/`, the output path, generated Wire, handler interfaces, `guiHandler.go`,
+the bonuses service, dependencies, `.agent/backlog/test_observations.md` and
+`.agent/backlog/owner_findings.md` (its O15 entry stays, as fixed entries have in earlier
+batches; the review's §0 is the disposition of record).
 
 **Batch G inventory, committed in `35e0fab`:**
 
@@ -158,8 +236,8 @@ in the tree; the merged code is the reference.
 **Tests:** listed in §5. No goldens changed.
 
 **Agent docs:**
-- [the Batch G plan](plans/batch-g-editor-graph-diagnostics.md) (first version `a587617`,
-  completed in `35e0fab`, closed in this turn; the owner will delete it after the merge).
+- the Batch G plan (first version `a587617`, completed in `35e0fab`; since deleted by the
+  owner).
 - [test_observations.md](backlog/test_observations.md): records the GUI-only statements of
   the graph cache.
 - `.agent/memories/gui-and-tests.md` (gitignored): redraw assertions, handler wrappers,
@@ -172,8 +250,45 @@ in the tree; the merged code is the reference.
 
 ## 5. Tests added or updated
 
-**This closing turn added no tests and reran nothing**, because it changed documentation
-only. The Batch G verification below is the evidence of record for `35e0fab`.
+**This closing turn added no tests and reran nothing** beyond confirming that the committed
+`3c0ad87` builds and passes `go test ./test/unit/...`. The Batch J verification below is the
+evidence of record.
+
+### Batch J (`3c0ad87`)
+
+**Unit tests** (mirrored layout, triple-A, `t.Parallel()`, one assertion each):
+- `zoneContentEditorService/composeContentRule_test.go`, rewritten on the model: unknown key
+  rejected and empty row; distance `-1` / past-the-end rejected for both distance kinds;
+  out-of-range indices return an empty row; exact rows for road, town, variant, and guarded
+  and solo with `true` and `false` (stored as a non-nil `false`, not nil); all five valid
+  kinds accepted.
+- The other three service test files migrated to model inputs, same scenarios.
+- `zoneContentHandler/`: the embedded composition reaches the service; accept →
+  `{rule, true}`; reject → `{rule, false}` passed through; only Key/Name reach
+  `GetDefaultContentRules`; descriptions reach the service unwrapped and in order.
+- `contentRuleHandler/describeContentRule_test.go`: a table over all five rule names for
+  `contentRuleKeyFromName` (was 71.4%, now 100%).
+- `contentRuleHandler` and `guiHandler` tests: constant renames only.
+
+**Architecture gate:** a temporary blank `dtos` import in the service made
+`TestWhenDtoConsumersAreScanned_OnlyTheApiBoundaryAndAppNameADto` fail on that file; the
+file hash matched after removal and the test passed again.
+
+**Baseline** (HEAD `33bff1f`): build PASS; coverage **74.5%** (6909 / 9261); `./test/...`
+PASS; tagged run PASS (root 3.429s, GUI 26.150s); testlayoutcheck PASS; gofmt clean; lint 0.
+
+**Final** (Windows/amd64, Go 1.27.0, empty `GOFLAGS`): build and `go vet` under no tag,
+`integration_test` and `integration_test,gui` PASS; coverage **74.5%** (6915 / 9263: +2
+handler statements, +6 covered; every function in the three touched files at 100%);
+`./test/...` PASS; tagged run PASS (root 4.103s, GUI 33.104s), no `.failure` files;
+testlayoutcheck PASS; gofmt clean; lint **0 issues** after `--fix` (34 findings, all in this
+batch's files: gofmt/gci on the new files, golines, 18 `modernize/embedlit`).
+
+**Reviews** (Claude Opus 5.5):
+- Plan: APPROVE WITH CHANGES; all 10 findings applied.
+- Implementation: APPROVE; 3 nits, all applied.
+
+### Batch G (`35e0fab`, prior session)
 
 **Unit tests** (mirrored layout, triple-A, `t.Parallel()`):
 - `connectionEditorService/findIsolatedZones_test.go`: 6 new tests. They lock the `nil`
@@ -227,26 +342,37 @@ in-game behaviour.
 
 ## 6. Git status snapshot
 
-The branch is **`AD/performance`**, HEAD **`35e0fab` ("Batch G")**, level with
+The branch is **`AD/performance`**, HEAD **`3c0ad87` ("Batch J")**, level with
 `origin/AD/performance`. The history on top of `master` (`f78caeb`, Batch F #48) is
-`a587617` ("plan"), then `35e0fab`. Batch G is not yet merged to `master`.
+`a587617` ("plan"), `35e0fab` ("Batch G"), `33bff1f` ("docs"), `6649def` ("Batch J
+start"), then `3c0ad87`. Batches G and J are not yet merged to `master`.
 
 The tree was clean when this closing turn began. `git status --short` now shows only this
 turn's three documentation edits, all unstaged:
 
 ```text
  M .agent/backlog/review-gpt-6-astra-09-07.md
- M .agent/plans/batch-g-editor-graph-diagnostics.md
+ M .agent/plans/batch-j-zone-content-dto-boundary.md
  M .agent/session-carry-forward.md
 ```
 
-`.agent/memories/` and `tmp/` (the raw benchmark output) are gitignored.
+`.agent/memories/` and `tmp/` are gitignored.
 
 **The assistant performed no staging, unstaging, commit, push, stash, branch switch or
-worktree change in this turn.**
+worktree change in this session.**
 
 ## 7. Rejections / things the user declined
 
+- **Batch J.**
+  - Rejected designs: keeping `ContentRuleKey` in `internal/common` (breaks models'
+    import rule), a `dtos` type alias, nesting the option inside `ContentRuleComposition`,
+    `*ContentRuleRow` or a result-struct model instead of comma-ok, deleting the result
+    DTO, narrowing the descriptions to plain strings, and dropping the Guarded check in
+    `GetDefaultContentRules`.
+  - Moving the `contentRuleHandler` catalogue/describe logic into `content_rules` was
+    declined for this batch (J9): recorded, not assigned.
+  - The plan's nested-literal instruction was superseded by Go 1.27 promoted-field literals
+    (see §3). An interim `funlen` helper extraction in `contentRuleHandler.go` was reverted.
 - **Batch G.**
   - The O(z+c) isolation rewrite failed G3 and was reverted, with the numbers recorded.
   - Dialog-direct invalidate tests were planned but proved infeasible: the canvas offset
@@ -286,13 +412,9 @@ worktree change in this turn.**
   - Topology retirement (Batch K) stays out of scope.
   - No opportunistic DTO, schema, package, allocation or output-path work.
   - Never claim unobserved engine outcomes.
-- **§8 verification encoding.** Use explicit UTF-8 for Git stdout and disk reads, because
-  PowerShell 5.1 mis-decodes. Git stores this file LF-normalized while the worktree is
-  CRLF. Measured on 2026-09-28 before and after the Batch G rewrite, the LF-normalized
-  UTF-8 SHA-256 of this file's §8 (from `## 8.` up to `## 9.`) is
-  `0DDDEBF32DB51167E675EA7A147E75F186B77643E8024F26E7B262102B004AD8`. The earlier recorded
-  value `35D5F4…` did not reproduce with this method for either document.
 - **Recorded, not assigned:**
+  - `contentRuleHandler` holds the content-rule option catalogue and describe logic
+    (business logic in a handler; J9).
   - A service comment still names the legacy rebuild entry point.
   - A zero-edge tournament count remark.
   - The defensive selected-pointer rebinding branch.
@@ -336,11 +458,12 @@ Other pending decisions: arena/manual invalidation and effective-mode aliases (�
 
 ## 9. Next recommended actions
 
-**Batch G is closed, with no open Batch G questions and no blockers.** The owner merges
-`AD/performance` to `master`, then deletes the Batch G plan. Neither is an agent action.
+**Batch J is closed, with no open Batch J questions and no blockers.** The owner merges
+`AD/performance` to `master` and decides when to delete the Batch J plan. Neither is an
+agent action.
 
 The next unit of work is the **owner's choice** among the remaining batches of the
-surviving review's §9 table (15 items left):
+surviving review's §9 table (14 items left):
 - **H: CI/tooling hardening,** §6.2, §6.3 and §6.5. This is next in table order, and the
   items are independent configuration changes:
   - linter version alignment;
@@ -350,54 +473,58 @@ surviving review's §9 table (15 items left):
 
   Each has open owner decisions recorded in its review item.
 - **I: docs,** §7.1 and §7.2.
-- **J: the reopened service boundary,** §2.2.
 - **K–P:** topology retirement, the compact-state investigation, the persistence format,
   panel/state organization, naming and lookup, and the Vec2 audit. The binding scope for
   each is in §8's retained decisions.
 
 Routing for the next session, in order:
 1. Read [AGENTS.md](../AGENTS.md), this handoff, then the chosen items and their §9 row.
-2. Inspect the current code yourself, because review line numbers predate Batches F and G.
+2. Inspect the current code yourself, because review line numbers predate Batches F, G and J.
 3. Ask the owner every open decision in the items, summarize the scope, and get approval.
 4. Write a new durable plan under `.agent/plans/`, get an independent review and explicit
-   plan approval, and capture a fresh baseline (coverage 74.5%) before the first edit.
+   plan approval, and capture a fresh baseline (coverage 74.5%, 6915 / 9263) before the
+   first edit.
 
 **Deployment.** Nothing is deployed and nothing is authorized to be. The owner alone
-stages, commits, merges and releases. Batch G still awaits the owner's merge to `master`.
-No schema migration, dependency installation, Wire regeneration or output-directory
-change is required or pending. Native Linux and Steam Deck execution remain unmeasured.
+stages, commits, merges and releases. Batches G and J still await the owner's merge to
+`master`. No schema migration, dependency installation, Wire regeneration or
+output-directory change is required or pending. Native Linux and Steam Deck execution
+remain unmeasured.
 
 ## 10. Carry-forward prompt
 
 > Read [AGENTS.md](../AGENTS.md) first, then [this handoff](session-carry-forward.md). It
 > is self-contained.
 >
-> **Batch G is CLOSED.** The owner reviewed it and committed it as `35e0fab` on
-> `AD/performance`, which is not yet merged to `master` (`f78caeb`). Review §3.1 is
-> marked **FIXED** in the [surviving review](backlog/review-gpt-6-astra-09-07.md), whose
-> §9 table shows batch `G` complete, with 17 fixed and 15 remaining. Coverage of 74.5%
-> was accepted and is the new baseline. The Batch G plan is CLOSED and will be deleted by
-> the owner after the merge; §3 of this handoff restates its settled decisions (G1–G9a).
-> Do not reimplement, re-verify or re-review Batch G.
+> **Batch J is CLOSED.** The owner reviewed it and committed it as `6649def` (plan) and
+> `3c0ad87` on `AD/performance`, which (with Batch G, `35e0fab`) is not yet merged to
+> `master` (`f78caeb`). Review §2.2 is marked **FIXED** in the
+> [surviving review](backlog/review-gpt-6-astra-09-07.md), whose §9 table shows batch `J`
+> complete, with 18 fixed and 14 remaining. Coverage stays at the 74.5% baseline. The
+> Batch J plan is CLOSED; §3 of this handoff restates its settled decisions (J1–J9) and
+> Batch G's (G1–G9a). Do not reimplement, re-verify or re-review Batch J or Batch G.
 >
 > **State:** the only working-tree changes are the closing turn's three documentation
-> edits: the review, the plan and this handoff. The assistant performed no Git mutation;
-> preserve the owner's state exactly.
+> edits: the review, the Batch J plan and this handoff. The assistant performed no Git
+> mutation; preserve the owner's state exactly.
 >
 > **Next work is the owner's choice of batch from review §9.** H (CI/tooling: §6.2,
 > §6.3, §6.5) is next in order. No plan exists yet. Follow the gates in §9: read,
 > inspect, ask, summarize, plan, independent review, plan approval, fresh baseline.
 >
-> **Verification on record** (Batch G final code, Windows/amd64, Go 1.27.0, empty
-> `GOFLAGS`; not rerun at close-out):
-> - build: PASS;
-> - `-p=2` coverage: PASS, 74.5%;
+> **Verification on record** (Batch J final code, Windows/amd64, Go 1.27.0, empty
+> `GOFLAGS`; the committed tree was re-checked with build + unit tests at close-out):
+> - build and tagged `go vet`: PASS;
+> - coverage: PASS, 74.5% (6915 / 9263);
 > - `go test ./test/...`: PASS;
-> - tagged `integration_test,gui` run: PASS, root 3.322s, GUI 32.380s;
+> - tagged `integration_test,gui` run: PASS, root 4.103s, GUI 33.104s;
 > - `testlayoutcheck`: PASS; `gofmt`: clean; lint: 0 issues.
 >
 > **Native Linux, Steam Deck and the race detector are UNAVAILABLE.** No in-game result is
 > claimed.
+>
+> **Go 1.27 literals:** promoted fields of embedded structs are set directly in composite
+> literals; `modernize/embedlit` rejects the nested form.
 >
 > **GUI snapshots:** never keep a blanket `-update`, because it rewrites about 280 goldens.
 > Accept only the `.failure` files a plain run produces.
@@ -416,9 +543,9 @@ change is required or pending. Native Linux and Steam Deck execution remain unme
 >
 > **Out of scope** unless the owner selects that batch: Batch K topology retirement,
 > direct `GeneratorConfig` rejection, DTO cleanup, schema and package work, allocation
-> tuning, and every settled alternative in §7. §8 stays verbatim. Its Batch C wording
-> and its pending-decision wording for §1.5, §1.11, §1.12 and §2.1 are superseded; its
-> retained later-scope decisions remain binding.
+> tuning, and every settled alternative in §7. §8 stays verbatim. Its Batch C wording,
+> its pending-decision wording for §1.5, §1.11, §1.12 and §2.1, and its §2.2 bullet are
+> superseded; its retained later-scope decisions remain binding.
 >
 > **Preserve:**
 > - explicit Portal Road `false`/`nil` and valid approaches;
@@ -429,6 +556,7 @@ change is required or pending. Native Linux and Steam Deck execution remain unme
 > - the shared curve builder, as the single source of curves;
 > - hit tests resolving against the live connection list;
 > - the graph cache's own dirty flag (`markGraphDirty` on every edit that replaces the
->   zone or connection lists), and a status key built from the full state.
+>   zone or connection lists), and a status key built from the full state;
+> - `internal/services/zone_content` naming no DTO, with conversion in the handlers.
 >
 > This handoff contains the full continuation context.
