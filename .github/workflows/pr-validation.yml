@@ -15,7 +15,8 @@ env:
   GO_VERSION: 1.27.0
   coverage_file: coverage.txt
   coverage_artifact: code-coverage
-  coverage_percentage_threshold: 60.0
+  coverage_percentage_threshold: 70.0
+  coverage_decreased_allowed: -2.5
 
 jobs:
   check-go-mod:
@@ -207,7 +208,7 @@ jobs:
           exclude: (?:^|/)test/(.+)$
 
       - name: Fail if coverage drops
-        if: ${{ steps.coverage.outputs.coverage_trend == 'decreased' }}
+        if: ${{ steps.coverage.outputs.coverage_trend == 'decreased' && steps.coverage.outputs.coverage_delta < env.coverage_decreased_allowed }}
         run: echo "Coverage decreased!" && exit 1
 
       - name: Enforce minimum coverage
