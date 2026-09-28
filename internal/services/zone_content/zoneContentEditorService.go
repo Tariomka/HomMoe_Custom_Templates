@@ -5,8 +5,8 @@ import (
 	"sort"
 	"strings"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/content_rule_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 )
 
@@ -20,33 +20,33 @@ func NewZoneContentEditorService() IZoneContentEditorService {
 }
 
 func (this *ZoneContentEditorService) ComposeContentRule(
-	request dtos.ContentRuleCompositionRequestDto) dtos.ContentRuleCompositionResultDto {
-	switch request.Option.Key {
-	case dtos.ContentRuleKeyDistanceToRoad, dtos.ContentRuleKeyDistanceToTown:
-		if request.DistanceIndex < 0 || request.DistanceIndex >= len(request.DistanceNames) {
-			return dtos.ContentRuleCompositionResultDto{}
+	composition content_rule_model.ContentRuleComposition) (editor_state_model.ContentRuleRow, bool) {
+	switch composition.Key {
+	case content_rule_model.ContentRuleKeyDistanceToRoad, content_rule_model.ContentRuleKeyDistanceToTown:
+		if composition.DistanceIndex < 0 || composition.DistanceIndex >= len(composition.DistanceNames) {
+			return editor_state_model.ContentRuleRow{}, false
 		}
 
-		return validRule(editor_state_model.ContentRuleRow{
-			Name:         request.Option.Name,
-			DistanceName: request.DistanceNames[request.DistanceIndex],
-		})
-	case dtos.ContentRuleKeyGuarded:
-		guarded := request.IsGuarded
-		return validRule(editor_state_model.ContentRuleRow{Name: request.Option.Name, IsGuarded: &guarded})
-	case dtos.ContentRuleKeySoloEncounter:
-		solo := request.IsSoloEncounter
-		return validRule(editor_state_model.ContentRuleRow{Name: request.Option.Name, IsSoloEncounter: &solo})
-	case dtos.ContentRuleKeyVariant:
-		if request.VariantIndex < 0 || request.VariantIndex >= len(request.VariantIDs) {
-			return dtos.ContentRuleCompositionResultDto{}
+		return editor_state_model.ContentRuleRow{
+			Name:         composition.Name,
+			DistanceName: composition.DistanceNames[composition.DistanceIndex],
+		}, true
+	case content_rule_model.ContentRuleKeyGuarded:
+		guarded := composition.IsGuarded
+		return editor_state_model.ContentRuleRow{Name: composition.Name, IsGuarded: &guarded}, true
+	case content_rule_model.ContentRuleKeySoloEncounter:
+		solo := composition.IsSoloEncounter
+		return editor_state_model.ContentRuleRow{Name: composition.Name, IsSoloEncounter: &solo}, true
+	case content_rule_model.ContentRuleKeyVariant:
+		if composition.VariantIndex < 0 || composition.VariantIndex >= len(composition.VariantIDs) {
+			return editor_state_model.ContentRuleRow{}, false
 		}
 
-		variantID := request.VariantIDs[request.VariantIndex]
-		return validRule(editor_state_model.ContentRuleRow{Name: request.Option.Name, VariantID: &variantID})
+		variantID := composition.VariantIDs[composition.VariantIndex]
+		return editor_state_model.ContentRuleRow{Name: composition.Name, VariantID: &variantID}, true
 	}
 
-	return dtos.ContentRuleCompositionResultDto{}
+	return editor_state_model.ContentRuleRow{}, false
 }
 
 func (this *ZoneContentEditorService) UpsertContentRule(
@@ -63,9 +63,9 @@ func (this *ZoneContentEditorService) UpsertContentRule(
 }
 
 func (this *ZoneContentEditorService) GetDefaultContentRules(
-	options dtos.ContentRuleEditorOptionsDto) []editor_state_model.ContentRuleRow {
-	for _, option := range options.Rules {
-		if option.Key == dtos.ContentRuleKeyGuarded {
+	options []content_rule_model.ContentRuleOption) []editor_state_model.ContentRuleRow {
+	for _, option := range options {
+		if option.Key == content_rule_model.ContentRuleKeyGuarded {
 			guarded := true
 
 			return []editor_state_model.ContentRuleRow{{Name: option.Name, IsGuarded: &guarded}}
@@ -75,7 +75,8 @@ func (this *ZoneContentEditorService) GetDefaultContentRules(
 	return nil
 }
 
-func (this *ZoneContentEditorService) GetContentRuleMarkers(descriptions []dtos.ContentRuleDescriptionDto) string {
+func (this *ZoneContentEditorService) GetContentRuleMarkers(
+	descriptions []content_rule_model.ContentRuleDescription) string {
 	markers := make([]string, 0, len(descriptions))
 	for _, description := range descriptions {
 		if description.Valid && description.Marker != "" {
@@ -87,9 +88,9 @@ func (this *ZoneContentEditorService) GetContentRuleMarkers(descriptions []dtos.
 
 func (this *ZoneContentEditorService) GetContentRowDisplayName(
 	name string,
-	descriptions []dtos.ContentRuleDescriptionDto) string {
+	descriptions []content_rule_model.ContentRuleDescription) string {
 	for _, description := range descriptions {
-		if description.Key == dtos.ContentRuleKeyVariant && description.Valid {
+		if description.Key == content_rule_model.ContentRuleKeyVariant && description.Valid {
 			return name + " (" + description.VariantLabel + ")"
 		}
 	}
@@ -115,8 +116,4 @@ func (this *ZoneContentEditorService) ClampContentCount(count int, maxCount int)
 	}
 
 	return count
-}
-
-func validRule(rule editor_state_model.ContentRuleRow) dtos.ContentRuleCompositionResultDto {
-	return dtos.ContentRuleCompositionResultDto{Rule: rule, Valid: true}
 }

@@ -1,10 +1,12 @@
 package dtos
 
+import "github.com/Tariomka/hommoe_custom_templates/internal/models/content_rule_model"
+
 type ContentRuleOptionDto struct {
-	Key         ContentRuleKey
-	Name        string
+	content_rule_model.ContentRuleOption
+
 	Description string
 	Marker      string
-	EditorKind  ContentRuleEditorKind
+	EditorKind  content_rule_model.ContentRuleEditorKind
 	EditorLabel string
 }

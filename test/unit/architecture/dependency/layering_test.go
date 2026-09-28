@@ -56,17 +56,17 @@ var entityNamerAllowList = []string{
 	"internal/services/file_service",
 }
 
-// dtoNamerAllowList records the two services that speak DTOs **by decision, not
-// by debt** (batch O). Their DTOs are the form and result shapes of two dialogs;
-// mirroring them as Models would add a type and a handler slice converter per
-// shape without adding meaning. `internal/services/pickers` used to be here and
+// dtoNamerAllowList records the one service that speaks DTOs **by decision, not
+// by debt** (batch O). Its DTOs are the form and result shapes of the bonus
+// dialog; mirroring them as Models would add a type and a handler slice converter
+// per shape without adding meaning. `internal/services/pickers` used to be here and
 // was deleted instead - it was view-model logic, and it now lives in
-// app/gui/models/. **Only ever remove entries.**
+// app/gui/models/. `internal/services/zone_content` was removed when its service
+// moved to content_rule_model types. **Only ever remove entries.**
 //
 //nolint:gochecknoglobals // shared, read-only rule input for this file's tests.
 var dtoNamerAllowList = []string{
 	"internal/services/bonuses",
-	"internal/services/zone_content",
 }
 
 func TestWhenEntityImportsAreScanned_DoesNotDependOnHigherLayers(t *testing.T) {

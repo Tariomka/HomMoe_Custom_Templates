@@ -1,14 +1,7 @@
 package dtos
 
-// ContentRuleCompositionRequestDto carries the manage-rules editor state that a
-// content rule is composed from: the selected rule type plus the value the
-// matching editor control currently holds.
+import "github.com/Tariomka/hommoe_custom_templates/internal/models/content_rule_model"
+
 type ContentRuleCompositionRequestDto struct {
-	Option          ContentRuleOptionDto
-	DistanceNames   []string
-	DistanceIndex   int
-	IsGuarded       bool
-	IsSoloEncounter bool
-	VariantIDs      []int
-	VariantIndex    int
+	content_rule_model.ContentRuleComposition
 }

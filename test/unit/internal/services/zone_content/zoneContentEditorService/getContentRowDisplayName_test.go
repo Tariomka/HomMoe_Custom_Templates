@@ -3,7 +3,7 @@ package zoneContentEditorService_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/content_rule_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zone_content"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
@@ -16,8 +16,8 @@ func TestWhenNoVariantRuleApplies_TheRowKeepsItsPlainName(t *testing.T) {
 	name := gofakeit.Word()
 
 	// Act
-	displayName := service.GetContentRowDisplayName(name, []dtos.ContentRuleDescriptionDto{
-		{Key: dtos.ContentRuleKeyGuarded, Valid: true},
+	displayName := service.GetContentRowDisplayName(name, []content_rule_model.ContentRuleDescription{
+		{Key: content_rule_model.ContentRuleKeyGuarded, Valid: true},
 	})
 
 	// Assert
@@ -31,8 +31,8 @@ func TestWhenTheVariantRuleIsInvalid_TheRowKeepsItsPlainName(t *testing.T) {
 	name := gofakeit.Word()
 
 	// Act
-	displayName := service.GetContentRowDisplayName(name, []dtos.ContentRuleDescriptionDto{
-		{Key: dtos.ContentRuleKeyVariant, VariantLabel: gofakeit.Word()},
+	displayName := service.GetContentRowDisplayName(name, []content_rule_model.ContentRuleDescription{
+		{Key: content_rule_model.ContentRuleKeyVariant, VariantLabel: gofakeit.Word()},
 	})
 
 	// Assert
@@ -47,8 +47,8 @@ func TestWhenAVariantRuleApplies_TheRowNameCarriesTheVariantLabel(t *testing.T) 
 	label := gofakeit.Word()
 
 	// Act
-	displayName := service.GetContentRowDisplayName(name, []dtos.ContentRuleDescriptionDto{
-		{Key: dtos.ContentRuleKeyVariant, Valid: true, VariantLabel: label},
+	displayName := service.GetContentRowDisplayName(name, []content_rule_model.ContentRuleDescription{
+		{Key: content_rule_model.ContentRuleKeyVariant, Valid: true, VariantLabel: label},
 	})
 
 	// Assert

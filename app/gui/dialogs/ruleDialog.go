@@ -14,6 +14,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/content_rule_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 )
 
@@ -204,14 +205,14 @@ func (this *ManageRulesDialog) layoutEditor(theme *material.Theme) layout.Widget
 
 		return layout.Inset{Top: unit.Dp(6)}.Layout(gtx, func(gtx layout.Context) layout.Dimensions {
 			switch option.EditorKind {
-			case dtos.ContentRuleEditorKindDistance:
+			case content_rule_model.ContentRuleEditorKindDistance:
 				return this.labeledControl(theme, option.EditorLabel, this.distanceDropdown.GetWidget(theme))(gtx)
-			case dtos.ContentRuleEditorKindBoolean:
-				if option.Key == dtos.ContentRuleKeyGuarded {
+			case content_rule_model.ContentRuleEditorKindBoolean:
+				if option.Key == content_rule_model.ContentRuleKeyGuarded {
 					return widgets.NewLabeledCheckboxRowWidget(theme, &this.guardedBool, option.EditorLabel)(gtx)
 				}
 				return widgets.NewLabeledCheckboxRowWidget(theme, &this.soloBool, option.EditorLabel)(gtx)
-			case dtos.ContentRuleEditorKindVariant:
+			case content_rule_model.ContentRuleEditorKindVariant:
 				return this.labeledControl(theme, option.EditorLabel, this.variantDropdown.GetWidget(theme))(gtx)
 			default:
 				return layout.Dimensions{}
@@ -273,7 +274,8 @@ func (this *ManageRulesDialog) buildRuleFromEditor() (editor_state_model.Content
 	}
 
 	result := this.contentRuleHandler.ComposeContentRule(dtos.ContentRuleCompositionRequestDto{
-		Option:          option,
+		Key:             option.Key,
+		Name:            option.Name,
 		DistanceNames:   this.distanceNames,
 		DistanceIndex:   this.distanceDropdown.GetSelectedIndex(),
 		IsGuarded:       this.guardedBool.Value,

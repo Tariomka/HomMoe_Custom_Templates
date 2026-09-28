@@ -1,8 +1,8 @@
 package test_helpers
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/content_rule_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/stretchr/testify/mock"
 )
@@ -15,10 +15,10 @@ type ZoneContentEditorServiceMock struct {
 }
 
 func (this *ZoneContentEditorServiceMock) ComposeContentRule(
-	request dtos.ContentRuleCompositionRequestDto) dtos.ContentRuleCompositionResultDto {
-	arguments := this.Called(request)
-	result, _ := arguments.Get(0).(dtos.ContentRuleCompositionResultDto)
-	return result
+	composition content_rule_model.ContentRuleComposition) (editor_state_model.ContentRuleRow, bool) {
+	arguments := this.Called(composition)
+	rule, _ := arguments.Get(0).(editor_state_model.ContentRuleRow)
+	return rule, arguments.Bool(1)
 }
 
 func (this *ZoneContentEditorServiceMock) UpsertContentRule(
@@ -30,21 +30,21 @@ func (this *ZoneContentEditorServiceMock) UpsertContentRule(
 }
 
 func (this *ZoneContentEditorServiceMock) GetDefaultContentRules(
-	options dtos.ContentRuleEditorOptionsDto) []editor_state_model.ContentRuleRow {
+	options []content_rule_model.ContentRuleOption) []editor_state_model.ContentRuleRow {
 	arguments := this.Called(options)
 	rules, _ := arguments.Get(0).([]editor_state_model.ContentRuleRow)
 	return rules
 }
 
 func (this *ZoneContentEditorServiceMock) GetContentRuleMarkers(
-	descriptions []dtos.ContentRuleDescriptionDto) string {
+	descriptions []content_rule_model.ContentRuleDescription) string {
 	arguments := this.Called(descriptions)
 	return arguments.String(0)
 }
 
 func (this *ZoneContentEditorServiceMock) GetContentRowDisplayName(
 	name string,
-	descriptions []dtos.ContentRuleDescriptionDto) string {
+	descriptions []content_rule_model.ContentRuleDescription) string {
 	arguments := this.Called(name, descriptions)
 	return arguments.String(0)
 }

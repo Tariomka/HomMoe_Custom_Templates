@@ -5,6 +5,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/content_rule_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zone_content"
 )
@@ -26,7 +27,8 @@ func NewZoneContentHandler(
 
 func (this *zoneContentHandler) ComposeContentRule(
 	request dtos.ContentRuleCompositionRequestDto) dtos.ContentRuleCompositionResultDto {
-	return this.zoneContentEditor.ComposeContentRule(request)
+	rule, valid := this.zoneContentEditor.ComposeContentRule(request.ContentRuleComposition)
+	return dtos.ContentRuleCompositionResultDto{Rule: rule, Valid: valid}
 }
 
 func (this *zoneContentHandler) UpsertContentRule(
@@ -36,7 +38,12 @@ func (this *zoneContentHandler) UpsertContentRule(
 }
 
 func (this *zoneContentHandler) GetDefaultContentRules(content models.SidMapping) []editor_state_model.ContentRuleRow {
-	return this.zoneContentEditor.GetDefaultContentRules(this.GetContentRuleEditorOptions(content))
+	options := linq.FromSlice(this.GetContentRuleEditorOptions(content).Rules).
+		Select(func(option dtos.ContentRuleOptionDto) content_rule_model.ContentRuleOption {
+			return option.ContentRuleOption
+		}).
+		ToSlice()
+	return this.zoneContentEditor.GetDefaultContentRules(options)
 }
 
 func (this *zoneContentHandler) GetContentRuleMarkers(
@@ -61,10 +68,10 @@ func (this *zoneContentHandler) ClampContentCount(count int, maxCount int) int {
 
 func (this *zoneContentHandler) describeContentRules(
 	content models.SidMapping,
-	rules []editor_state_model.ContentRuleRow) []dtos.ContentRuleDescriptionDto {
+	rules []editor_state_model.ContentRuleRow) []content_rule_model.ContentRuleDescription {
 	return linq.FromSlice(rules).
-		Select(func(rule editor_state_model.ContentRuleRow) dtos.ContentRuleDescriptionDto {
-			return this.DescribeContentRule(content, rule)
+		Select(func(rule editor_state_model.ContentRuleRow) content_rule_model.ContentRuleDescription {
+			return this.DescribeContentRule(content, rule).ContentRuleDescription
 		}).
 		ToSlice()
 }

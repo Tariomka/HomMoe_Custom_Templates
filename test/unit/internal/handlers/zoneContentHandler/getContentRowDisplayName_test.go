@@ -5,6 +5,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/content_rule_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
@@ -16,16 +17,20 @@ func TestWhenTheRowNameIsRequested_TheContentNameAndDescriptionsAreHandedToTheSe
 	fixture := newZoneContentHandlerFixture()
 	content := models.SidMapping{Name: gofakeit.Word()}
 	rules := []editor_state_model.ContentRuleRow{{Name: gofakeit.Word()}}
-	description := dtos.ContentRuleDescriptionDto{Key: dtos.ContentRuleKeyVariant, Valid: true}
+	description := content_rule_model.ContentRuleDescription{
+		Key:          content_rule_model.ContentRuleKeyVariant,
+		VariantLabel: gofakeit.Word(),
+		Valid:        true,
+	}
 	fixture.contentRules.DescribeContentRuleFunc = func(
 		models.SidMapping,
 		editor_state_model.ContentRuleRow,
 	) dtos.ContentRuleDescriptionDto {
-		return description
+		return dtos.ContentRuleDescriptionDto{ContentRuleDescription: description}
 	}
 	expected := gofakeit.Sentence(2)
 	fixture.contentEditor.
-		On("GetContentRowDisplayName", content.Name, []dtos.ContentRuleDescriptionDto{description}).
+		On("GetContentRowDisplayName", content.Name, []content_rule_model.ContentRuleDescription{description}).
 		Return(expected)
 
 	// Act

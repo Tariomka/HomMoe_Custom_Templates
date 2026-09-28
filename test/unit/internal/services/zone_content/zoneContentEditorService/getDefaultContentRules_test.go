@@ -3,7 +3,7 @@ package zoneContentEditorService_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/content_rule_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zone_content"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
@@ -16,8 +16,8 @@ func TestWhenNoGuardedRuleIsOffered_ThereIsNoDefaultRule(t *testing.T) {
 	service := zone_content.NewZoneContentEditorService()
 
 	// Act
-	rules := service.GetDefaultContentRules(dtos.ContentRuleEditorOptionsDto{
-		Rules: []dtos.ContentRuleOptionDto{{Key: dtos.ContentRuleKeyVariant}},
+	rules := service.GetDefaultContentRules([]content_rule_model.ContentRuleOption{
+		{Key: content_rule_model.ContentRuleKeyVariant},
 	})
 
 	// Assert
@@ -31,8 +31,8 @@ func TestWhenAGuardedRuleIsOffered_TheDefaultRuleIsNamedAfterIt(t *testing.T) {
 	name := gofakeit.Word()
 
 	// Act
-	rules := service.GetDefaultContentRules(dtos.ContentRuleEditorOptionsDto{
-		Rules: []dtos.ContentRuleOptionDto{{Key: dtos.ContentRuleKeyGuarded, Name: name}},
+	rules := service.GetDefaultContentRules([]content_rule_model.ContentRuleOption{
+		{Key: content_rule_model.ContentRuleKeyGuarded, Name: name},
 	})
 
 	// Assert
@@ -46,8 +46,8 @@ func TestWhenAGuardedRuleIsOffered_TheDefaultRuleIsGuarded(t *testing.T) {
 	service := zone_content.NewZoneContentEditorService()
 
 	// Act
-	rules := service.GetDefaultContentRules(dtos.ContentRuleEditorOptionsDto{
-		Rules: []dtos.ContentRuleOptionDto{{Key: dtos.ContentRuleKeyGuarded, Name: gofakeit.Word()}},
+	rules := service.GetDefaultContentRules([]content_rule_model.ContentRuleOption{
+		{Key: content_rule_model.ContentRuleKeyGuarded, Name: gofakeit.Word()},
 	})
 
 	// Assert

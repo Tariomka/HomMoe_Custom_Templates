@@ -5,12 +5,13 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/content_rule_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestWhenMarkersAreRequested_TheDescribedRulesAreHandedToTheService(t *testing.T) {
+func TestWhenMarkersAreRequested_TheDescriptionsReachTheServiceUnwrappedAndInOrder(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	fixture := newZoneContentHandlerFixture()
@@ -23,7 +24,7 @@ func TestWhenMarkersAreRequested_TheDescribedRulesAreHandedToTheService(t *testi
 		return dtos.ContentRuleDescriptionDto{Marker: savedRule.Name, Valid: true}
 	}
 	expected := gofakeit.Word()
-	fixture.contentEditor.On("GetContentRuleMarkers", []dtos.ContentRuleDescriptionDto{
+	fixture.contentEditor.On("GetContentRuleMarkers", []content_rule_model.ContentRuleDescription{
 		{Marker: rules[0].Name, Valid: true},
 		{Marker: rules[1].Name, Valid: true},
 	}).Return(expected)

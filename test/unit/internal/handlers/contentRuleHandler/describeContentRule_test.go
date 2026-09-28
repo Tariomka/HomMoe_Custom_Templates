@@ -6,6 +6,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/content_rule_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/content_rules"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
@@ -81,18 +82,37 @@ func TestWhenSavedRuleIsRestored_MarksTheDescriptionValid(t *testing.T) {
 
 func TestWhenSavedRuleNamesAKnownRule_ReturnsItsKey(t *testing.T) {
 	t.Parallel()
-	// Arrange
-	service := &test_helpers.ContentRuleServiceMock{}
-	service.On("CreateRuleFromSavedRule", mock.Anything, mock.Anything).Return(nil)
-	handler := handlers.NewContentRuleHandler(service)
+	cases := []struct {
+		scenario string
+		name     string
+		expected content_rule_model.ContentRuleKey
+	}{
+		{"DistanceToRoad_ReturnsDistanceToRoadKey", content_rules.RuleDistanceToRoadName,
+			content_rule_model.ContentRuleKeyDistanceToRoad},
+		{"DistanceToTown_ReturnsDistanceToTownKey", content_rules.RuleDistanceToTownName,
+			content_rule_model.ContentRuleKeyDistanceToTown},
+		{"Guarded_ReturnsGuardedKey", content_rules.RuleGuardedName, content_rule_model.ContentRuleKeyGuarded},
+		{"SoloEncounter_ReturnsSoloEncounterKey", content_rules.RuleSoloEncounterName,
+			content_rule_model.ContentRuleKeySoloEncounter},
+		{"Variant_ReturnsVariantKey", content_rules.RuleVariantName, content_rule_model.ContentRuleKeyVariant},
+	}
+	for _, testCase := range cases {
+		t.Run(testCase.scenario, func(t *testing.T) {
+			t.Parallel()
+			// Arrange
+			service := &test_helpers.ContentRuleServiceMock{}
+			service.On("CreateRuleFromSavedRule", mock.Anything, mock.Anything).Return(nil)
+			handler := handlers.NewContentRuleHandler(service)
 
-	// Act
-	description := handler.DescribeContentRule(
-		models.SidMapping{},
-		editor_state_model.ContentRuleRow{Name: content_rules.RuleGuardedName})
+			// Act
+			description := handler.DescribeContentRule(
+				models.SidMapping{},
+				editor_state_model.ContentRuleRow{Name: testCase.name})
 
-	// Assert
-	assert.Equal(t, dtos.ContentRuleKeyGuarded, description.Key)
+			// Assert
+			assert.Equal(t, testCase.expected, description.Key)
+		})
+	}
 }
 
 func TestWhenSavedRuleNamesAnUnknownRule_ReturnsAnEmptyKey(t *testing.T) {
@@ -108,7 +128,7 @@ func TestWhenSavedRuleNamesAnUnknownRule_ReturnsAnEmptyKey(t *testing.T) {
 		editor_state_model.ContentRuleRow{Name: gofakeit.UUID()})
 
 	// Assert
-	assert.Equal(t, dtos.ContentRuleKey(""), description.Key)
+	assert.Equal(t, content_rule_model.ContentRuleKey(""), description.Key)
 }
 
 func TestWhenSavedRuleSelectsAKnownVariant_ReturnsItsLabel(t *testing.T) {
