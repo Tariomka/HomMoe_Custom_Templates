@@ -155,6 +155,47 @@ func (this *ZoneEditorHandler) RightClickEdge(name string) *ZoneEditorHandler {
 	return this
 }
 
+// PressInOneFrame delivers every gesture to the dialog before it draws the next
+// frame, the way a fast double click or a click right after a toolbar press
+// arrives. Build the gestures first: each one is aimed at what is on screen now.
+func (this *ZoneEditorHandler) PressInOneFrame(gestures ...PointerGesture) *ZoneEditorHandler {
+	this.base.runner.tb.Helper()
+	this.base.runner.PressInOneFrame(gestures...)
+	this.base.runner.NextFrame()
+	this.verifySnapshot()
+	return this
+}
+
+// EdgeRightClick aims a right click at the named connection's curve.
+func (this *ZoneEditorHandler) EdgeRightClick(name string) PointerGesture {
+	this.base.runner.tb.Helper()
+	return PointerGesture{Position: this.CanvasPoint(this.connectionMidPoint(name)), Secondary: true}
+}
+
+// EdgeClick aims a tap at the named connection's curve.
+func (this *ZoneEditorHandler) EdgeClick(name string) PointerGesture {
+	this.base.runner.tb.Helper()
+	return PointerGesture{Position: this.CanvasPoint(this.connectionMidPoint(name))}
+}
+
+// DialogButtonClick aims a tap at the dialog's button labelled label.
+func (this *ZoneEditorHandler) DialogButtonClick(label string) PointerGesture {
+	this.base.runner.tb.Helper()
+	bounds := this.base.runner.ButtonBoundsIn(zoneEditorRect(), label)
+	center := bounds.Min.Add(bounds.Max).Div(2)
+	return PointerGesture{Position: f32.Pt(float32(center.X), float32(center.Y))}
+}
+
+// DeleteSelectedButtonClick aims a tap at the toolbar's Delete selected button.
+func (this *ZoneEditorHandler) DeleteSelectedButtonClick() PointerGesture {
+	return this.DialogButtonClick(deleteSelectedButtonLabel)
+}
+
+// UndoButtonClick aims a tap at the toolbar's Undo button.
+func (this *ZoneEditorHandler) UndoButtonClick() PointerGesture {
+	return this.DialogButtonClick(undoButtonLabel)
+}
+
 // DragZone presses the named zone and releases at a canvas-local position. The
 // canvas ignores a drag shorter than its dead zone, so a caller after a move
 // rather than a selection has to travel further than that.

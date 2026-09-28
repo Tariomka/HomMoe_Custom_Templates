@@ -9,6 +9,7 @@ import (
 type zoneEditorConnectionPropertiesState struct {
 	syncedFor         *template_model.Connection
 	typeDropdown      *components.DropdownSelector
+	typeValues        []string
 	guardZoneDropdown *components.DropdownSelector
 	guardDropdown     *components.DropdownSelector
 	guardPresetLabels []string

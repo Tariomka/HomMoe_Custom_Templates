@@ -26,7 +26,7 @@ func NewEditorConnectionLineStyle(connection template_model.Connection) Connecti
 	return ConnectionLineStyle{
 		HasRoad:        connection.HasRoad(),
 		ExplicitPortal: connection.IsExplicitPortal(),
-		DrawsAsPortal:  connection.IsExplicitPortal(),
+		DrawsAsPortal:  connection.IsEffectivePortal(),
 	}
 }
 

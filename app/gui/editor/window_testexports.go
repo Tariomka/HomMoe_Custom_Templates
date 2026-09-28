@@ -126,6 +126,8 @@ type IZoneEditorDialog interface {
 	StatusHint() string
 	GuardPresetLabels() []string
 	SelectedGuardPresetLabel() string
+	ConnectionTypeLabels() []string
+	SelectedConnectionTypeLabel() string
 }
 
 // TopZoneEditor ONLY FOR INTEGRATION TEST USE

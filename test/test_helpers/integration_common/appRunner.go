@@ -39,8 +39,10 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/editor"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/internal/composition"
+	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers/integration_common/snapshot"
 )
 
@@ -190,6 +192,35 @@ func (this *AppRunner) RightClickAt(point f32.Point) {
 			Position: point,
 		},
 		pointer.Event{Kind: pointer.Release, Source: pointer.Mouse, Position: point})
+	this.frameLocked()
+	this.mu.Unlock()
+	this.invalidate()
+}
+
+// PressInOneFrame queues every gesture before a single trailing frame, which is
+// how a fast user's clicks reach a widget that drains its events in one pass.
+// The leading frame registers the input areas; both run under one lock.
+func (this *AppRunner) PressInOneFrame(gestures ...PointerGesture) {
+	this.tb.Helper()
+	this.mu.Lock()
+	this.frameLocked()
+	for _, gesture := range gestures {
+		if gesture.Secondary {
+			this.router.Queue(
+				pointer.Event{
+					Kind:     pointer.Press,
+					Source:   pointer.Mouse,
+					Buttons:  pointer.ButtonSecondary,
+					Position: gesture.Position,
+				},
+				pointer.Event{Kind: pointer.Release, Source: pointer.Mouse, Position: gesture.Position})
+			continue
+		}
+		this.router.Queue(
+			pointer.Event{Kind: pointer.Press, Source: pointer.Touch, Position: gesture.Position},
+			pointer.Event{Kind: pointer.Release, Source: pointer.Touch, Position: gesture.Position})
+	}
+	this.router.Queue(pointer.Event{Kind: pointer.Move, Source: pointer.Touch, Position: f32.Point{}})
 	this.frameLocked()
 	this.mu.Unlock()
 	this.invalidate()
@@ -387,6 +418,36 @@ func (this *AppRunner) SaveStateToFile(path string) {
 	this.mu.Lock()
 	this.App.SaveStateToFile(path)
 	this.mu.Unlock()
+}
+
+// ApplyManualConnectionEdit commits the generated layout as a manual edit after
+// edit has rewritten its connections, through the same state driver entry
+// point the zone editor's Apply uses. It is how a test reaches a connection the
+// editor's own controls cannot produce, such as one loaded from an older file
+// (lock-guarded).
+func (this *AppRunner) ApplyManualConnectionEdit(edit func(connections []template_model.Connection)) {
+	this.tb.Helper()
+	this.mu.Lock()
+	state := this.App.GetStateDriver()
+	template := state.GetLastTemplate()
+	if template == nil || len(template.Variants) == 0 {
+		this.mu.Unlock()
+		this.tb.Fatal("there is no generated layout to edit")
+	}
+	variant := template.Variants[0]
+	zones := make([]template_model.Zone, 0, len(variant.Zones))
+	for _, zone := range variant.Zones {
+		zones = append(zones, zone.Clone())
+	}
+	connections := make([]template_model.Connection, 0, len(variant.Connections))
+	for _, connection := range variant.Connections {
+		connections = append(connections, connection.Clone())
+	}
+	edit(connections)
+	state.ApplyEditedZones(dtos.ZoneEditorZonesDto{Zones: zones, Connections: connections})
+	this.frameLocked()
+	this.mu.Unlock()
+	this.invalidate()
 }
 
 // Status returns the state driver's status message and error flag (lock-guarded).

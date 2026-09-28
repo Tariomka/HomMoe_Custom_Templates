@@ -57,6 +57,16 @@ func templateWith(zones []template_model.Zone, connections []template_model.Conn
 	}
 }
 
+// obstructedManualZones places C just below the middle of the A-B chord, close
+// enough that a curve between A and B has to bend around it.
+func obstructedManualZones() []template_model.Zone {
+	return []template_model.Zone{
+		manualZone("Spawn-A", 0.25, 0.5),
+		manualZone("Spawn-B", 0.75, 0.5),
+		manualZone("Neutral-C", 0.5, 0.52),
+	}
+}
+
 // roadTemplate wraps a single connection of the given type and road flag into a
 // two-zone template, for the projection of road status.
 func roadTemplate(connectionType string, road *bool) *template_model.Template {

@@ -6,6 +6,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
@@ -94,7 +95,7 @@ func TestWhenAnEdgeIsLaidOut_ItsLabelSitsOnTheCurveMidpoint(t *testing.T) {
 
 	// Assert
 	require.Len(t, geometry.Edges, 2)
-	assert.Equal(t, data.NewVec2(350.0, 359.0), geometry.Edges[0].MidPoint)
+	assert.Equal(t, data.NewVec2(350.0, 360.5), geometry.Edges[0].MidPoint)
 }
 
 func TestWhenTwoConnectionsSharePair_TheirCurvesSpreadSymmetrically(t *testing.T) {
@@ -112,8 +113,31 @@ func TestWhenTwoConnectionsSharePair_TheirCurvesSpreadSymmetrically(t *testing.T
 	// Assert
 	require.Len(t, geometry.Edges, 2)
 	assert.Equal(t,
-		[]data.Vec2[float64]{data.NewVec2(350.0, 368.0), data.NewVec2(350.0, 332.0)},
+		[]data.Vec2[float64]{data.NewVec2(350.0, 371.0), data.NewVec2(350.0, 329.0)},
 		[]data.Vec2[float64]{geometry.Edges[0].ControlPoint, geometry.Edges[1].ControlPoint})
+}
+
+// The editor must draw exactly the curves the Preview tab and the PNG export
+// draw, so its control points are the shared layout's, obstacle bends included.
+func TestWhenObstructedParallelConnectionsAreLaidOut_TheEdgesFollowTheSharedCurveLayout(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	service, _ := newGeometryFixture(obstaclePositions())
+	connections := []template_model.Connection{
+		newConnection("ab", "A", "B"),
+		newConnection("ba", "B", "A"),
+	}
+	layout := preview.ConnectionCurveLayout{Positions: obstaclePositions(), ZoneRadius: fixtureZoneRadius}
+	expected := make([]data.Vec2[float64], 0, len(connections))
+	for _, curve := range layout.Build(connections) {
+		expected = append(expected, curve.Control)
+	}
+
+	// Act
+	geometry := service.BuildGeometry(nil, connections, "", fixtureCanvasSide)
+
+	// Assert
+	assert.Equal(t, expected, controlPoints(geometry.Edges))
 }
 
 func TestWhenConnectionsSharePairs_TheyAreGroupedInFirstSeenOrder(t *testing.T) {

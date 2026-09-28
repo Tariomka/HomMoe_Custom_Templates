@@ -7,28 +7,14 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/preview_service"
 )
 
-// Curve tunables - adjust the shape of the connection curves here.
 const (
-	// parallelEdgeGapPx is the perpendicular distance between two curves that
-	// connect the same pair of zones.
-	parallelEdgeGapPx = 18.0
-	// obstacleClearancePx is how far beyond a zone's radius a curve must pass
-	// before that zone stops pushing it aside.
-	obstacleClearancePx = 8.0
-	// obstacleBulgePaddingPx is the extra push applied on top of the clearance
-	// so a deflected curve does not merely graze the obstacle.
-	obstacleBulgePaddingPx = 6.0
-	// obstacleChordMargin ignores obstacles sitting near either end of the
-	// chord, where a bulge would only distort the curve's attachment.
-	obstacleChordMargin = 0.08
-	// edgeHitReachPx is how close a point must be to a curve to hit it.
-	edgeHitReachPx = 9.0
-	// edgeHitSampleCount is how many points along a curve are distance-tested.
-	edgeHitSampleCount = 21
+	edgeHitReachPx     = 9.0 // how close a point must be to a curve to hit it.
+	edgeHitSampleCount = 21  // how many points along a curve are distance-tested.
 )
 
 // Snapping tunables - adjust the feel of the snap toggle here.
@@ -147,116 +133,27 @@ func (this *ZoneEditorGeometryService) SnapPosition(
 	return result
 }
 
-// buildEdges turns every connection whose two endpoints have a position into a
-// curve, spreading connections that share a zone pair symmetrically around the
-// straight chord and bending clear of intermediate nodes.
+// buildEdges lays every connection whose two endpoints have a position out along
+// the curve the preview draws it with, adding the label point the editor needs.
 func buildEdges(
 	connections []template_model.Connection,
 	positions map[string]models.Position,
 	zoneRadius float64) []models.ZoneEditorEdge {
-	order, groups := groupConnectionsByPair(connections)
-	edges := make([]models.ZoneEditorEdge, 0, len(connections))
-	for _, key := range order {
-		group := groups[key]
-		count := len(group)
-		for slot, connectionIndex := range group {
-			connection := connections[connectionIndex]
-			startPoint, hasStart := positions[connection.From]
-			endPoint, hasEnd := positions[connection.To]
-			if !hasStart || !hasEnd {
-				continue
-			}
-			// Bend around the canonical (lexicographic) endpoint order so that
-			// A->B and B->A spread to opposite sides of the same chord.
-			canonicalA, canonicalB := startPoint, endPoint
-			if connection.From > connection.To {
-				canonicalA, canonicalB = canonicalB, canonicalA
-			}
-			delta := canonicalB.Subtract(canonicalA)
-			distance := delta.Distance()
-			if distance < 1 {
-				distance = 1
-			}
-			normal := delta.RotateClockwise().DivideScalar(distance)
-			spread := (float64(slot) - float64(count-1)/2.0) * parallelEdgeGapPx
-			bulge := spread + obstacleBulge(positions, zoneRadius, canonicalA, canonicalB, normal)
-			midPoint := startPoint.Add(endPoint).MultiplyScalar(0.5)
-			controlPoint := midPoint.Add(normal.MultiplyScalar(2.0 * bulge))
-			labelPoint := startPoint.MultiplyScalar(0.25).
-				Add(controlPoint.MultiplyScalar(0.5)).
-				Add(endPoint.MultiplyScalar(0.25))
-			edges = append(edges, models.ZoneEditorEdge{
-				ConnectionIndex: connectionIndex,
-				StartPoint:      startPoint,
-				EndPoint:        endPoint,
-				ControlPoint:    controlPoint,
-				MidPoint:        labelPoint,
-			})
-		}
+	curves := preview.ConnectionCurveLayout{Positions: positions, ZoneRadius: zoneRadius}.Build(connections)
+	edges := make([]models.ZoneEditorEdge, 0, len(curves))
+	for _, curve := range curves {
+		labelPoint := curve.Start.MultiplyScalar(0.25).
+			Add(curve.Control.MultiplyScalar(0.5)).
+			Add(curve.End.MultiplyScalar(0.25))
+		edges = append(edges, models.ZoneEditorEdge{
+			ConnectionIndex: curve.ConnectionIndex,
+			StartPoint:      curve.Start,
+			EndPoint:        curve.End,
+			ControlPoint:    curve.Control,
+			MidPoint:        labelPoint,
+		})
 	}
 	return edges
-}
-
-// groupConnectionsByPair buckets connection indices by unordered endpoint pair,
-// preserving first-seen order so parallel edges spread deterministically from
-// frame to frame.
-func groupConnectionsByPair(
-	connections []template_model.Connection) ([]connectionPairKey, map[connectionPairKey][]int) {
-	groups := make(map[connectionPairKey][]int)
-	order := make([]connectionPairKey, 0)
-	for index, connection := range connections {
-		from, to := connection.From, connection.To
-		if from > to {
-			from, to = to, from
-		}
-		key := connectionPairKey{from: from, to: to}
-		if _, seen := groups[key]; !seen {
-			order = append(order, key)
-		}
-		groups[key] = append(groups[key], index)
-	}
-	return order, groups
-}
-
-// obstacleBulge returns a perpendicular push so a curve bends clear of any zone
-// node that lies close to the straight chord between its two endpoints.
-func obstacleBulge(
-	positions map[string]models.Position,
-	zoneRadius float64,
-	chordStart, chordEnd models.Position,
-	normal models.Position) float64 {
-	clearance := zoneRadius + obstacleClearancePx
-	segment := chordEnd.Subtract(chordStart)
-	segmentLengthSquared := segment.SquaredLength()
-	if segmentLengthSquared < 1 {
-		return 0
-	}
-
-	best := 0.0
-	bestMagnitude := 0.0
-	for _, center := range positions {
-		ratio := center.Subtract(chordStart).DotProduct(segment) / segmentLengthSquared
-		if ratio <= obstacleChordMargin || ratio >= 1-obstacleChordMargin {
-			continue
-		}
-
-		offset := center.Subtract(chordStart.Add(segment.MultiplyScalar(ratio)))
-		perpendicular := offset.Distance()
-		if perpendicular >= clearance {
-			continue
-		}
-
-		need := (clearance - perpendicular) + obstacleBulgePaddingPx
-		signed := need
-		if offset.DotProduct(normal) >= 0 {
-			signed = -need
-		}
-		if math.Abs(signed) > bestMagnitude {
-			bestMagnitude = math.Abs(signed)
-			best = signed
-		}
-	}
-	return best
 }
 
 // otherZoneGuides collects the horizontal and vertical guide coordinates

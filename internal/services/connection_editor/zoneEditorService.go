@@ -79,6 +79,10 @@ func (this *ZoneEditorService) ChangeConnectionType(
 	connectionType string,
 	generateRoads bool) {
 	connection.ConnectionType = connectionType
+	if !connection.IsExplicitPortal() {
+		connection.PortalPlacementRulesFrom = nil
+		connection.PortalPlacementRulesTo = nil
+	}
 	this.roadPolicy.StampConnectionRoad(connection, generateRoads)
 }
 

@@ -365,9 +365,9 @@ func TestWhenAPortalIsFlaggedRoadless_TheProjectedEdgeIsARoadlessPortal(t *testi
 		[]bool{layout.Connections[0].HasRoad, layout.Connections[0].ExplicitPortal})
 }
 
-// The road classifier is case-insensitive even though the shape classifier is
-// not, so a lower-cased portal is a roaded portal drawn with the direct shape.
-func TestWhenAPortalTypeIsLowerCased_TheProjectedEdgeIsStillAnExplicitPortal(t *testing.T) {
+// Both the road and the shape classifiers ignore case, so a lower-cased portal
+// is a roaded portal drawn with the portal shape.
+func TestWhenAPortalTypeIsLowerCased_TheProjectedEdgeIsAPortalShapedExplicitPortal(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
@@ -378,7 +378,7 @@ func TestWhenAPortalTypeIsLowerCased_TheProjectedEdgeIsStillAnExplicitPortal(t *
 	// Assert
 	require.Len(t, layout.Connections, 1)
 	assert.Equal(t,
-		[]bool{true, false},
+		[]bool{true, true},
 		[]bool{layout.Connections[0].ExplicitPortal, layout.Connections[0].IsPortal()})
 }
 
@@ -1336,6 +1336,89 @@ func TestWhenManualZonesCoincide_KeepsControlPointOnSharedPoint(t *testing.T) {
 	// Assert
 	require.Len(t, layout.Connections, 1)
 	assert.Equal(t, layout.Connections[0].Start, layout.Connections[0].Ctrl)
+}
+
+func TestWhenAZoneSitsNearAConnectionsChord_TheEdgeBendsAboveIt(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	connections := []template_model.Connection{directConnection("Spawn-A", "Spawn-B")}
+
+	// Act
+	layout := service.BuildPreviewLayout(templateWith(obstructedManualZones(), connections), config.TopologyRing, 600)
+
+	// Assert
+	require.Len(t, layout.Connections, 1)
+	assert.Less(t, layout.Connections[0].Ctrl.Y, 300.0)
+}
+
+func TestWhenConnectionsAreLaidOut_TheEdgesFollowTheSharedCurveLayout(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	connections := []template_model.Connection{
+		directConnection("Spawn-A", "Spawn-B"),
+		directConnection("Spawn-B", "Spawn-A"),
+		directConnection("Spawn-A", "Neutral-C"),
+	}
+
+	// Act
+	layout := service.BuildPreviewLayout(templateWith(obstructedManualZones(), connections), config.TopologyRing, 600)
+
+	// Assert
+	expected := make([]data.Vec2[float64], 0, len(connections))
+	for _, curve := range (preview.ConnectionCurveLayout{
+		Positions:  layout.Positions,
+		ZoneRadius: layout.ZoneRadius,
+	}).Build(connections) {
+		expected = append(expected, curve.Control)
+	}
+	actual := make([]data.Vec2[float64], 0, len(layout.Connections))
+	for _, connection := range layout.Connections {
+		actual = append(actual, connection.Ctrl)
+	}
+	assert.Equal(t, expected, actual)
+}
+
+func TestWhenConnectionsSharePairs_TheEdgesAreGroupedInFirstSeenOrder(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	connections := []template_model.Connection{
+		directConnection("Spawn-A", "Spawn-B"),
+		directConnection("Neutral-C", "Spawn-A"),
+		directConnection("Spawn-B", "Spawn-A"),
+	}
+
+	// Act
+	layout := service.BuildPreviewLayout(templateWith(obstructedManualZones(), connections), config.TopologyRing, 600)
+
+	// Assert
+	ends := make([]data.Vec2[float64], 0, len(layout.Connections))
+	for _, connection := range layout.Connections {
+		ends = append(ends, connection.End)
+	}
+	assert.Equal(t,
+		[]data.Vec2[float64]{
+			layout.Positions["Spawn-B"],
+			layout.Positions["Spawn-B"],
+			layout.Positions["Spawn-A"],
+		},
+		ends)
+}
+
+func TestWhenAConnectionIsReversed_TheEdgeStartsAtTheCanonicalEndpoint(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
+	connections := []template_model.Connection{directConnection("Spawn-B", "Spawn-A")}
+
+	// Act
+	layout := service.BuildPreviewLayout(templateWith(obstructedManualZones(), connections), config.TopologyRing, 600)
+
+	// Assert
+	require.Len(t, layout.Connections, 1)
+	assert.Equal(t, layout.Positions["Spawn-A"], layout.Connections[0].Start)
 }
 
 // ── multi-hub edge cases ─────────────────────────────────────────────
