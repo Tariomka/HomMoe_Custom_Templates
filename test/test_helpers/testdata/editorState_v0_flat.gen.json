@@ -32,7 +32,7 @@
   "heroMin": 2,
   "heroMax": 9,
   "heroIncrement": 3,
-  "topology": "Chain",
+  "topology": "Square",
   "randomPortals": true,
   "maxPortalConns": 17,
   "spawnFootholds": true,

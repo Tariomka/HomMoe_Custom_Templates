@@ -13,12 +13,8 @@ func TestWhenSequenceIsIterated_YieldsAllTopologiesInDropdownOrder(t *testing.T)
 	// Arrange
 	expected := []config.MapTopology{
 		config.TopologyRandom,
-		config.TopologyRing,
 		config.TopologyCircles,
-		config.TopologyHubAndSpoke,
 		config.TopologyGeometricHub,
-		config.TopologyChain,
-		config.TopologySharedWeb,
 		config.TopologySquare,
 		config.TopologyGeometric,
 		config.TopologyCross,
@@ -38,7 +34,7 @@ func TestWhenSequenceIsIterated_YieldsAllTopologiesInDropdownOrder(t *testing.T)
 func TestWhenIterationStopsEarly_YieldsOnlyConsumedPrefix(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	expected := []config.MapTopology{config.TopologyRandom, config.TopologyRing}
+	expected := []config.MapTopology{config.TopologyRandom, config.TopologyCircles}
 	var actual []config.MapTopology
 
 	// Act

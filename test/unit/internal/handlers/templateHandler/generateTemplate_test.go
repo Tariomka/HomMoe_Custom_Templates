@@ -1,6 +1,7 @@
 package templateHandler_test
 
 import (
+	"errors"
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
@@ -30,6 +31,71 @@ func TestWhenTemplateNameIsEmpty_ReturnsNoTemplateNameError(t *testing.T) {
 
 	// Assert
 	assert.ErrorIs(t, err, common_errors.ErrNoTemplateName)
+}
+
+func TestWhenValidationRejectsTheState_ReturnsTheRejection(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	fixture := newTemplateHandlerFixture()
+	state := editor_state_model.NewDefaultEditorStateModel()
+	rejection := errors.New(gofakeit.Sentence(3))
+	fixture.stateHandler.On("ValidateEditorState", state, true).
+		Return(editor_state_dto.EditorStateValidationDto{State: state, Rejection: rejection})
+
+	// Act
+	_, err := fixture.handler.GenerateTemplate(toDto(state))
+
+	// Assert
+	assert.ErrorIs(t, err, rejection)
+}
+
+func TestWhenValidationRejectsTheState_NeverGenerates(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	fixture := newTemplateHandlerFixture()
+	state := editor_state_model.NewDefaultEditorStateModel()
+	fixture.stateHandler.On("ValidateEditorState", state, true).
+		Return(editor_state_dto.EditorStateValidationDto{State: state, Rejection: errors.New(gofakeit.Sentence(3))})
+
+	// Act
+	_, _ = fixture.handler.GenerateTemplate(toDto(state))
+
+	// Assert
+	fixture.templateGenerator.AssertNotCalled(t, "Generate")
+}
+
+func TestWhenValidationRejectsTheState_NeverMapsIt(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	fixture := newTemplateHandlerFixture()
+	state := editor_state_model.NewDefaultEditorStateModel()
+	fixture.stateHandler.On("ValidateEditorState", state, true).
+		Return(editor_state_dto.EditorStateValidationDto{State: state, Rejection: errors.New(gofakeit.Sentence(3))})
+
+	// Act
+	_, _ = fixture.handler.GenerateTemplate(toDto(state))
+
+	// Assert
+	fixture.mapper.AssertNotCalled(t, "FromEditorState", mock.Anything)
+}
+
+func TestWhenGenerationFails_ReturnsTheGenerationError(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	fixture := newTemplateHandlerFixture()
+	state := editor_state_model.NewDefaultEditorStateModel()
+	generationError := errors.New(gofakeit.Sentence(3))
+	fixture.stateHandler.On("ValidateEditorState", state, true).
+		Return(editor_state_dto.EditorStateValidationDto{State: state})
+	fixture.mapper.On("FromEditorState", state).Return(namedConfiguration())
+	fixture.templateGenerator.On("SetConfiguration", mock.Anything).Return()
+	fixture.templateGenerator.On("Generate").Return(nil, nil, generationError)
+
+	// Act
+	_, err := fixture.handler.GenerateTemplate(toDto(state))
+
+	// Assert
+	assert.ErrorIs(t, err, generationError)
 }
 
 func TestWhenGenerationYieldsNoTemplate_ReturnsGeneratedTemplateInvalidError(t *testing.T) {

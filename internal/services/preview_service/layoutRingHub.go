@@ -8,8 +8,8 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 )
 
-// layoutRingOrHub renders the structured topologies (Default, HubAndSpoke,
-// Chain, SharedWeb). Multi-hub "Hub-*" templates fan their spokes out from
+// layoutRingOrHub is the generic layout for zones without usable generator or
+// manual positions. Multi-hub "Hub-*" templates fan their spokes out from
 // each cluster center; otherwise zones land on a single outer ring with an
 // optional center hub.
 //

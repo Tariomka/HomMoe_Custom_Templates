@@ -223,7 +223,7 @@ func newLegacyState() editor_state_v1.EditorState {
 		PlayerZoneCastles: 4,
 
 		PlayerZoneSize: 1.25,
-		Topology:       topology.TopologyChain,
+		Topology:       topology.TopologySquare,
 		GenerateRoads:  true,
 
 		VictoryCondition: "win_condition_4",

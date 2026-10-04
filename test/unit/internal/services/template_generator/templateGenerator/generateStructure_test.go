@@ -6,33 +6,14 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template_entity"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
-	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
 )
 
-func TestWhenRingTopologySelected_CreatesConnectionPerZone(t *testing.T) {
-	t.Parallel()
-	// Arrange
-	playerCount := gofakeit.Number(3, 8)
-	neutralZoneCount := gofakeit.Number(1, 6)
-	configuration := config.NewGeneratorConfig()
-	configuration.Topology = config.TopologyRing
-	configuration.PlayerCount = playerCount
-	configuration.ZoneConfiguration.NeutralZoneCount = neutralZoneCount
-	generator := test_helpers.NewTemplateGenerator(configuration)
-
-	// Act
-	actual, _ := generateTemplate(generator)
-
-	// Assert
-	assert.Len(t, actual.Variants[0].Connections, playerCount+neutralZoneCount)
-}
-
-func TestWhenRingTopologyWithEightZones_SetsOrientationAngleStepToFortyFiveDegrees(t *testing.T) {
+func TestWhenSquareTopologyWithEightZones_SetsOrientationAngleStepToFortyFiveDegrees(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
-	configuration.Topology = config.TopologyRing
+	configuration.Topology = config.TopologySquare
 	configuration.PlayerCount = 4
 	configuration.ZoneConfiguration.NeutralZoneCount = 4
 	generator := test_helpers.NewTemplateGenerator(configuration)
@@ -58,9 +39,10 @@ func TestWhenTopologySelected_IncludesTopologyNameInDescription(t *testing.T) {
 		topology       config.MapTopology
 		expectedPhrase string
 	}{
-		{"WhenRingTopologySelected_IncludesRingInDescription", config.TopologyRing, "Ring"},
-		{"WhenHubAndSpokeTopologySelected_IncludesHubInDescription", config.TopologyHubAndSpoke, "Hub"},
-		{"WhenSharedWebTopologySelected_IncludesSharedWebInDescription", config.TopologySharedWeb, "Shared Web"},
+		{"WhenCirclesTopologySelected_IncludesCirclesInDescription", config.TopologyCircles, "Circles"},
+		{"WhenGeometricHubTopologySelected_IncludesGeometricHubInDescription",
+			config.TopologyGeometricHub, "Geometric Hub"},
+		{"WhenCrossTopologySelected_IncludesCrossInDescription", config.TopologyCross, "Cross"},
 		{"WhenRandomTopologySelected_IncludesRandomInDescription", config.TopologyRandom, "Random"},
 	}
 	for _, testCase := range cases {
@@ -111,7 +93,7 @@ func TestWhenNeutralZonesAreHighQuality_ProducesStrongerBorderGuardsThanLowQuali
 	// Arrange
 	newQualityConfiguration := func(highCount, lowCount int) *config.GeneratorConfig {
 		configuration := config.NewGeneratorConfig()
-		configuration.Topology = config.TopologyRing
+		configuration.Topology = config.TopologySquare
 		configuration.PlayerCount = 2
 		configuration.ZoneConfiguration.NeutralZoneCount = 0
 		configuration.ZoneConfiguration.Advanced.Enabled = true
@@ -136,7 +118,7 @@ func TestWhenCityHoldEnabledWithMixedNeutralTiers_MarksExactlyOneHoldCityMainObj
 	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
-	configuration.Topology = config.TopologyHubAndSpoke
+	configuration.Topology = config.TopologyGeometricHub
 	configuration.PlayerCount = 2
 	configuration.GameEndConditions = &config.GameEndConditions{
 		VictoryCondition: "win_condition_5",

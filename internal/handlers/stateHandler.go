@@ -37,6 +37,9 @@ func (this *stateHandler) LoadState(path string, fixIssues bool) (*editor_state_
 	}
 
 	validation := this.ValidateEditorState(*loaded, fixIssues)
+	if validation.Rejection != nil {
+		return nil, validation.Rejection
+	}
 	return &validation, nil
 }
 
@@ -61,7 +64,11 @@ func (this *stateHandler) ValidateEditorState(
 	state = state.Clone()
 	issues := this.editorValidator.Validate(&state)
 	warnings := make([]string, 0, len(issues))
+	var rejection error
 	for _, issue := range issues {
+		if rejection == nil {
+			rejection = issue.Rejection()
+		}
 		if fixIssues {
 			issue.Fix(&state)
 		}
@@ -71,7 +78,7 @@ func (this *stateHandler) ValidateEditorState(
 		normalizeInactiveNeutralCounts(&state)
 	}
 
-	return editor_state_dto.EditorStateValidationDto{State: state, Warnings: warnings}
+	return editor_state_dto.EditorStateValidationDto{State: state, Warnings: warnings, Rejection: rejection}
 }
 
 func normalizeInactiveNeutralCounts(state *editor_state_model.EditorState) {

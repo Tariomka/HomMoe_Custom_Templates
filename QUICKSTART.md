@@ -50,8 +50,8 @@ The window has three regions:
 - **Tabs** (left): the three configuration tabs listed below.
 - **Preview** (right): live render of the most recently generated template,
   the output-directory picker (`Browse`, `Reveal`), a status line, and the
-  `Generate` / `Save Template` buttons. The output folder is pre-filled from
-  your Steam install when it can be located, and the preview PNG is written
+  `Generate` / `Save Template` buttons. The output folder is pre-filled with
+  the game's detected templates folder, and the preview PNG is written
   automatically when you **Save Template**.
 
 There is no separate footer — everything below the preview image belongs to
@@ -102,9 +102,11 @@ apply at generation time.
 
 ## 3. Save / Load Settings
 
-Your editor state is persisted as `.gen.json` files (the `dtos.EditorStateDto`
-model, handled by `file_service.FileService.SaveSettings` /
-`file_service.FileService.LoadSettingsFile`).
+Your editor state is persisted as `.gen.json` files. In memory it is the
+`editor_state_model.EditorState` model, which crosses the handler boundary
+wrapped in `editor_state_dto.EditorStateDto`;
+`file_service.FileService.SaveSettings` / `LoadSettingsFile` map it to and
+from the `.gen.json` entity (`internal/entities/editor_state`).
 
 - **Save** — write the current widget state back to the active `.gen.json`,
   or ask for a folder if there is not one yet.
@@ -120,16 +122,17 @@ and an asterisk when there are unsaved changes.
 
 ## 4. Generate a Template
 
-1. The output folder is pre-filled from your Steam install when it can be
-   found; otherwise pick one in the preview panel (`Browse`).
+1. The output folder is pre-filled with the game's detected templates folder.
+   If detection fails, pick that folder in the preview panel (`Browse`)
+   before exporting; the choice lasts for the current session only.
 2. Click **Generate** — this builds the template in memory and refreshes the
    preview panel.
 3. Click **Save Template** — writes `<TemplateName>.rmg.json` plus a preview
    `<TemplateName>.png` into the chosen folder.
 4. **Reveal** opens the output folder in the app's own browse dialog.
 
-Drop the resulting `.rmg.json` into the game's templates directory and
-pick it from the in-game Random Map Generator screen.
+The template is already in the game's templates directory: pick it from the
+in-game Random Map Generator screen.
 
 ## 5. Building Another Front-End
 
@@ -139,7 +142,7 @@ the Gio GUI: [app/tui/](app/tui) and [app/web/](app/web) are placeholders for
 exactly that.
 
 Every front-end talks to the same seam. The composition root builds the whole
-object graph and hands back a single interface:
+object graph and hands back interfaces:
 
 ```go
 package main
@@ -149,12 +152,22 @@ import (
 
     "github.com/Tariomka/hommoe_custom_templates/internal/composition"
     "github.com/Tariomka/hommoe_custom_templates/internal/dtos"
+    "github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
+    "github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 )
 
 func main() {
     backend := composition.InitializeGuiHandler()
 
-    state := dtos.NewDefaultEditorStateDto()
+    // The game only reads templates from its own folder.
+    outputPath, err := composition.InitializeFileSystemHandler().FindGameTemplateDirectory()
+    if err != nil {
+        log.Fatal(err)
+    }
+
+    state := editor_state_dto.EditorStateDto{
+        EditorState: editor_state_model.NewDefaultEditorStateModel(),
+    }
     state.TemplateName = "Programmatic Map"
     state.PlayerCount = 4
     state.MapSize = 160
@@ -167,7 +180,7 @@ func main() {
     savedPath, err := backend.SaveTemplate(dtos.TemplateSaveDto{
         Template:   loaded.Template,
         Topology:   state.Topology,
-        OutputPath: ".",
+        OutputPath: outputPath,
     })
     if err != nil {
         log.Fatal(err)
@@ -176,20 +189,28 @@ func main() {
 }
 ```
 
-`handler_interfaces.IGuiHandler` is the whole contract a front-end needs:
+`handler_interfaces.IGuiHandler` is the contract for editing and generating
+templates. It embeds:
 
 | Interface             | What it covers                                    |
 |-----------------------|---------------------------------------------------|
 | `ITemplateHandler`    | generate, update, re-apply castle settings, save  |
 | `IStateHandler`       | validate, load and save `.gen.json` editor state  |
-| `IPreviewHandler`     | preview layout and PNG rendering                  |
-| `IContentRuleHandler` | per-row zone-content placement rules and catalogs |
+| `IPreviewHandler`     | preview panel layout (the PNG is rendered by `SaveTemplate`) |
+| `IZoneContentHandler` | zone-content rows and rules; embeds `IContentRuleHandler` (rule catalogue and descriptions) |
 | `IZoneEditorHandler`  | manual zone and connection editing                |
+| `IBonusHandler`       | game-start bonus entries                          |
+
+Two standalone seams have their own injectors:
+`composition.InitializeFileSystemHandler()` returns `IFileSystemHandler`
+(directory browsing and game templates folder detection), and
+`composition.InitializeRegenerationHandler()` returns `IRegenerationHandler`
+(when the live preview regenerates and whether manual edits survive it).
 
 Rules for a new front-end: it may only render and collect input, it exchanges
 `internal/dtos` types with the handlers, and it never constructs services
 itself — add providers to [internal/composition](internal/composition) and
-regenerate the injector instead. `dtos.NewDefaultEditorStateDto()` matches the
+regenerate the injector instead. `editor_state_model.NewDefaultEditorStateModel()` matches the
 GUI's defaults (2 players, size 160, topology Random, Classic mode, etc.).
 
 ## 6. Map Sizes

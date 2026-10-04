@@ -5,8 +5,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 )
 
-// IZoneLabelProvider names the zones a variant is built from, letting callers
-// substitute a deterministic labelling in tests.
 type IZoneLabelProvider interface {
 	CreatePlayerLabels(playerCount int) []string
 	CreateNeutralZonePlans(configuration config.GeneratorConfig) neutral_zone.Plans
@@ -18,9 +16,7 @@ type IZoneLabelProvider interface {
 	CreateOrderedZoneLabels(
 		configuration config.GeneratorConfig,
 		playerLabels []string,
-		neutralZones neutral_zone.Plans,
-		isRing bool) []string
+		neutralZones neutral_zone.Plans) []string
 	CreateBalancedRingZoneLabels(playerLabels []string, neutralZones neutral_zone.Plans) []string
-	CreateBalancedChainZoneLabels(playerLabels []string, neutralZones neutral_zone.Plans) []string
 	CreateBalancedNeutralRingZoneLabels(neutralZones neutral_zone.Plans, playerCount int) []string
 }

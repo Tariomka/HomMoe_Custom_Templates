@@ -28,7 +28,7 @@ func TestWhenRequestContainsTemplate_ReturnsServiceLayoutUnchanged(t *testing.T)
 	}}}
 	request := dtos.PreviewLayoutRequestDto{
 		Template:   &template,
-		Topology:   config.TopologyRing,
+		Topology:   config.TopologyRandom,
 		CanvasSide: 600,
 	}
 	expected := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService()).BuildPreviewLayout(
@@ -49,7 +49,7 @@ func TestWhenTemplateIsNil_ReturnsEmptyServiceLayout(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	request := dtos.PreviewLayoutRequestDto{
-		Topology:   config.TopologyRing,
+		Topology:   config.TopologyRandom,
 		CanvasSide: 600,
 	}
 	expected := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService()).BuildPreviewLayout(

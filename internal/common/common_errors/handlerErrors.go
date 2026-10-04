@@ -9,4 +9,5 @@ var (
 	ErrNoOutputPath             = errors.New("output path is required")
 	ErrProvidedTemplateInvalid  = errors.New("provided template is invalid")
 	ErrZonesMissing             = errors.New("some connections point to non existing zone(s)")
+	ErrUnsupportedTopology      = errors.New("unsupported topology")
 )

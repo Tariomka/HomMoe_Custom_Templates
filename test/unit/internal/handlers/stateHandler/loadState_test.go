@@ -2,10 +2,13 @@ package stateHandler_test
 
 import (
 	"errors"
+	"fmt"
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/validators"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
@@ -163,4 +166,75 @@ func TestWhenIssuesAreFixed_ReturnsTheCorrectedTournamentPlayerCount(t *testing.
 	// Assert
 	require.NoError(t, err)
 	assert.Equal(t, 2, validation.State.PlayerCount)
+}
+
+func TestWhenLoadedTopologyIsBlocked_ReturnsUnsupportedTopologyError(t *testing.T) {
+	t.Parallel()
+	for _, fixIssues := range []bool{false, true} {
+		t.Run(fmt.Sprintf("FixIssues%v_ReturnsUnsupportedTopologyError", fixIssues), func(t *testing.T) {
+			t.Parallel()
+			// Arrange
+			handler := newHandlerLoading("NotARealTopology")
+
+			// Act
+			_, err := handler.LoadState(gofakeit.Word(), fixIssues)
+
+			// Assert
+			assert.ErrorIs(t, err, common_errors.ErrUnsupportedTopology)
+		})
+	}
+}
+
+func TestWhenLoadedTopologyIsRetired_ErrorTextNamesTheRetiredTopology(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	handler := newHandlerLoading("Default")
+
+	// Act
+	_, err := handler.LoadState(gofakeit.Word(), false)
+
+	// Assert
+	assert.EqualError(t, err,
+		`topology "Ring" (saved as "Default") has been retired and is no longer supported; `+
+			"re-create the template with a supported topology")
+}
+
+func TestWhenLoadedTopologyIsBlocked_ReturnsNoState(t *testing.T) {
+	t.Parallel()
+	for _, fixIssues := range []bool{false, true} {
+		t.Run(fmt.Sprintf("FixIssues%v_ReturnsNoState", fixIssues), func(t *testing.T) {
+			t.Parallel()
+			// Arrange
+			handler := newHandlerLoading("Chain")
+
+			// Act
+			validation, _ := handler.LoadState(gofakeit.Word(), fixIssues)
+
+			// Assert
+			assert.Nil(t, validation)
+		})
+	}
+}
+
+func TestWhenLoadedTopologyIsEmpty_LoadsWithTheEmptyTopologyWarning(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	handler := newHandlerLoading("")
+
+	// Act
+	validation, err := handler.LoadState(gofakeit.Word(), true)
+
+	// Assert
+	require.NoError(t, err)
+	assert.Equal(t, []string{"topology is empty; using Random"}, validation.Warnings)
+}
+
+// newHandlerLoading returns a handler with the real validator whose file
+// service loads a default state carrying the given topology.
+func newHandlerLoading(topology config.MapTopology) handler_interfaces.IStateHandler {
+	loaded := editor_state_model.NewDefaultEditorStateModel()
+	loaded.Topology = topology
+	fileService := &test_helpers.FileServiceMock{}
+	fileService.On("LoadSettingsFile", mock.Anything).Return(&loaded, nil)
+	return handlers.NewStateHandler(fileService, validators.NewEditorStateValidator())
 }

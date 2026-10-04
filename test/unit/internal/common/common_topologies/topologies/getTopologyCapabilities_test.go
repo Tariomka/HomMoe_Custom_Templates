@@ -13,10 +13,6 @@ func TestWhenCapabilitiesAreRequested_ReturnsRegisteredTopologyCapabilities(t *t
 	t.Parallel()
 	// Arrange
 	expected := map[config.MapTopology]models.TopologyCapabilities{
-		config.TopologyRing:        {LayoutKind: models.TopologyLayoutRingHub},
-		config.TopologyHubAndSpoke: {LayoutKind: models.TopologyLayoutRingHub, UsesHub: true},
-		config.TopologyChain:       {LayoutKind: models.TopologyLayoutRingHub},
-		config.TopologySharedWeb:   {LayoutKind: models.TopologyLayoutRingHub},
 		config.TopologyRandom: {
 			LayoutKind: models.TopologyLayoutScatter, UsesGeneratorPosition: true,
 		},
@@ -38,7 +34,8 @@ func TestWhenCapabilitiesAreRequested_ReturnsRegisteredTopologyCapabilities(t *t
 		config.TopologyGeometricHub: {
 			LayoutKind: models.TopologyLayoutFixedGeometry, UsesHub: true, UsesGeneratorPosition: true,
 		},
-		config.MapTopology("Unknown"): {LayoutKind: models.TopologyLayoutRingHub},
+		config.MapTopology("Unknown"): {LayoutKind: models.TopologyLayoutScatter, UsesGeneratorPosition: true},
+		config.MapTopology("Default"): {LayoutKind: models.TopologyLayoutScatter, UsesGeneratorPosition: true},
 	}
 	actual := make(map[config.MapTopology]models.TopologyCapabilities, len(expected))
 

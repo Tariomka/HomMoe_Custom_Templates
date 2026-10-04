@@ -10,8 +10,15 @@
 
 **Finding count:** **32 actionable items: 8 High, 17 Medium, 7 Low.** This includes owner-requested architecture/product work scoped on 2026-09-08, not just proved defects. Informational observations and prior-item dispositions are not included in that count. Findings are source-verified unless a runtime reproduction is explicitly recorded. Performance claims are reasoned, not benchmark measurements. In-game behavior was not tested.
 
-**Current progress (2026-09-28):** **18 fixed, 14 remaining**: 0 High, 8 Medium,
-6 Low. Batches A/D, B, C, E, F, G and J are owner-committed and closed; Batch F closed with
+**Current progress (2026-10-04):** **24 fixed, 8 remaining**: 0 High, 5 Medium,
+3 Low. Batch K (§2.3) closed with owner commits `1ee746b` and `27b2933` on 2026-10-04 (plan
+`d50f34d`); the owner reviewed it and accepted 73.2% coverage. Batches A/D, B, C, E, F, G, H, I,
+J and K are owner-committed and closed; Batch I
+(§7.1, §7.2) closed with owner commit `dd2b8bf` on 2026-10-04 (plan `599ff23`),
+independent plan/implementation reviews and docs-only Windows checks. Batch H
+(§6.2, §6.3, §6.5) closed with owner commit `a140e0a` on 2026-10-04, independent
+plan/implementation reviews, Windows verification, and the owner's report that the pushed
+changes and release `v0.3.9-alpha.3` work. Batch F closed with
 owner commit `b9c47a7` on 2026-09-28, independent review and Windows verification,
 coverage **74.6%** (owner-accepted, GUI-only decrease) and lint zero. Batch G closed with
 owner commit `35e0fab` on 2026-09-28, independent plan/implementation reviews and Windows
@@ -457,7 +464,24 @@ catalogue and describe logic, which is business logic in a handler.
 
 **Owner decision.** Reopening is authorized; the API/result shape and whole-exception vs single-seam scope still require the normal ask/plan/approval protocol. The bonuses DTO exception is not reopened by this decision.
 
-### 2.3 🟠 Retire Ring, Hub, Chain, and Shared Web topologies and their tournament builders
+### 2.3 ✅ FIXED — Retire Ring, Hub, Chain, and Shared Web topologies and their tournament builders
+
+**Progress (2026-10-04).** Batch K, plan
+[batch-k-topology-retirement.md](../plans/batch-k-topology-retirement.md) (owner decisions
+K1–K16, F1–F6), owner commits `1ee746b` (Phase 1) and `27b2933` (Phases 2–4), owner-reviewed:
+- **Gone:** the four constants and aliases; their descriptors, services, wiring and tests;
+  the Ring/Hub/Chain tournament builders.
+- **Tournaments:** every tournament builds balanced clusters.
+- **Load rejection:** retired and unknown saved IDs are refused at load by a blocking validation
+  issue (`ErrUnsupportedTopology`). Retired IDs give a distinct message naming the former
+  topology, and the current document stays unchanged. A missing key loads as Random; `""` is
+  fixed to Random with a warning.
+- **Lookup:** `Resolve` returns `(creator, bool)` with no fallback, and the provider and
+  `Generate` return the error.
+- **Verification:** Windows: unit, integration, GUI and both performance suites run
+  explicitly; independent reviews (GPT-6.1 Sol).
+- **Coverage:** 74.5% → 73.2%, purely from deleting fully-covered code. No surviving file lost
+  coverage, and the owner decides on that total.
 
 **Evidence / owner request O08.** [Topology descriptors](../../internal/common/common_topologies/topologyDescriptors.go) still expose all four ordinary choices. Their serialized IDs in [mapTopology.go](../../internal/entities/topology/mapTopology.go) are `Default`, `HubAndSpoke`, `Chain`, and `SharedWeb`. [TopologyServiceLookup](../../internal/services/template_generator/providers/topologyServiceLookup.go) uses Ring as a fallback. [TournamentTopology](../../internal/services/template_generator/providers/topology/tournamentTopology.go) selects dedicated Ring/Hub builders, a balanced builder for Circles, and a chain fallback for other IDs, including surviving choices such as Random.
 
@@ -585,7 +609,16 @@ These are specific test-plan gaps attached to the production findings, not six a
 
 ## §6 CI/CD and dependency tooling
 
-### 6.2 🟠 The tools module installs a different linter than CI and this baseline
+### 6.2 ✅ FIXED — The tools module installs a different linter than CI and this baseline
+
+**Progress (2026-10-04).** Owner commit `a140e0a`. `tools/go.mod` now pins
+`golangci-lint/v2 v2.13.1`; MVS/tidy moved only indirect requirements (47 bumps, 2 added,
+2 removed), and the `go` directive, `tool` block, `wire` and `gcov2lcov` are unchanged. The
+PR lint job reads the version from `tools/go.mod` with `go list -m` in a fail-fast step that
+rejects an empty value, so `tools/go.mod` is the single source. The warning-only `--disable`
+list stays explicit. Tools and root `go mod tidy -diff` exit 0; the built tool's
+`go version -m` matches the installed binary's module sum; lint 0 issues. The Batch H plan
+has since been deleted by the owner.
 
 **Evidence.** [tools/go.mod](../../tools/go.mod#L90-L98) pins `github.com/golangci/golangci-lint/v2 v2.12.2`; [PR lint](../../.github/workflows/pr-validation.yml#L72-L77) specifies `version: v2.13.1`. The installed executable used here reports `2.13.1`.
 
@@ -595,7 +628,13 @@ These are specific test-plan gaps attached to the production findings, not six a
 
 **Owner decision.** Choose the supported linter version; do not infer the tools module's broader dependencies should be upgraded wholesale.
 
-### 6.3 🟡 Module/checksum files lack the LF policy their tidy checks require on Windows
+### 6.3 ✅ FIXED — Module/checksum files lack the LF policy their tidy checks require on Windows
+
+**Progress (2026-10-04).** Owner commit `a140e0a`. `.gitattributes` adds
+`go.mod text eol=lf` and `go.sum text eol=lf` (any depth). Only the four paths were
+refreshed in the working tree; the index was already LF, so nothing was normalized or
+staged. All four now report `i/lf w/lf attr/text eol=lf`, and both Windows `go mod tidy -diff`
+runs exit 0. The owner reports the pushed changes work.
 
 **Evidence.** [.gitattributes](../../.gitattributes#L1-L5) says `* text=auto` and only `*.go text eol=lf`, despite the comment mentioning modules. `git ls-files --eol` reports `i/lf w/crlf attr/text=auto` for both module files and both checksum files. Both `go mod tidy -diff` runs exit **1** and produce only checksum-file line replacements: root **45 removed/45 added**, tools **988/988**. Comparing normalized removed/added lines yielded **zero content differences** in both.
 
@@ -605,7 +644,16 @@ These are specific test-plan gaps attached to the production findings, not six a
 
 **Owner decision.** Attribute/normalization change only; do not stage or commit during the fix session.
 
-### 6.5 🟠 Release tag input is interpolated directly into shell source
+### 6.5 ✅ FIXED — Release tag input is interpolated directly into shell source
+
+**Progress (2026-10-04).** Owner commit `a140e0a`. A new first `validate` job
+reads the tag only through `env` and requires
+`^v[0-9]+\.[0-9]+(\.[0-9]+)?(-[0-9A-Za-z.]+)?$` (every existing tag matches). Its outputs feed
+`main.version` (via `env.VERSION`), the release name and tag, and `prerelease` (true for a
+`-` suffix). No tag expression remains inside a `run:` block. By owner decision, the checkout
+ref and concurrency group are unchanged and there is no separate tag-existence check. The exact
+step was exercised once against 25 crafted cases and all 26 tags; actionlint v1.7.12 is clean.
+The owner released `v0.3.9-alpha.3` (tag on `a140e0a`, the prerelease path) and reports it works.
 
 **Evidence.** [release build](../../.github/workflows/release.yml#L60-L63) contains `go build -trimpath -ldflags "-s -w -X main.version=${{ github.event.inputs.tag || github.ref_name }}" ...`. [workflow_dispatch](../../.github/workflows/release.yml#L7-L11) accepts a free-form tag input.
 
@@ -627,7 +675,23 @@ These are specific test-plan gaps attached to the production findings, not six a
 
 ## §7 Docs and developer experience
 
-### 7.1 🟡 README's dependency, pipeline, and license descriptions are stale
+### 7.1 ✅ FIXED — README's dependency, pipeline, and license descriptions are stale
+
+**Progress (2026-10-04).** Owner commit `dd2b8bf`. README now:
+- links Gio without a version (the version is in go.mod);
+- ends the Generation Flow in `*template_model.Template`, with the persistence seam
+  `FileService.SaveTemplateWithPreview` → `TemplateMapper.ToEntity` →
+  `TemplateRepository.Save`;
+- states MIT with a link to LICENSE.
+
+By owner decision the batch also fixed every other audited inaccuracy, without a rewrite:
+- README: per-platform templates-folder detection and refused export on failure (no
+  working-directory fallback); the air flags; `SingleHero`; the structure tree; the
+  composition-root injectors; the `-run` example.
+- QUICKSTART: the persistence layering, a compiling §5 example that writes to the detected
+  folder, and the `IGuiHandler` table.
+
+Links were checked and the snippet was compile-checked once.
 
 **Evidence.** [README](../../README.md#L88-L91) advertises `gioui.org v0.10.0`; [go.mod](../../go.mod#L5-L12) requires `v0.10.2`. The [pipeline diagram](../../README.md#L243-L257) ends in `entities.RmgTemplate`, whereas [Generate](../../internal/services/template_generator/templateGenerator.go#L57-L91) returns a model. [license text](../../README.md#L314-L316) says “See the main project repository,” although [LICENSE](../../LICENSE) is present.
 
@@ -637,7 +701,22 @@ These are specific test-plan gaps attached to the production findings, not six a
 
 **Owner decision.** None; do not expand this into a documentation rewrite.
 
-### 7.2 🟡 Remaining observation paths and CI claims need reconciliation
+### 7.2 ✅ FIXED — Remaining observation paths and CI claims need reconciliation
+
+**Progress (2026-10-04).** Owner commit `dd2b8bf`. [test_observations.md](test_observations.md):
+- **Paths and symbols:** the stale ones are corrected (the snapshot subpackage,
+  `AddButtonSemantics`, `groupConnectionsByPair`, the 4-argument `NewUIState`), and
+  `suggestDirectory`/`tabCalibration.go` are gone.
+- **Removed:** the obsolete template-dir fallback entry.
+- **CI claim:** "never run in CI" is scoped to the GPU benchmark, noting that the Mesa/Xvfb
+  GUI job runs on PRs.
+- **Narrowed:** the io.go limitation, to the registry and the Windows Steam-path fallbacks.
+- **History:** historical figures are labelled, and the deliberate absence of an allocation
+  threshold is kept.
+- **Recorded, not assigned:** the untested `reapplyManualEdits` castle branch.
+
+Also, the AGENTS.md §4.2.1 example now shows the real `IGuiHandler`. The owner removed the
+mock's stale doc comment and trimmed the button-logger test comments.
 
 **Evidence / progress.** The obsolete branch/push instructions identified in the original review have been replaced by the owner-requested [current handoff](../session-carry-forward.md). That portion is addressed. Remaining [test observations](test_observations.md) still refer to older flat snapshot-helper paths, `suggestDirectory`, and GPU tests never running in CI. Current source uses [snapshot helpers](../../test/test_helpers/integration_common/snapshot), [getWorkingDirectory](../../app/gui/drivers/stateFiles.go), and a [Mesa/Xvfb GUI job](../../.github/workflows/pr-validation.yml#L235-L278). The old benchmark figures are historical, not current measurements.
 
@@ -674,10 +753,10 @@ The configured run includes existing exclusions (protected registry duplication,
 | E: effective modes and guard propagation | §1.5, §1.11, §1.12 | Complete: owner commits `1b4658c` and `2062932`, Windows verification and independent review; findings marked fixed 2026-09-12. Accepted 74.9% coverage; native Linux unavailable. |
 | F: editor geometry | §1.13, §1.14, §1.15; optionally §2.1 | Complete: owner commit `b9c47a7` with §2.1 approved into scope, Windows verification and independent plan/implementation reviews; findings marked fixed 2026-09-28. Accepted 74.6% coverage; native Linux unavailable. |
 | G: measured performance | §3.1 | Complete: owner commit `35e0fab`, Windows verification and independent plan/implementation reviews; finding marked fixed 2026-09-28. Accepted 74.5% coverage (covered statements unchanged); native Linux unavailable. |
-| H: CI/tooling hardening | §6.2, §6.3, §6.5 | Independent configuration changes: linter alignment, Windows/Linux EOL checks, and safe release-tag validation. |
-| I: docs | §7.1, §7.2 | Can run independently after owner approves retirement scope. |
+| H: CI/tooling hardening | §6.2, §6.3, §6.5 | Complete: owner commit `a140e0a`, linter pinned to v2.13.1 with `tools/go.mod` as CI's single source, LF attributes for module/checksum files, env-only release tag with format validation and prerelease detection. Independent plan/implementation reviews (GPT-6.1 Sol); Windows verification; owner-confirmed push and release `v0.3.9-alpha.3`. No Go code changed, so coverage was not rerun (owner decision). |
+| I: docs | §7.1, §7.2 | Complete: owner commit `dd2b8bf` (plan `599ff23`); every audited README/QUICKSTART inaccuracy, test observations, AGENTS.md interface example. Independent plan/implementation reviews (GPT-6.1 Sol); docs-only checks (links, snippet compile, vet on comment-touched packages); no coverage run (owner decision). |
 | J: reopened service boundary | §2.2 | Complete: owner commit `3c0ad87`, whole zone-content exception removed (bonuses kept), Windows verification and independent plan/implementation reviews; finding marked fixed 2026-09-28. Coverage 74.5% (covered statements 6909 → 6915); native Linux unavailable. |
-| K: topology retirement | §2.3 | Inventory shared builders before removal; reject retired saved IDs, reroute surviving tournament fallbacks to balanced generation, and coordinate §1.12. |
+| K: topology retirement | §2.3 | Complete: owner commits `1ee746b` and `27b2933` (plan `d50f34d`), owner-reviewed 2026-10-04. Retired IDs rejected at load, balanced tournaments, panic-free lookup contract; independent plan/implementation reviews (GPT-6.1 Sol). Owner accepted 73.2% coverage (74.5% before; the drop is deleted fully-covered code only); native Linux unavailable. |
 | L: compact-state investigation | §2.4 | Can begin independently; owner reviews live/persisted feasibility and reconstruction semantics before implementation or schema design. |
 | M: coordinated persistence format | §2.5, §2.6; approved outcome of §2.4 only | Follow L's decision gate. One migration plan, supported legacy loading, typed entries, and explicit root-versus-section wire assertions. |
 | N: panel/state organization | §2.7, §2.9 | Driver accessors first; preserve public panel API, GUI snapshots, and state round trips. Coordinate Bonuses work with M. |

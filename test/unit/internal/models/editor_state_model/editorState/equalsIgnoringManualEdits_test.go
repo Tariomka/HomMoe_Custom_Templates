@@ -146,7 +146,7 @@ func TestWhenFuzzedStatePairsCompared_MatchesReflectDeepEqual(t *testing.T) {
 			state.AdvancedMode = !state.AdvancedMode
 		}},
 		{"TopologyDiffers_MatchesDeepEqual", func(state *editor_state_model.EditorState) {
-			state.Topology = config.TopologyHubAndSpoke
+			state.Topology = config.TopologyGeometricHub
 		}},
 		{
 			"BonusEntryDiffers_MatchesDeepEqual",

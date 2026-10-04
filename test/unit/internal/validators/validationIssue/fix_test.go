@@ -3,6 +3,7 @@ package validationIssue_test
 import (
 	"testing"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/Tariomka/hommoe_custom_templates/internal/validators"
@@ -127,6 +128,33 @@ func TestWhenVictoryConditionIsUnknown_FixResetsToStandard(t *testing.T) {
 
 	// Assert
 	assert.Equal(t, registry.GetWinningConditionValues().Standard, state.VictoryCondition)
+}
+
+func TestWhenTopologyIsEmpty_FixRestoresRandom(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	state := editor_state_model.NewDefaultEditorStateModel()
+	state.Topology = ""
+
+	// Act
+	applyAllFixes(t, &state)
+
+	// Assert
+	assert.Equal(t, config.TopologyRandom, state.Topology)
+}
+
+func TestWhenIssueIsBlocking_FixLeavesStateUnchanged(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	state := editor_state_model.NewDefaultEditorStateModel()
+	state.Topology = "Chain"
+	expected := state.Clone()
+
+	// Act
+	applyAllFixes(t, &state)
+
+	// Assert
+	assert.Equal(t, expected, state)
 }
 
 // applyAllFixes validates the state and applies every returned fix in order,

@@ -19,7 +19,7 @@ func TestWhenTournamentEnabled_CreatesSpawnZonePerPlayer(t *testing.T) {
 	// Arrange
 	playerCount := gofakeit.Number(2, 8)
 	generator := test_helpers.NewTemplateGenerator(
-		newTournamentConfiguration(config.TopologyRing, playerCount, gofakeit.Number(1, 20)))
+		newTournamentConfiguration(config.TopologySquare, playerCount, gofakeit.Number(1, 20)))
 
 	// Act
 	actual, _ := generateTemplate(generator)
@@ -28,31 +28,31 @@ func TestWhenTournamentEnabled_CreatesSpawnZonePerPlayer(t *testing.T) {
 	assert.Len(t, zonesWithPrefix(actual, "Spawn-"), playerCount)
 }
 
-func TestWhenTournamentEnabledWithHubAndSpokeTopology_CreatesHubGuardGroups(t *testing.T) {
+func TestWhenTournamentEnabledWithRandomTopology_CreatesBalancedGuardGroups(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	generator := test_helpers.NewTemplateGenerator(
-		newTournamentConfiguration(config.TopologyHubAndSpoke, 2, gofakeit.Number(1, 20)))
+		newTournamentConfiguration(config.TopologyRandom, 2, gofakeit.Number(1, 20)))
 
 	// Act
 	actual, _ := generateTemplate(generator)
 
 	// Assert
-	hasHubGuardGroup := linq.FromSlice(actual.Variants[0].Connections).
+	hasBalancedGuardGroup := linq.FromSlice(actual.Variants[0].Connections).
 		Where(func(connection template_entity.Connection) bool {
-			return strings.HasPrefix(connection.GuardMatchGroup, "tourney_hub_guard_")
+			return strings.HasPrefix(connection.GuardMatchGroup, "tourney_bal_guard_")
 		}).
 		Any()
-	assert.True(t, hasHubGuardGroup)
+	assert.True(t, hasBalancedGuardGroup)
 }
 
 func TestWhenTournamentEnabled_SecondPlayerClusterIsUnreachableFromFirst(t *testing.T) {
 	t.Parallel()
 	perClusterTopologies := []config.MapTopology{
-		config.TopologyRing,
-		config.TopologyHubAndSpoke,
+		config.TopologySquare,
+		config.TopologyGeometricHub,
 		config.TopologyCircles,
-		config.TopologyChain,
+		config.TopologyRandom,
 	}
 	for _, topology := range perClusterTopologies {
 		subTestName := fmt.Sprintf("When%sTopologySelected_SecondPlayerClusterIsUnreachableFromFirst", topology)
@@ -97,7 +97,7 @@ func TestWhenTournamentEnabledWithRandomPortals_AddsPortalConnections(t *testing
 	// Arrange
 	// Portals are drawn from each player's own neutral cluster, so the zone
 	// count must stay high enough for both clusters to offer portal targets.
-	configuration := newTournamentConfiguration(config.TopologyRing, gofakeit.Number(2, 8), gofakeit.Number(8, 20))
+	configuration := newTournamentConfiguration(config.TopologySquare, gofakeit.Number(2, 8), gofakeit.Number(8, 20))
 	configuration.RandomPortals = true
 	configuration.MaxPortalConnections = 4
 	generator := test_helpers.NewTemplateGenerator(configuration)

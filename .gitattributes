@@ -1,5 +1,7 @@
 # Handle text files automatically by default
 * text=auto
 
-# Force all Go source files and modules to use LF
+# Force Go sources, module and checksum files to use LF (go mod tidy -diff expects LF)
 *.go text eol=lf
+go.mod text eol=lf
+go.sum text eol=lf

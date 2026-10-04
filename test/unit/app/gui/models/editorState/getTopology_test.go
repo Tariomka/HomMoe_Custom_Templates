@@ -13,12 +13,12 @@ func TestWhenTopologyWasUpdated_GetTopologyReturnsIt(t *testing.T) {
 	// Arrange
 	state := newEditorState()
 	state.UpdateCurrentState(
-		func(dto *editor_state_model.EditorState) { dto.Topology = config.TopologyHubAndSpoke },
+		func(dto *editor_state_model.EditorState) { dto.Topology = config.TopologyGeometricHub },
 	)
 
 	// Act
 	actual := state.GetTopology()
 
 	// Assert
-	assert.Equal(t, config.TopologyHubAndSpoke, actual)
+	assert.Equal(t, config.TopologyGeometricHub, actual)
 }

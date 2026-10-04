@@ -108,18 +108,18 @@ func TestWhenAdvancedCastlesPerZoneExceedsFour_ClampsCastlesToFour(t *testing.T)
 	assert.Equal(t, neutral_zone.Plans{{Label: "C", Quality: neutral_zone.QualityHigh, CastleCount: 4}}, plans)
 }
 
-func TestWhenTopologyIsSharedWebAndNoNeutralsRequested_AddsSingleMediumPlan(t *testing.T) {
+func TestWhenTheRetiredSharedWebIsConfiguredWithNoNeutrals_AddsNoPlan(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	provider := zones.NewZoneLabelProvider()
 	configuration := simpleCountConfig(2, 0, 1)
-	configuration.Topology = config.TopologySharedWeb
+	configuration.Topology = config.MapTopology("SharedWeb")
 
 	// Act
 	plans := provider.CreateNeutralZonePlans(configuration)
 
 	// Assert
-	assert.Equal(t, neutral_zone.Plans{{Label: "C", Quality: neutral_zone.QualityMedium, CastleCount: 1}}, plans)
+	assert.Empty(t, plans)
 }
 
 func TestWhenRequestedCountExceedsLabelPool_CapsPlansAtAvailableLabels(t *testing.T) {
@@ -150,7 +150,7 @@ func TestWhenRequestedCountIsNegative_CreatesNoPlans(t *testing.T) {
 
 func simpleCountConfig(playerCount, neutralCount, castleCount int) config.GeneratorConfig {
 	configuration := config.NewGeneratorConfig()
-	configuration.Topology = config.TopologyRing
+	configuration.Topology = config.TopologySquare
 	configuration.PlayerCount = playerCount
 	configuration.ZoneConfiguration.NeutralZoneCount = neutralCount
 	configuration.ZoneConfiguration.NeutralZoneCastles = castleCount

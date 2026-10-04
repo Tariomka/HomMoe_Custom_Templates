@@ -12,13 +12,9 @@ func TestWhenCatalogIsRequested_EveryDescriptorCarriesItsOwnType(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	expected := []config.MapTopology{
-		config.TopologyRing,
 		config.TopologyCircles,
 		config.TopologyRandom,
-		config.TopologyHubAndSpoke,
 		config.TopologyGeometricHub,
-		config.TopologyChain,
-		config.TopologySharedWeb,
 		config.TopologySquare,
 		config.TopologyGeometric,
 		config.TopologyCross,
@@ -30,13 +26,9 @@ func TestWhenCatalogIsRequested_EveryDescriptorCarriesItsOwnType(t *testing.T) {
 
 	// Assert
 	actual := []config.MapTopology{
-		descriptors.Default.Type,
 		descriptors.Circles.Type,
 		descriptors.Random.Type,
-		descriptors.HubAndSpoke.Type,
 		descriptors.GeometricHub.Type,
-		descriptors.Chain.Type,
-		descriptors.SharedWeb.Type,
 		descriptors.Square.Type,
 		descriptors.Geometric.Type,
 		descriptors.Cross.Type,

@@ -14,7 +14,7 @@ func TestWhenTournamentCreatorIsInvoked_BuildsTournamentVariant(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
-	configuration.Topology = config.TopologyRing
+	configuration.Topology = config.TopologyRandom
 	playerLabels := []string{"A", "B"}
 	neutralZones := neutral_zone.Plans{}
 	neutralZones.AddPlan("C", neutral_zone.QualityMedium, 1)

@@ -312,7 +312,7 @@ func arenaState() *editor_state_model.EditorState {
 // layout-defining option, which invalidates any hand-made zone layout.
 func layoutChangedState() *editor_state_model.EditorState {
 	state := defaultState()
-	state.Topology = config.TopologyChain
+	state.Topology = config.TopologySquare
 	return state
 }
 

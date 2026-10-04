@@ -24,15 +24,7 @@ func NewPreviewLayoutService(tierService zone_interfaces.IZoneTierService) IPrev
 	return &PreviewLayoutService{tierService: tierService}
 }
 
-// BuildPreviewLayout computes zone positions, radius and connections for a
-// preview canvas of the given side length. The layout strategy is picked to
-// match the in-game generator: Circles uses concentric rings keyed off the
-// GeneratorRing stamps; Square, Geometric, Cross and Fractal are placed
-// verbatim from their GeneratorPosition stamps (centered and scaled to fit) so
-// the exact geometric figure is preserved; Random scatters zones using the
-// GeneratorPosition stamps with hard-floor and edge-clearance correction
-// passes; all other topologies fall back to the classic ring / hub-and-spoke
-// renderer.
+// BuildPreviewLayout computes zone positions, radius and connections for a preview canvas of the given side length.
 func (this *PreviewLayoutService) BuildPreviewLayout(
 	template *template_model.Template,
 	topology config.MapTopology,
@@ -47,13 +39,6 @@ func (this *PreviewLayoutService) BuildPreviewLayout(
 		return *this.layout
 	}
 
-	// Apply the optional ZeroAngleZone rotation so the first ring slot lines
-	// up with the template author's chosen anchor, then lay out every zone with
-	// the topology-specific renderer. Tournament templates are not special-
-	// cased here: both player clusters are laid out together at full canvas
-	// size (the generator seeds the two halves with mirrored positions and, for
-	// hub topologies, layoutMultiHub fans the clusters out), so the preview and
-	// the zone editor share one consistent, fully reversible coordinate system.
 	zones := orderZonesByZeroAngle(variant.Zones, variant.Orientation.ZeroAngleZone)
 	this.dispatchClusterLayout(zones, variant.Connections, topology, side)
 
@@ -88,11 +73,6 @@ func (this *PreviewLayoutService) dispatchClusterLayout(
 	}
 }
 
-// layoutManualPositions places zones exactly where the manual zone editor put
-// them: canvas = normalized position × side. The mapping must stay trivially
-// invertible (p = pos / side) so dragging in the editor is exact. The zone
-// radius shrinks just enough to keep the closest pair of zones from
-// overlapping.
 func (this *PreviewLayoutService) layoutManualPositions(zones []template_model.Zone, side float64) {
 	metrics := newCanvasMetrics(side)
 
@@ -104,14 +84,7 @@ func (this *PreviewLayoutService) layoutManualPositions(zones []template_model.Z
 	this.commitPositions(zones, positions, radius)
 }
 
-// buildPreviewZones turns every positioned zone into its drawable preview
-// form: letter, tier, hub/player flags and castle markers.
-//
-// A zone is only drawn as a hub when the template actually contains a hub
-// zone (named "Hub" or "Hub-*"). Connectivity-based guesses are not used
-// here: in topologies like Random or Circles an ordinary neutral can happen
-// to touch every spawn without being a hub, which previously made the hub
-// marker appear (and flicker) on non-hub zones.
+// buildPreviewZones turns every positioned zone into its drawable preview form.
 func (this *PreviewLayoutService) buildPreviewZones(zones []template_model.Zone) {
 	for _, zone := range zones {
 		pos, ok := this.layout.Positions[zone.Name]

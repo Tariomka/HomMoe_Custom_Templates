@@ -19,7 +19,7 @@ func TestWhenNeutralZonesArePlanned_EveryPlannedTierIsRecordedOnItsZone(t *testi
 	generator := test_helpers.NewTemplateGenerator(newMixedTierConfiguration())
 
 	// Act
-	generated, _ := generator.Generate()
+	generated, _, _ := generator.Generate()
 
 	// Assert
 	var recordedTiers []neutral_zone.Quality
@@ -45,7 +45,7 @@ func TestWhenTopologyBuildsAHubZone_RecordsItAtTheHighestTier(t *testing.T) {
 	generator := test_helpers.NewTemplateGenerator(newMixedTierConfiguration())
 
 	// Act
-	generated, _ := generator.Generate()
+	generated, _, _ := generator.Generate()
 
 	// Assert
 	hub, ok := findZone(generated, "Hub")
@@ -60,7 +60,7 @@ func TestWhenSpawnZonesAreGenerated_RecordsNoTierForThem(t *testing.T) {
 	generator := test_helpers.NewTemplateGenerator(newMixedTierConfiguration())
 
 	// Act
-	generated, _ := generator.Generate()
+	generated, _, _ := generator.Generate()
 
 	// Assert
 	var tieredSpawnZoneNames []string
@@ -78,7 +78,7 @@ func TestWhenTiersAreRecorded_CoversEveryNeutralZoneOfTheVariant(t *testing.T) {
 	generator := test_helpers.NewTemplateGenerator(newMixedTierConfiguration())
 
 	// Act
-	generated, _ := generator.Generate()
+	generated, _, _ := generator.Generate()
 
 	// Assert
 	var unrecordedZoneNames []string
@@ -103,7 +103,7 @@ func findZone(template *template_model.Template, name string) (template_model.Zo
 // topology, so the variant has to carry both a hub and several distinct tiers.
 func newMixedTierConfiguration() *config.GeneratorConfig {
 	configuration := config.NewGeneratorConfig()
-	configuration.Topology = config.TopologyHubAndSpoke
+	configuration.Topology = config.TopologyGeometricHub
 	configuration.PlayerCount = 2
 	configuration.ZoneConfiguration.NeutralZoneCount = 0
 	configuration.ZoneConfiguration.Advanced.Enabled = true

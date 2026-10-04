@@ -66,7 +66,7 @@ func NewAllFieldsEditorStateModel() editor_state_model.EditorState {
 		NeutralZoneSize:             1.5,
 		HubZoneSize:                 1.75,
 		GuardRandomization:          0.35,
-		Topology:                    config.TopologyChain,
+		Topology:                    config.TopologySquare,
 		RandomPortals:               true,
 		MaxPortalConnections:        17,
 		SpawnRemoteFootholds:        true,

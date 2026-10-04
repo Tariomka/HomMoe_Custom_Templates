@@ -28,7 +28,7 @@ func BenchmarkPreviewLayoutService_BuildPreviewLayout(b *testing.B) {
 		{name: "RandomDefault", topology: config.TopologyRandom, playerCount: 2, neutralZoneCount: 0},
 		{name: "RandomMedium", topology: config.TopologyRandom, playerCount: 4, neutralZoneCount: 8},
 		{name: "RandomLarge", topology: config.TopologyRandom, playerCount: 8, neutralZoneCount: 16},
-		{name: "RingLarge", topology: config.TopologyRing, playerCount: 8, neutralZoneCount: 16},
+		{name: "SquareLarge", topology: config.TopologySquare, playerCount: 8, neutralZoneCount: 16},
 		{name: "CirclesLarge", topology: config.TopologyCircles, playerCount: 8, neutralZoneCount: 16},
 	}
 
@@ -38,7 +38,8 @@ func BenchmarkPreviewLayoutService_BuildPreviewLayout(b *testing.B) {
 			configuration.Topology = benchmarkCase.topology
 			configuration.PlayerCount = benchmarkCase.playerCount
 			configuration.ZoneConfiguration.NeutralZoneCount = benchmarkCase.neutralZoneCount
-			generated, _ := test_helpers.NewTemplateGenerator(configuration).Generate()
+			generated, _, err := test_helpers.NewTemplateGenerator(configuration).Generate()
+			require.NoError(b, err)
 			service := preview_service.NewPreviewLayoutService(zone_services.NewZoneTierService())
 
 			var layout preview.Layout

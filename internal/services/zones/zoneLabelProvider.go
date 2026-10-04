@@ -62,12 +62,6 @@ func (this *ZoneLabelProvider) CreateNeutralZonePlans(
 		castleCount := helpers.Clamp(configuration.ZoneConfiguration.NeutralZoneCastles, 0, 4)
 		add(configuration.ZoneConfiguration.NeutralZoneCount, neutral_zone.QualityMedium, castleCount)
 	}
-	if configuration.Topology == config.TopologySharedWeb && len(plans) == 0 && maxNeutral > 0 {
-		plans.AddPlan(
-			this.zoneLabels[configuration.PlayerCount],
-			neutral_zone.QualityMedium,
-			helpers.Clamp(configuration.ZoneConfiguration.NeutralZoneCastles, 0, 4))
-	}
 	return plans
 }
 
@@ -101,13 +95,9 @@ func (this *ZoneLabelProvider) CreateZoneName(label string, playerLabels []strin
 func (this *ZoneLabelProvider) CreateOrderedZoneLabels(
 	configuration config.GeneratorConfig,
 	playerLabels []string,
-	neutralZones neutral_zone.Plans,
-	isRing bool) []string {
+	neutralZones neutral_zone.Plans) []string {
 	if configuration.Topology == config.TopologyCircles {
-		if isRing {
-			return this.CreateBalancedRingZoneLabels(playerLabels, neutralZones)
-		}
-		return this.CreateBalancedChainZoneLabels(playerLabels, neutralZones)
+		return this.CreateBalancedRingZoneLabels(playerLabels, neutralZones)
 	}
 
 	neutralLabels := linq.FromSlice(neutralZones).
@@ -128,7 +118,7 @@ func (this *ZoneLabelProvider) CreateBalancedRingZoneLabels(
 	}
 
 	caps := utils.GetEvenGapCapacities(len(playerLabels), len(neutralZones))
-	gaps := utils.AssignNeutralZonesToGaps(neutralZones, caps, false)
+	gaps := utils.AssignNeutralZonesToGaps(neutralZones, caps)
 	var ordered []string
 	for i, playerLabel := range playerLabels {
 		ordered = append(ordered, playerLabel)
@@ -137,54 +127,6 @@ func (this *ZoneLabelProvider) CreateBalancedRingZoneLabels(
 		}
 	}
 	return ordered
-}
-
-func (this *ZoneLabelProvider) CreateBalancedChainZoneLabels(
-	playerLabels []string,
-	neutralZones neutral_zone.Plans) []string {
-	if len(playerLabels) == 0 {
-		return linq.FromSlice(neutralZones).
-			Select(func(x neutral_zone.Plan) string { return x.Label }).
-			ToSlice()
-	}
-
-	gapCount := len(playerLabels) + 1
-	capacities := make([]int, gapCount)
-	remaining := len(neutralZones)
-	// Distribute extra neutrals only into interior gaps so that the first
-	// and last positions of the chain are always player zones. Degenerate cases (0 or 1
-	// player) fall back to even distribution across every gap
-	interiorGapCount := max(0, gapCount-2)
-	if interiorGapCount > 0 {
-		extras := utils.GetEvenGapCapacities(interiorGapCount, remaining)
-		for i := 1; i < gapCount-1; i++ {
-			capacities[i] += extras[i-1]
-		}
-	} else {
-		extras := utils.GetEvenGapCapacities(gapCount, remaining)
-		for i := range gapCount {
-			capacities[i] += extras[i]
-		}
-	}
-	neutralZoneGaps := utils.AssignNeutralZonesToGaps(neutralZones, capacities, true)
-	orderedLabels := linq.FromSlice(utils.OrderEdgeGap(neutralZoneGaps[0], true)).
-		Select(func(x neutral_zone.Plan) string { return x.Label }).
-		ToSlice()
-	for index, playerLabel := range playerLabels {
-		orderedLabels = append(orderedLabels, playerLabel)
-		neutralZoneGap := neutralZoneGaps[index+1]
-		trailing := index == len(playerLabels)-1
-		var gap neutral_zone.Plans
-		if trailing {
-			gap = utils.OrderEdgeGap(neutralZoneGap, false)
-		} else {
-			gap = utils.OrderNeutralsWithinGap(neutralZoneGap)
-		}
-		for _, zonePlan := range gap {
-			orderedLabels = append(orderedLabels, zonePlan.Label)
-		}
-	}
-	return orderedLabels
 }
 
 func (this *ZoneLabelProvider) CreateBalancedNeutralRingZoneLabels(
@@ -199,7 +141,7 @@ func (this *ZoneLabelProvider) CreateBalancedNeutralRingZoneLabels(
 	}
 
 	caps := utils.GetEvenGapCapacities(max(1, playerCount), len(neutralZones))
-	gaps := utils.AssignNeutralZonesToGaps(neutralZones, caps, false)
+	gaps := utils.AssignNeutralZonesToGaps(neutralZones, caps)
 	var labels []string
 	for _, gap := range gaps {
 		for _, zonePlan := range utils.OrderNeutralsWithinGap(gap) {
@@ -220,19 +162,8 @@ func (this *ZoneLabelProvider) createTopologyAdjacency(
 	// and only default branch is used, but the logic is correct and probably will be used in the future
 	// so for now we keep all of the branches
 	switch configuration.Topology {
-	case config.TopologyChain:
-		orderedLabels := this.CreateOrderedZoneLabels(configuration, playerLabels, neutralZones, false)
-		for current := range len(orderedLabels) - 1 {
-			next := current + 1
-			if isIsolated &&
-				slices.Contains(playerLabels, orderedLabels[current]) &&
-				slices.Contains(playerLabels, orderedLabels[next]) {
-				continue
-			}
-			adjacency.Link(orderedLabels[current], orderedLabels[next])
-		}
-	case config.TopologyRing, config.TopologyCircles:
-		orderedLabels := this.CreateOrderedZoneLabels(configuration, playerLabels, neutralZones, true)
+	case config.TopologyCircles:
+		orderedLabels := this.CreateOrderedZoneLabels(configuration, playerLabels, neutralZones)
 		for current := range orderedLabels {
 			next := (current + 1) % len(orderedLabels)
 			if isIsolated &&
@@ -243,7 +174,7 @@ func (this *ZoneLabelProvider) createTopologyAdjacency(
 			adjacency.Link(orderedLabels[current], orderedLabels[next])
 		}
 	default:
-		orderedLabels := this.CreateOrderedZoneLabels(configuration, playerLabels, neutralZones, true)
+		orderedLabels := this.CreateOrderedZoneLabels(configuration, playerLabels, neutralZones)
 		for current := range orderedLabels {
 			next := (current + 1) % len(orderedLabels)
 			adjacency.Link(orderedLabels[current], orderedLabels[next])

@@ -67,7 +67,7 @@ func TestWhenTemplateAndOutputPathAreValid_ReturnsTemplateFilePath(t *testing.T)
 	template.Name = "Valid Save Template"
 	templateDto := dtos.TemplateSaveDto{
 		Template:   template,
-		Topology:   config.TopologyRing,
+		Topology:   config.TopologyRandom,
 		OutputPath: outputDirectory,
 	}
 
@@ -88,7 +88,7 @@ func TestWhenTemplateAndOutputPathAreValid_WritesTemplateFile(t *testing.T) {
 	template.Name = "Written Save Template"
 	templateDto := dtos.TemplateSaveDto{
 		Template:   template,
-		Topology:   config.TopologyRing,
+		Topology:   config.TopologyRandom,
 		OutputPath: outputDirectory,
 	}
 
@@ -109,7 +109,7 @@ func TestWhenTemplateAndOutputPathAreValid_WritesPreviewImage(t *testing.T) {
 	template.Name = "Preview Save Template"
 	templateDto := dtos.TemplateSaveDto{
 		Template:   template,
-		Topology:   config.TopologyRing,
+		Topology:   config.TopologyRandom,
 		OutputPath: outputDirectory,
 	}
 
@@ -130,7 +130,7 @@ func TestWhenTemplateOutputPathPointsToExistingFile_ReturnsError(t *testing.T) {
 	template := generateDefaultTemplate(t, handler)
 	templateDto := dtos.TemplateSaveDto{
 		Template:   template,
-		Topology:   config.TopologyRing,
+		Topology:   config.TopologyRandom,
 		OutputPath: blockingFile,
 	}
 
@@ -151,7 +151,7 @@ func TestWhenPreviewImageCannotBeWritten_ReturnsError(t *testing.T) {
 	require.NoError(t, os.Mkdir(filepath.Join(outputDirectory, "Blocked Preview Template.png"), 0o755))
 	templateDto := dtos.TemplateSaveDto{
 		Template:   template,
-		Topology:   config.TopologyRing,
+		Topology:   config.TopologyRandom,
 		OutputPath: outputDirectory,
 	}
 
@@ -172,7 +172,7 @@ func TestWhenPreviewImageCannotBeWritten_StillReturnsTemplateFilePath(t *testing
 	require.NoError(t, os.Mkdir(filepath.Join(outputDirectory, "Blocked Preview Path Template.png"), 0o755))
 	templateDto := dtos.TemplateSaveDto{
 		Template:   template,
-		Topology:   config.TopologyRing,
+		Topology:   config.TopologyRandom,
 		OutputPath: outputDirectory,
 	}
 

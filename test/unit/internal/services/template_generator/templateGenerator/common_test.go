@@ -11,9 +11,13 @@ import (
 // generateTemplate flattens the generated template back to the .rmg.json shape
 // for the tests that assert on it; the tests that assert on the planned tiers
 // call Generate directly. Going through the real mapper here also makes every
-// one of those assertions a proof that the round trip is lossless.
+// one of those assertions a proof that the round trip is lossless. It panics
+// when generation fails, which only an unsupported topology causes.
 func generateTemplate(
 	generator template_generator.ITemplateGenerator) (*template_entity.RmgTemplate, []string) {
-	generated, warnings := generator.Generate()
+	generated, warnings, err := generator.Generate()
+	if err != nil {
+		panic(err)
+	}
 	return new(mappers.NewTemplateMapper().ToEntity(*generated)), warnings
 }

@@ -22,10 +22,7 @@ func GetEvenGapCapacities(gapCount, itemCount int) []int {
 	return capacities
 }
 
-func AssignNeutralZonesToGaps(
-	neutralZones neutral_zone.Plans,
-	capacities []int,
-	preferInterior bool) []neutral_zone.Plans {
+func AssignNeutralZonesToGaps(neutralZones neutral_zone.Plans, capacities []int) []neutral_zone.Plans {
 	gaps := make([]neutral_zone.Plans, len(capacities))
 	loads := make([]float64, len(capacities))
 	sortedZones := neutral_zone.NewNeutralZonePlansSortedByBalance(neutralZones)
@@ -39,17 +36,7 @@ func AssignNeutralZonesToGaps(
 		if len(candidates) == 0 {
 			break
 		}
-		if preferInterior {
-			var interior []int
-			for _, c := range candidates {
-				if c > 0 && c < len(capacities)-1 {
-					interior = append(interior, c)
-				}
-			}
-			if len(interior) > 0 {
-				candidates = interior
-			}
-		}
+
 		best := candidates[0]
 		for _, candidate := range candidates[1:] {
 			if loads[candidate] < loads[best] ||
@@ -84,14 +71,4 @@ func OrderNeutralsWithinGap(neutralZones neutral_zone.Plans) neutral_zone.Plans 
 		}
 	}
 	return slots
-}
-
-func OrderEdgeGap(neutralZones neutral_zone.Plans, playerAtEnd bool) neutral_zone.Plans {
-	sorted := neutral_zone.NewNeutralZonePlansSortedByBalance(neutralZones)
-	if playerAtEnd {
-		for i, j := 0, len(*sorted)-1; i < j; i, j = i+1, j-1 {
-			sorted.Swap(i, j)
-		}
-	}
-	return *sorted
 }

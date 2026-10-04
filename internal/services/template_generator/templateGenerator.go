@@ -61,18 +61,20 @@ func (this *TemplateGenerator) SetConfiguration(configuration *config.GeneratorC
 // Generate builds the template for the current configuration and returns it,
 // with the tier the zone factory planned recorded on every neutral and hub
 // zone, plus the warnings raised while parsing the configuration's free-text
-// fields.
-func (this *TemplateGenerator) Generate() (*template_model.Template, []string) {
+// fields. It fails when the configured topology has no generator.
+func (this *TemplateGenerator) Generate() (*template_model.Template, []string, error) {
 	this.configuration.EnsureNameExists()
 	playerLabels := this.zoneLabelProvider.CreatePlayerLabels(this.configuration.PlayerCount)
 	neutralZones := this.zoneLabelProvider.CreateNeutralZonePlans(*this.configuration)
 	holdCityLabel := this.zoneLabelProvider.GetHoldCityLabel(*this.configuration, playerLabels, neutralZones)
 	tuning := this.tuningFactory.Create(this.configuration, this.configuration.PlayerCount+len(neutralZones))
-	valueOverrides, warnings := this.gameRulesProvider.CreateValueOverrides(*this.configuration)
-
-	variant := this.topologyProvider.
+	variant, err := this.topologyProvider.
 		CreateTopologyVariant(*this.configuration, playerLabels, neutralZones, tuning, holdCityLabel)
+	if err != nil {
+		return nil, nil, err
+	}
 
+	valueOverrides, warnings := this.gameRulesProvider.CreateValueOverrides(*this.configuration)
 	generated := template_model.Template{
 		Name:                this.configuration.TemplateName,
 		GameMode:            this.configuration.GameMode,
@@ -100,7 +102,7 @@ func (this *TemplateGenerator) Generate() (*template_model.Template, []string) {
 		RemoteFootholdCount:  this.configuration.RemoteFootholdCount,
 	})
 
-	return &generated, warnings
+	return &generated, warnings, nil
 }
 
 func (this *TemplateGenerator) createTemplateDescription(neutralCount int) string {

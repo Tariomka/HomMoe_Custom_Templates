@@ -66,7 +66,7 @@ func TestWhenTopologyChanges_RebuildsTheLayout(t *testing.T) {
 	cache.Get(1, config.TopologyRandom, 600, build)
 
 	// Act
-	cache.Get(1, config.TopologyRing, 600, build)
+	cache.Get(1, config.TopologyCircles, 600, build)
 
 	// Assert
 	assert.Equal(t, 2, callCount)
