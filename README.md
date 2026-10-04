@@ -31,14 +31,17 @@ Generated template preview:
 ├── go.mod
 ├── data/
 │   ├── ExampleTemplates/                    # 57 reference .rmg.json templates
-│   └── GameData/GeneratorData/              # Game configuration & content pools
-│       ├── generator_config.json
-│       ├── generator_environment_assets.json
-│       ├── generator_stats_config.json
-│       ├── content_lists/
-│       ├── content_pools/
-│       ├── encounter_templates/
-│       └── zone_layouts/
+│   ├── Images/                              # Preview images of the reference templates
+│   └── GameData/
+│       ├── DB/                              # Extracted game database (buffs, AI picks…)
+│       └── GeneratorData/                   # Game configuration & content pools
+│           ├── generator_config.json
+│           ├── generator_environment_assets.json
+│           ├── generator_stats_config.json
+│           ├── content_lists/
+│           ├── content_pools/
+│           ├── encounter_templates/
+│           └── zone_layouts/
 ├── app/                                     # Front-ends (presentation only)
 │   ├── gui/                                 # Gio desktop GUI
 │   │   ├── program.go                       # Gio app bootstrap + event loop
@@ -59,26 +62,35 @@ Generated template preview:
 │   └── testlayoutcheck/                     # Checker that enforces the test/unit layout rules
 ├── internal/
 │   ├── composition/                         # wire provider sets + generated injector
-│   ├── handlers/                            # Thin GuiHandler facade over focused use-case handlers
+│   ├── handlers/                            # Thin GUIHandler facade over focused use-case handlers
 │   ├── dtos/                                # Editor-state / template transfer objects
 │   ├── common/                              # Shared errors, constants and immutable catalogs
 │   ├── registry/                            # Pure game SIDs / enum pools (items, spells, factions…)
 │   ├── helpers/                             # IO (Steam VDF detect), math, slice, string, linq
-│   ├── entities/                            # Database layer: read-only .rmg.json schema (template/), editor_state/, topology/
+│   ├── entities/                            # Database layer: read-only .rmg.json schema (template_entity/), editor_state/, topology/
 │   ├── mappers/                             # Entity ⇄ model and editor-state ⇄ generator-config mapping
 │   ├── models/                              # Service layer: owns the structure and the business logic
 │   │   ├── config/                          # GeneratorConfig (config_inner: topology, zone, hero, rules)
-│   │   └── editor_state_model/              # EditorState and its nine groups, wrapping the entities
+│   │   ├── content_rule_model/              # Content-rule keys, options, compositions and descriptions
+│   │   ├── editor_state_model/              # EditorState and its nine groups, wrapping the entities
+│   │   ├── neutral_zone/                    # Neutral-zone plans, profiles and qualities
+│   │   ├── preview/                         # Preview layout and the shared connection-curve builder
+│   │   ├── regeneration/                    # Regeneration and manual-edit decisions
+│   │   └── template_model/                  # The generated template, wrapping the .rmg.json entities
 │   ├── repositories/                        # Atomic file read/write per persisted artifact
 │   ├── validators/                          # Editor-state validation rules
 │   └── services/                            # Business logic
 │       ├── asset_provider/                  # Embedded game-data and preview assets
-│       ├── builders/                        # Invariant-rich template entity builders
+│       ├── bonuses/                         # Game-start bonus entries
+│       ├── builders/                        # Invariant-rich template model builders
 │       ├── connection_editor/               # Manual zone/connection editing logic
 │       ├── content_rules/                   # Per-row content placement rules and catalogs
+│       ├── editor/                          # Preview regeneration decisions
 │       ├── file_service/                    # .gen.json and .rmg.json persistence
+│       ├── file_system/                     # Directory browsing and path resolution
 │       ├── preview_service/                 # Preview layout and PNG rendering
 │       ├── template_generator/              # Generator + topology/content/rule providers
+│       ├── zone_content/                    # Zone-content editor rules and row presentation
 │       └── zones/                           # Shared zone, castle and road construction
 ├── tools/                                   # Second module: wire, golangci-lint, gcov2lcov
 └── test/                                    # Unit, architecture, integration and performance suites
@@ -86,7 +98,7 @@ Generated template preview:
 
 ## Features
 
-- **Gio desktop GUI** (`gioui.org v0.10.0`) with three configuration tabs and a
+- **Gio desktop GUI** ([gioui.org](https://gioui.org), version pinned in [go.mod](go.mod)) with three configuration tabs and a
   live preview sidebar that also owns the output-directory picker and the
   generate/save buttons:
   1. **General** — template name, players, map size, game mode, hero counts,
@@ -103,10 +115,13 @@ Generated template preview:
 - **Layered architecture** — the GUI talks to `internal/handlers.GUIHandler`
   through DTOs; all generation, IO and preview logic lives in
   `internal/services`.
-- **Steam auto-detection** — on launch the app locates the game's
-  custom-template folder (or install `map_templates`) by parsing Steam's
-  `libraryfolders.vdf`, and falls back to the working directory. Works on
-  Windows and Linux/Steam Deck.
+- **Game templates folder auto-detection** — on launch the app looks for the
+  game's custom-template folder (`my_map_templates`): on Windows under the
+  user profile's `AppData/LocalLow/Unfrozen/HeroesOldenEra`, on Linux/Steam
+  Deck inside the game's Proton prefix, found through Steam's
+  `libraryfolders.vdf`. If detection fails, the output folder stays empty and
+  export is refused until you pick the game's templates folder; that choice
+  lasts for the current session only.
 - **Manual zone editor** — visually add, move and reconnect zones over a
   generated template before saving.
 - **Live preview + PNG export** — renders the topology with in-game-style
@@ -130,7 +145,7 @@ go build .
 ```
 
 Hot reload via [air](https://github.com/air-verse/air) is configured in
-[.air.toml](.air.toml); set `HOT_RELOAD=1` to start the window minimized.
+[.air.toml](.air.toml); it starts the app with `-minimized -with-logging`.
 
 Dependencies are wired at compile time by
 [goforj/wire](https://github.com/goforj/wire). The generated
@@ -146,8 +161,9 @@ Never pass `-tags=wireinject` to `go build` or `go test`; that tag is for the ge
 
 ## Workflow
 
-1. Launch the GUI (`go run .`). On startup it tries to locate the game's
-   template folder via Steam and pre-fills the output directory.
+1. Launch the GUI (`go run .`). On startup it detects the game's template
+   folder and pre-fills the output directory; if detection fails, pick the
+   folder in the preview panel before exporting.
 2. Configure the template across the **General**, **Layout & Zones** and
    **Bonuses & Bans** tabs.
 3. (Optional) On the **Layout & Zones** tab open the **Manual zone editor** to
@@ -157,8 +173,8 @@ Never pass `-tags=wireinject` to `go build` or `go test`; that tag is for the ge
 5. Click **Generate** to build the template and refresh the preview,
    then **Save Template** to write `<TemplateName>.rmg.json` (plus a preview
    `.png`) into the output folder.
-6. Drop the `.rmg.json` into the game's templates folder and pick it from
-   the in-game RMG screen.
+6. Pick the template from the in-game RMG screen; it is already in the
+   game's templates folder.
 
 ## Topologies
 
@@ -178,10 +194,10 @@ Never pass `-tags=wireinject` to `go build` or `go test`; that tag is for the ge
 
 ## Game Modes & Victory Conditions
 
-Game modes (UI exposes both, generator currently always emits `Classic`):
+Game modes (both exposed in the UI and emitted as selected):
 
 - `Classic`
-- `SingleHero` (reserved)
+- `SingleHero` — bans hero hiring and makes losing the starting hero a loss
 
 Victory condition IDs (`GameEndConditions.VictoryCondition`):
 
@@ -230,8 +246,9 @@ Independent toggles also exist for `lostStartCity`, `lostStartHero`,
    editor-state validation and cross-cutting utilities including Steam library
    detection.
 8. **Composition root** (`internal/composition`) — the wire provider sets and
-   the generated `InitializeGuiHandler` injector. Every dependency is
-   constructed here exactly once; nothing else builds its own collaborators.
+   the generated `InitializeGuiHandler`, `InitializeFileSystemHandler` and
+   `InitializeRegenerationHandler` injectors, which wire handlers and services
+   to their collaborators.
 
 ### Generation Flow
 
@@ -239,7 +256,7 @@ Independent toggles also exist for `lostStartCity`, `lostStartHero`,
 app/gui (panels, dialogs, drivers.State)
    │   holds the working state as editor_state_model.EditorState and crosses
    │   the handler boundary as editor_state_dto.EditorStateDto
-   │   invokes app/gui/interfaces.IBackend
+   │   drivers.State calls handler_interfaces.IGuiHandler
    ▼
 handlers.GUIHandler → templateHandler.GenerateTemplate
    │   validates state and maps it through mappers.GeneratorConfigMapper
@@ -252,10 +269,12 @@ template_generator.TemplateGenerator.Generate
    ├── providers.MandatoryContentProvider / ContentLimitProvider
    └── providers.ZoneLayoutProvider
    ▼
-entities.RmgTemplate
-   ├──► handlers.previewHandler → preview_service       (preview panel + PNG)
-   └──► handlers.templateHandler
-           └──► file_service.FileService                ──► <Name>.rmg.json
+*template_model.Template (+ warnings)
+   ├──► handlers.previewHandler → preview_service       (preview panel layout)
+   └──► handlers.templateHandler.SaveTemplate             (+ preview_service PNG)
+           └──► file_service.FileService.SaveTemplateWithPreview
+                   ├── mappers.TemplateMapper.ToEntity  (Model → Entity seam)
+                   └──► repositories.TemplateRepository.Save  ──► <Name>.rmg.json
 ```
 
 ## Testing
@@ -271,7 +290,7 @@ go run ./cmd/testlayoutcheck .
 go test ./test/unit/internal/services/... -count=1
 
 # A single test (by name)
-go test ./test/unit/internal/services/file_service/... -run TestWhenStateIsSaved
+go test ./test/unit/internal/repositories/... -run TestWhenStateIsSaved
 
 # Integration tests
 go test -tags integration_test ./test/integration/... -count=1
@@ -313,4 +332,4 @@ go tool pprof -http :42069 cpu.prof
 
 ## License
 
-See the main project repository for license information.
+MIT, see [LICENSE](LICENSE).

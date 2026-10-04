@@ -45,17 +45,17 @@ generated Wire or the output directory; no bulk rewrites; no repo-committed chec
 - the `reapplyManualEdits` location and rationale corrected;
 - the fixture-tested io.go Linux path acknowledged.
 
-**Owner plan approval:** pending.
+**Owner plan approval:** 2026-10-04, "Approved, please proceed".
 
 **Out of scope:** topology retirement wording (Batch K; "Eleven topologies" is accurate today),
 the QUICKSTART map-size table (labelled "common presets", accurate), restructuring or
 restyling any document, owner_findings.md, and the review's §8.
 
 ## Phase 1: README (§7.1)
-Status: Not started
+Status: Complete
 
-- [ ] Features: `gioui.org v0.10.0` → Gio named without a version, linked to [go.mod](../../go.mod) (I2).
-- [ ] Features, Steam auto-detection: replace the bullet's mechanism and fallback with what the
+- [x] Features: `gioui.org v0.10.0` → Gio named without a version, linked to [go.mod](../../go.mod) (I2).
+- [x] Features, Steam auto-detection: replace the bullet's mechanism and fallback with what the
       startup path (`FindGameTemplateDirectory` → `FindOldenEraTemplatesDir(false)`) does:
       - on Windows it globs the user-profile
         `AppData/LocalLow/Unfrozen/HeroesOldenEra/users/*/my_map_templates`, with no Steam parsing;
@@ -64,11 +64,11 @@ Status: Not started
       - the install `map_templates` folder is not used at startup;
       - on failure the output folder stays empty with an error status, and export is refused
         until the user picks the game's templates folder (session-only picker).
-- [ ] Workflow steps 1 and 6 (and QUICKSTART §4's closing line, Phase 2): the template is
+- [x] Workflow steps 1 and 6 (and QUICKSTART §4's closing line, Phase 2): the template is
       written straight into the detected templates folder, so "drop it into the game's
       templates folder" becomes "pick it in-game". Step 1 drops "via Steam".
-- [ ] Building & Running: `HOT_RELOAD=1` → `.air.toml` passes `-minimized` (and `-with-logging`).
-- [ ] Project Structure tree:
+- [x] Building & Running: `HOT_RELOAD=1` → `.air.toml` passes `-minimized` (and `-with-logging`).
+- [x] Project Structure tree:
   - `entities/ … (template/)` → `template_entity/`;
   - `Thin GuiHandler facade` → `GUIHandler`;
   - add the missing `services/` packages (`bonuses/`, `editor/`, `file_system/`, `zone_content/`);
@@ -76,14 +76,14 @@ Status: Not started
     `regeneration/`, `template_model/`);
   - add `data/GameData/DB/` and `data/Images/`.
   Verify each name with `list_dir` before writing.
-- [ ] Game Modes: drop "generator currently always emits `Classic`" and "(reserved)". State
+- [x] Game Modes: drop "generator currently always emits `Classic`" and "(reserved)". State
       that the selected mode is emitted, and that `SingleHero` applies its hero rules.
       Re-check `gameRulesProvider.go` before writing.
-- [ ] Generation Flow diagram per I3. Replace the `app/gui/interfaces.IBackend` line with
+- [x] Generation Flow diagram per I3. Replace the `app/gui/interfaces.IBackend` line with
       `drivers.State` calling `handler_interfaces.IGuiHandler`.
-- [ ] Testing: `-run TestWhenStateIsSaved` on `file_service` → a path where the name exists
+- [x] Testing: `-run TestWhenStateIsSaved` on `file_service` → a path where the name exists
       (`./test/unit/internal/repositories/...`), or a real `file_service` test name.
-- [ ] License: "MIT, see [LICENSE](LICENSE)".
+- [x] License: "MIT, see `[LICENSE](LICENSE)`" (the README's own link).
 
 ### Verification Plan
 - Throwaway PowerShell link check: every relative link/image in README resolves (`Test-Path`
@@ -93,30 +93,51 @@ Status: Not started
   `func Test…` declaration under the documented package path.
 
 ### Phase Summary
-_(write when phase completes)_
+Done 2026-10-04. README now:
+- names Gio by link and points to go.mod for the version;
+- describes per-platform template-folder detection and the refused export on failure
+  (the bullet is renamed "Game templates folder auto-detection");
+- describes the air flags;
+- updates workflow steps 1 and 6;
+- states that the selected game mode is emitted, with `SingleHero`'s hero-hire ban and
+  starting-hero loss rule (`gameRulesProvider.go` L28/L108);
+- redraws the Generation Flow per I3, ending in `TemplateMapper.ToEntity` (the seam, inside
+  `FileService.SaveTemplateWithPreview`) and `TemplateRepository.Save`;
+- points the `-run` example at `./test/unit/internal/repositories/...`;
+- states MIT with a link to LICENSE.
+
+The tree adds `data/Images/`, `GameData/DB/`, 4 services and 5 model packages (names
+listed from disk) and fixes `template_entity/` and `GUIHandler`.
+
+Verification:
+- A throwaway link checker (`%TEMP%\batchi-linkcheck.ps1`, outside the repo; deleted at
+  close-out) reports README's 14 relative links all OK. Its negative control caught a missing
+  path and a missing anchor.
+- The stale-term grep has no hits.
+- `TestWhenStateIsSaved_*` exists twice in `repositories/editorStateRepository/save_test.go`.
 
 ## Phase 2: QUICKSTART (§7.1)
-Status: Not started
+Status: Complete
 
-- [ ] §3: the persistence sentence distinguishes three things: the editor state is the
+- [x] §3: the persistence sentence distinguishes three things: the editor state is the
       `editor_state_model.EditorState` model, which crosses the handler boundary wrapped in
       `editor_state_dto.EditorStateDto`; `file_service.FileService.SaveSettings` /
       `LoadSettingsFile` map it to and from the `.gen.json` entity
       (`internal/entities/editor_state`).
-- [ ] §4 step 1 and closing line: the folder is detected (not "from your Steam install" on
+- [x] §4 step 1 and closing line: the folder is detected (not "from your Steam install" on
       Windows), and the template is written into it, so "drop it into the game's templates
       directory" becomes "pick it in-game".
-- [ ] §5 snippet:
+- [x] §5 snippet:
   - `state := editor_state_dto.EditorStateDto{EditorState: editor_state_model.NewDefaultEditorStateModel()}`;
   - output path from `composition.InitializeFileSystemHandler().FindGameTemplateDirectory()`
     (exit on error) instead of `"."`, matching AGENTS.md §2.7;
   - imports updated.
-- [ ] §5 table: the six embedded interfaces of `IGuiHandler` (`ITemplateHandler`,
+- [x] §5 table: the six embedded interfaces of `IGuiHandler` (`ITemplateHandler`,
       `IStateHandler`, `IPreviewHandler`, `IZoneContentHandler` (embeds `IContentRuleHandler`),
       `IZoneEditorHandler`, `IBonusHandler`). Note the two standalone seams with their own
       injectors: `IFileSystemHandler` and `IRegenerationHandler`. The "whole contract" sentence
       is adjusted to match.
-- [ ] §5 prose: `dtos.NewDefaultEditorStateDto()` → `editor_state_model.NewDefaultEditorStateModel()`.
+- [x] §5 prose: `dtos.NewDefaultEditorStateDto()` → `editor_state_model.NewDefaultEditorStateModel()`.
       "exchanges `internal/dtos` types" stays (DTOs cross the seam; the default state is a
       model wrapped in the DTO).
 
@@ -128,45 +149,61 @@ Status: Not started
 - `Select-String QUICKSTART.md -Pattern 'NewDefaultEditorStateDto|dtos\.EditorStateDto|OutputPath: "\."'` → no hits.
 
 ### Phase Summary
-_(write when phase completes)_
+Done 2026-10-04. In QUICKSTART:
+- §3 separates the model, the DTO wrapper and the `.gen.json` entity; checked against
+  `FileService.SaveSettings` / `LoadSettingsFile`, which map through `editorStateMapper`.
+- §4 describes the detected folder, the session-only picker on failure, and "pick it in-game".
+- The §5 snippet wraps `NewDefaultEditorStateModel()` in `editor_state_dto.EditorStateDto`
+  and writes to `composition.InitializeFileSystemHandler().FindGameTemplateDirectory()`, with
+  a one-line comment citing the game's folder rule.
+- The §5 table lists `IGuiHandler`'s six embeds and names the two standalone injectors
+  (`InitializeFileSystemHandler`, `InitializeRegenerationHandler`, verified in
+  `internal/composition/wire.go`). "A single interface" became "interfaces".
+
+Verification:
+- The snippet was extracted verbatim from the markdown into `tmp/quickstartcheck/main.go`.
+  `go vet` and `go build` (to a temp exe) both exit 0. It was never run, and the folder and
+  exe were deleted.
+- All 11 relative links are OK, and the stale-term grep (plus "from your Steam install" and
+  "Drop the resulting") has no hits.
 
 ## Phase 3: test_observations.md (§7.2)
-Status: Not started
+Status: Complete
 
-- [ ] buttonWidget entry: separate the helper from the constructor limitation. The button
+- [x] buttonWidget entry: separate the helper from the constructor limitation. The button
       constructors still need `layout.Context` + a text shaper. The semantics helper is now the
       exported `utils.AddButtonSemantics` (app/gui/utils/buttonPositionLogger.go), which needs
       only ops, a label and dimensions; keep the accurate note that the logger tests replay
       equivalent ops.
-- [ ] zoneEditorDialog entry: `groupConnectionsByPair` now lives in `internal/models/preview`
+- [x] zoneEditorDialog entry: `groupConnectionsByPair` now lives in `internal/models/preview`
       (connectionCurveLayout.go, the shared curve builder). The ">=92.9%" figure is labelled
       as measured 2026-08-08.
-- [ ] drivers.State intro: `NewUIState(handler, false)` → the 4-argument
+- [x] drivers.State intro: `NewUIState(handler, false)` → the 4-argument
       `NewUIState(handler, fileSystem, regeneration, findTemplateDir)` with the handler mocks.
-- [ ] Delete the `templateDir == ""` fallback bullet (detection is now injected via
+- [x] Delete the `templateDir == ""` fallback bullet (detection is now injected via
       `IFileSystemHandler.FindGameTemplateDirectory` and unit-tested). Keep `GetOutputPathWidget`
       and repair the orphaned "(returns a Gio widget)" sentence.
-- [ ] stateFiles bullet: `suggestDirectory` → `getWorkingDirectory`. Check against the existing
+- [x] stateFiles bullet: `suggestDirectory` → `getWorkingDirectory`. Check against the existing
       `getWorkingDirectory` bullet so the two stay consistent.
-- [ ] `reapplyManualEdits` bullet: it lives in app/gui/drivers/stateManualEdits.go and delegates
+- [x] `reapplyManualEdits` bullet: it lives in app/gui/drivers/stateManualEdits.go and delegates
       through mockable handlers. Inspect `test/unit/app/gui/drivers/` for existing coverage of
       the castle branch. If covered, delete the bullet (I5). Otherwise replace the obsolete
       "entangled with the real mapper" rationale with the true remaining reason. No tests are
       added in this batch.
-- [ ] io.go entry: the Linux path is fixture-tested (test/unit/internal/helpers/io/ supplies a
+- [x] io.go entry: the Linux path is fixture-tested (test/unit/internal/helpers/io/ supplies a
       temp HOME, `libraryfolders.vdf` and the Proton directory, including success). Narrow the
       limitation to what is still host-dependent: the Windows registry and user-profile branches,
       plus anything else the inspection confirms. Mention `io_other.go`.
-- [ ] integration_common entry (I6): `integration_test`-tagged helpers need `editor.Window` and
+- [x] integration_common entry (I6): `integration_test`-tagged helpers need `editor.Window` and
       a GPU context; the untagged `snapshot/` subpackage (comparer, difference, masker, store)
       has unit tests under `test/unit/test/test_helpers/integration_common/snapshot/`. Drop
       `tabCalibration.go` and the flat file names.
-- [ ] Allocation entry: scope "never run in CI" to the benchmark, which needs both tags while the
+- [x] Allocation entry: scope "never run in CI" to the benchmark, which needs both tags while the
       CI performance job uses only `integration_test`. State that GUI integration tests do run on
       PRs (Mesa/Xvfb job) and that the figures are historical (2026-08-31). Keep the deliberate
       absence of an automated allocation threshold.
-- [ ] Disambiguate "Batch I Phase 4/6" (2026-08) as the earlier backlog's Batch I, not this one.
-- [ ] Label the remaining dated coverage figures (75.1→74.9, 6911/9246→9261) as historical
+- [x] Disambiguate "Batch I Phase 4/6" (2026-08) as the earlier backlog's Batch I, not this one.
+- [x] Label the remaining dated coverage figures (75.1→74.9, 6911/9246→9261) as historical
       where not already dated.
 
 ### Verification Plan
@@ -175,16 +212,36 @@ Status: Not started
   like `app/…`, `internal/…`, `test/…`).
 
 ### Phase Summary
-_(write when phase completes)_
+Done 2026-10-04. Every listed item was applied. Decisions taken from inspection:
+- **stateFiles bullet:** `suggestDirectory` was simply dropped, not renamed, because
+  `getWorkingDirectory` is called from the public `Load`/`SaveTo`. Its one untested branch is
+  already documented by the separate `currentPath != ""` bullet.
+- **`reapplyManualEdits`:** no unit test covers the castle branch (no `ReapplyCastleSettings`,
+  `ReapplyWithCastleChanges` or `DecideManualEditReapplication` in `test/unit/app/gui/drivers/`).
+  It is nonetheless reachable through the public `Generate` with the mocked
+  `IRegenerationHandler` and `IGuiHandler`, so the bullet now says it is not a limitation and
+  the missing unit test is recorded, not assigned. No test was added (I9).
+- **io.go:** Windows user-profile glob tests run only on Windows, and VDF/Proton tests only
+  elsewhere; each skips on the other platform. What stays host-dependent is the registry
+  lookup and the Windows Steam-path fallbacks. `io_other.go` was confirmed as the
+  non-Windows no-op.
+- **CI claim:** checked against `pr-validation.yml`. `run-gui-integration-tests` runs on
+  `pull_request` under `xvfb-run` with Mesa and `-tags=integration_test,gui`, while the
+  performance step uses `-tags integration_test` only.
+
+Verification: the stale-term grep (plus "entangled with the real") has no hits. A path
+existence check over 39 path-like tokens found 37 real paths, all existing; the other 2 are
+symbol references in untouched text (`app/gui/drivers.State`,
+`internal/validators/editorStateValidator`).
 
 ## Phase 4: Go comments and AGENTS.md
-Status: Not started
+Status: Complete
 
-- [ ] [templateHandlerMock.go](../../test/test_helpers/templateHandlerMock.go#L16):
+- [x] [templateHandlerMock.go](../../test/test_helpers/templateHandlerMock.go#L16):
       `interfaces.IBackend` → `handler_interfaces.IGuiHandler`.
-- [ ] [logButtonPositions_test.go](../../test/unit/app/gui/utils/buttonPositionLogger/logButtonPositions_test.go#L227):
+- [x] [logButtonPositions_test.go](../../test/unit/app/gui/utils/buttonPositionLogger/logButtonPositions_test.go#L227):
       `widgets.addButtonSemantics` → `utils.AddButtonSemantics`.
-- [ ] AGENTS.md §4.2.1: the bullet's examples `IDialog`, `IPanel`, `IGuiHandler`; the code
+- [x] AGENTS.md §4.2.1: the bullet's examples `IDialog`, `IPanel`, `IGuiHandler`; the code
       block shows the real `IGuiHandler` with its six embeds.
 
 ### Verification Plan
@@ -193,14 +250,22 @@ Status: Not started
 - AGENTS.md block matches [guiHandlerInterface.go](../../internal/handlers/handler_interfaces/guiHandlerInterface.go) exactly.
 
 ### Phase Summary
-_(write when phase completes)_
+Done 2026-10-04. Two one-line comment edits and the AGENTS.md §4.2.1 example now name the
+real `IGuiHandler` with its six embeds, in the order of `guiHandlerInterface.go`.
+`TemplateHandlerMock` satisfies `IGuiHandler`: it is passed as `NewUIState`'s first argument.
+
+Verification:
+- `gofmt -l` is empty and `go vet` on both packages exits 0.
+- No `IBackend` remains in AGENTS.md, README, QUICKSTART or the mock.
+- The AGENTS.md link check reports only the two pre-existing literal `[path](path)`
+  placeholders in §6, which are formatting examples, not links.
 
 ## Phase 5: Review and close-out
-Status: Not started
+Status: In progress (waiting on the owner-commit gate)
 
-- [ ] Independent implementation review (GPT-6.1 Sol): factual accuracy of every changed
+- [x] Independent implementation review (GPT-6.1 Sol): factual accuracy of every changed
       sentence against source; apply or record findings.
-- [ ] Update `.agent/session-carry-forward.md`.
+- [x] Update `.agent/session-carry-forward.md`.
 - [ ] **Gate: owner commit.** Only after the owner confirms the commit (the agent never
       commits): mark §7.1 and §7.2 `✅ FIXED` in place in the review, complete §9 row I, and
       refresh the progress line (23 fixed / 9 remaining: 0 High, 6 Medium, 3 Low). Never
@@ -210,10 +275,25 @@ Status: Not started
 - Review verdict recorded; `git status --short` lists only the intended files.
 
 ### Phase Summary
-_(write when phase completes)_
+Partial, 2026-10-04. The implementation review (GPT-6.1 Sol) returned APPROVE WITH CHANGES
+with 7 low findings, all applied:
+1. README shows the PNG on the `SaveTemplate` branch (`templateHandler` calls
+   `CreatePreviewImage`), and QUICKSTART's `IPreviewHandler` row says "preview panel layout".
+2. `builders/` is described as "template model builders" (they return `template_model` types).
+3. QUICKSTART's preview-panel paragraph no longer says "from your Steam install".
+4. The test-observations `handleSaveState` bullet explains that `Save` calls it directly once
+   `currentPath` is set by a dialog callback.
+5. The `reapplyManualEdits` bullet requires at least one castle change flag.
+6. The README composition root names all three injectors and drops the false
+   "constructed exactly once" claim.
+7. This plan's Phase 3 status and a duplicate summary placeholder were fixed.
+
+After the fixes, the README/QUICKSTART links are re-checked OK and the greps are clean. The
+handoff link check found the deleted Batch H plan link; it is now plain text. The temp link
+checker is deleted. `git status --short` lists exactly the 8 intended files.
 
 ## Final Recap
-_(write when all phases complete: summary of the entire piece of work)_
+_(write after the owner-commit gate)_
 
 ## Deployment Plan
-_(write when all phases complete: step-by-step deployment instructions)_
+_(write after the owner-commit gate)_

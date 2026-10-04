@@ -13,8 +13,6 @@ import (
 	"github.com/stretchr/testify/mock"
 )
 
-// TemplateHandlerMock is a testify mock of interfaces.IBackend, used
-// to unit-test app/gui/drivers.State without the real generator stack.
 type TemplateHandlerMock struct {
 	mock.Mock
 

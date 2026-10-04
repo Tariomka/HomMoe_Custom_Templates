@@ -16,7 +16,8 @@ public APIs in unit tests, so per-file coverage gaps here are intentional.
 - app/gui/dialogs/zoneEditorZoneProps.go and zoneEditorConnectionProps.go - Batch E
   quality-mutation installation and Custom preset synchronization are covered by
   test/integration/gui/zoneEditorProperties_integration_test.go. They remain 0% in
-  the unit profile; owner accepted total coverage 75.1% -> 74.9% on 2026-09-12.
+  the unit profile; owner accepted total coverage 75.1% -> 74.9% on 2026-09-12
+  (historical figures).
   The non-nil selected-index rebinding branch is defensive: selecting a zone clears
   the connection selection, so current real inputs cannot enter that branch.
 
@@ -26,8 +27,8 @@ public APIs in unit tests, so per-file coverage gaps here are intentional.
   `requestLateStatusRedraw` at the end of `Body`). They are covered by
   test/integration/gui/zoneEditorGraphCache_integration_test.go, which counts
   handler calls per frame and reads the aux router's wakeup. In the unit profile
-  they add 15 uncovered statements (covered 6911 unchanged, denominator
-  9246 -> 9261, reported total 74.6% -> 74.5%).
+  they added 15 uncovered statements when Batch G landed (2026-09-28, historical:
+  covered 6911 unchanged, denominator 9246 -> 9261, reported total 74.6% -> 74.5%).
 
 - app/gui/program.go - `StartApplication`, `eventLoop` and
   `getAndConfigureWindow` are the Gio bootstrap: they create a real
@@ -40,13 +41,14 @@ public APIs in unit tests, so per-file coverage gaps here are intentional.
   be provoked in-process. Making it testable would mean returning the error to
   main.go instead of exiting; the owner deferred that (see §1.4).
 
-- app/gui/widgets/buttonWidget.go - all button constructors (and the private
-  `addButtonSemantics` helper added 2026-07-12 for button-position debug
-  logging) need a `layout.Context` + `material.Theme` text shaper to lay out;
-  covered indirectly by the integration/performance suites that render the
-  full editor window. The semantic-op replay path itself IS unit-tested via
-  test/unit/app/gui/utils/buttonPositionLogger/ (headless ops that mirror
-  `addButtonSemantics`), and was verified end-to-end against a real
+- app/gui/widgets/buttonWidget.go - all button constructors need a
+  `layout.Context` + `material.Theme` text shaper to lay out; covered indirectly
+  by the integration/performance suites that render the full editor window.
+  The button-position debug semantics they emit come from the exported
+  `utils.AddButtonSemantics` (app/gui/utils/buttonPositionLogger.go), which needs
+  only ops, a label and dimensions. The semantic-op replay path IS unit-tested via
+  test/unit/app/gui/utils/buttonPositionLogger/ (headless ops equivalent to what
+  the buttons emit), and was verified end-to-end against a real
   `NewButtonWidget` layout during development.
 
 - app/gui/widgets/sliderRowWidget.go - `NewSliderRowWidget` (added 2026-07-13,
@@ -91,10 +93,12 @@ public APIs in unit tests, so per-file coverage gaps here are intentional.
   (one primary dialog struct with rendering methods and UI state split by
   responsibility).
   Much less of this is untestable than it was. Since 2026-08-08 (review item
-  §2.6, Batch 15) ALL the geometry moved to
-  internal/services/connection_editor - `BuildGeometry`, the obstacle bulge,
-  edge/node hit-testing, `groupConnectionsByPair`, the other-zone guides and the
-  grid step are unit-tested there at >=92.9% (most 100%), and the dialog's
+  §2.6, Batch 15) ALL the geometry moved out of the dialog -
+  `BuildGeometry`, the obstacle bulge, edge/node hit-testing, the other-zone
+  guides and the grid step are unit-tested in internal/services/connection_editor
+  (>=92.9%, most 100%, as measured 2026-08-08), and `groupConnectionsByPair` now
+  lives with the shared curve builder in internal/models/preview
+  (connectionCurveLayout.go). The dialog's
   canvas/snap files are thin call-throughs on `IZoneEditorHandler`. The revert
   semantics live in `drivers.State` (`PreviewBaseZones`, `ApplyEditedZones`) and
   are unit-tested under test/unit/app/gui/drivers/stateManualEdits.
@@ -141,18 +145,20 @@ public APIs in unit tests, so per-file coverage gaps here are intentional.
 
 ## app/gui/drivers.State (partially unit-tested since review item §2.2)
 
-Unit tests use `NewUIState(handler, false)` + `test_helpers.TemplateHandlerMock`.
+Unit tests use `NewUIState(handler, fileSystem, regeneration, findTemplateDir)`
+with the `test_helpers` handler mocks. Game templates folder detection is
+injected through `IFileSystemHandler.FindGameTemplateDirectory`, so every
+detection branch of `NewUIState` is unit-tested
+(test/unit/app/gui/drivers/state/newUIState_test.go).
 Still unit-untestable (dialog-callback or Gio territory):
 
-- state.go - `GetOutputPathWidget`
-- state.go - the `templateDir == ""` fallback inside `NewUIState`: whether
-  `FindOldenEraTemplatesDir` succeeds depends on whether the game is installed
-  on the machine running the tests, so only the branch that is true locally is
-  ever measured.
-  (returns a Gio widget). Covered by the integration suite.
-- stateFiles.go - `handleSaveState` / `handleLoadState` success paths and
-  `suggestDirectory` are only reachable through file-dialog callbacks
-  (`Load`/`SaveTo` pick handlers); unit tests assert the dialogs open, the
+- state.go - `GetOutputPathWidget` (returns a Gio widget). Covered by the
+  integration suite.
+- stateFiles.go - `handleLoadState` and the first `handleSaveState` of a
+  document are only reachable through file-dialog callbacks (`Load`/`SaveTo`
+  pick handlers), which are what establish `currentPath`; afterwards the public
+  `Save` calls `handleSaveState` directly, but a unit test cannot set
+  `currentPath` to get there. Unit tests assert the dialogs open; the
   integration suite exercises the load/save flows via the
   `integration_test`-gated `SaveStateToFile`/`LoadStateFromFile` exports.
 - stateFiles.go - `PickOutputDir` / `RevealOutputDir` only open dialogs whose
@@ -163,16 +169,20 @@ Still unit-untestable (dialog-callback or Gio territory):
   fallback. Batch F covered the branch end-to-end instead, through the
   `integration_test`-gated `State.SetCurrentPath` that the GUI suite's fixture
   directories are seeded with.
-- stateGeneration.go - `reapplyManualEdits` castle-change branch requires a
-  generation-then-castle-option-change sequence entangled with the real
-  mapper; exercised by the integration suite's manual-edit scenarios.
-- test/test_helpers/integration_common - the `integration_test`-tagged files
-  (`appRunner.go`, `appRunnerSnapshots.go`, `runMode.go`, `tabCalibration.go`)
+- stateManualEdits.go - `reapplyManualEdits`' castle-change branch is NOT a
+  testability limitation any more: it is reached from the public `Generate` when
+  the mocked `IRegenerationHandler.DecideManualEditReapplication` returns a
+  non-nil `ReapplyWithCastleChanges` with at least one change flag set and the
+  template has variants, and it then calls the
+  mocked `IGuiHandler.ReapplyCastleSettings`. No unit test covers it yet; the
+  integration suite's manual-edit scenarios do. Recorded, not assigned.
+- test/test_helpers/integration_common - the `integration_test`-tagged helpers
+  (the app runner, snapshots, run mode, tab and dialog handlers, coordinates)
   need `editor.Window` + a headless GPU context, so §4.6 forbids unit tests;
   they are exercised by the gated integration/performance suites (snapshot
   capture/validation via `window_snapshot_integration_test.go`). The untagged
-  helpers (`snapshotComparer.go`, `snapshotMasker.go`, `snapshotStore.go`) have
-  dedicated unit tests under `test/unit/test/test_helpers/integration_common/`.
+  `snapshot/` subpackage (comparer, difference, masker, store) has dedicated
+  unit tests under `test/unit/test/test_helpers/integration_common/snapshot/`.
 
 - internal/services/template_generator/providers/topology/base/topologyConnectionService.go -
   private connection, portal, repair, guard, and road policy is reachable through
@@ -206,14 +216,17 @@ Still unit-untestable (dialog-callback or Gio territory):
   half of that item is covered by
   `TestWhenEncodingFailsOverAnExistingPreview_LeavesTheDestinationUntouched`.
 
-- internal/helpers/io.go - `getVDFContent`, `getVDFFilePath`, `getSteamPath`,
-  `getBasePath`, and internal/helpers/io_windows.go -
-  `getSteamPathFromRegistry`: this is the Steam/Olden-Era install discovery
-  chain. It reads the Windows registry and the real Steam `libraryfolders.vdf`
-  from the host filesystem, so its result depends entirely on whether the
-  machine running the tests has Steam and the game installed. Covering it needs
-  an injectable filesystem/registry seam that does not exist today; the public
-  entry points that use it are covered through their error paths instead.
+- internal/helpers/io.go - the game templates folder discovery chain. Fixture
+  tests in test/unit/internal/helpers/io/ cover `FindOldenEraTemplatesDir` per
+  platform: on Windows the user-profile `my_map_templates` glob (temporary
+  `USERPROFILE`), on other platforms Steam's `libraryfolders.vdf` and the Proton
+  prefix (temporary `HOME`), success and not-found. Each test skips on the other
+  platform, so a single run only measures one side. Still host-dependent:
+  io_windows.go `getSteamPathFromRegistry` and the Windows Steam-path fallbacks in
+  `getSteamPath` (`ProgramFiles(x86)`, the hard-coded default), which read the
+  real registry/environment; io_other.go is the non-Windows no-op registry
+  lookup. Covering the registry needs an injectable seam that does not exist
+  today.
 
 - internal/services/template_generator/providers/topology/base/topologyConnectionService.go -
   `buildShiftDerangement`: reached only after `buildNonAdjacentDerangement`
@@ -221,7 +234,7 @@ Still unit-untestable (dialog-callback or Gio territory):
   seeding control over `math/rand` inside production code. Deterministic
   fallback, purely defensive; do not add a seam to reach it.
 
-- Batch I Phase 4 (2026-08-22) - roughly 55 test-local identifiers named `dto`
+- Earlier backlog's Batch I Phase 4 (2026-08-22; not the review's Batch I) - roughly 55 test-local identifiers named `dto`
   or `stateDto` now hold an `EditorStateModel` rather than a DTO, mostly as the
   closure parameter of `UpdateState` / `UpdateCurrentState` (e.g.
   test/unit/app/gui/drivers/state/, test/unit/app/gui/models/editorState/,
@@ -231,11 +244,15 @@ Still unit-untestable (dialog-callback or Gio territory):
   purely cosmetic. Production-side names were fixed in the same phase. Rename
   them opportunistically when a file is edited for another reason.
 
-- Batch I Phase 6 (2026-08-31) - **the per-frame allocation budget has no
-  automated guard.** The phase cut `BenchmarkEditorWindow_TabCycling` from
-  ~12,690 to ~4,773 allocs/op, but nothing fails if it climbs back: the
-  benchmark needs a GPU, carries the `integration_test,gui` tags and is
-  therefore never run in CI. An `allocs/op` assertion was considered and
+- Earlier backlog's Batch I Phase 6 (2026-08-31; not the review's Batch I) - **the
+  per-frame allocation budget has no automated guard.** The phase cut
+  `BenchmarkEditorWindow_TabCycling` from ~12,690 to ~4,773 allocs/op (historical
+  figures from that date), but nothing fails if it climbs back: the benchmark
+  needs a GPU and carries both the `integration_test` and `gui` tags, while the
+  CI performance job runs with `integration_test` only, so this benchmark never
+  runs in CI. (GUI integration tests themselves do run in CI: the PR workflow's
+  Mesa/Xvfb job runs `./test/integration/gui/...` on every pull request.) An
+  `allocs/op` assertion was considered and
   rejected - `testing.AllocsPerRun` over a Gio frame is dominated by rendering
   and font shaping, so a threshold tight enough to catch a regression in
   `EditorState.Clone` would be far too flaky to keep. The recorded figures in

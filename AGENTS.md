@@ -256,16 +256,16 @@ any file you *do* touch must leave the repo in conformance.
 
 ### 4.2.1 Interfaces
 
-- Interface types **must use `I` prefix** (`IDialog`, `IPanel`, `IBackend`).
+- Interface types **must use `I` prefix** (`IDialog`, `IPanel`, `IGuiHandler`).
 
   ```go
-  type IBackend interface {
-    ITemplateWorkflowHandler
-    IStatePersistenceHandler
-    IStateValidationHandler
+  type IGuiHandler interface {
+    ITemplateHandler
+    IStateHandler
     IPreviewHandler
-    IContentRuleHandler
+    IZoneContentHandler
     IZoneEditorHandler
+    IBonusHandler
   }
   ```
 

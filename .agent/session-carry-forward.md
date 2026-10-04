@@ -1,19 +1,21 @@
-# Carry-forward: Batch H implemented, awaiting owner review and commit
+# Carry-forward: Batch H closed; Batch I implemented, awaiting owner commit
 
-Date: 2026-10-04. **Batch H (review §6.2, §6.3, §6.5: CI/tooling hardening) is
-implemented, verified on Windows, and approved by independent review. It is uncommitted.**
-The owner approved the plan (committed by the owner as `25b4c98` "H Plan") and asked for every
-phase to run without stopping, with their review at the end.
+Date: 2026-10-04.
 
-**§6.2, §6.3 and §6.5 are marked FIXED ahead of the commit** in the
-[surviving review](backlog/review-gpt-6-astra-09-07.md), at the owner's request. Their
-Progress paragraphs say "uncommitted, awaiting owner commit". Row H of §9 is complete, and
-the progress line reads **21 fixed, 11 remaining** (0 High, 6 Medium, 5 Low). If the owner
-rejects any part, revert the matching review entries.
+**Batch H (review §6.2, §6.3, §6.5: CI/tooling) is CLOSED.** It was owner-committed as
+**`a140e0a`** and pushed. The owner released **`v0.3.9-alpha.3`** from it (exercising the
+prerelease path) and reports that everything works. The review marks all three items FIXED
+with that commit, and row H is complete. The Batch H plan has been deleted by the owner; §3
+restates H1–H12.
 
-The plan, [batch-h-ci-tooling-hardening.md](plans/batch-h-ci-tooling-hardening.md), has all
-four phases Complete, plus its Final Recap and Deployment Plan. It records the owner decisions
-H1–H12. §3 below restates them, along with J1–J9 and G1–G9a.
+**Batch I (review §7.1, §7.2: docs) is implemented, verified and approved by independent
+review, but its file edits are uncommitted.** Its plan and the Batch H review close-out were
+committed by the owner as `599ff23`.
+- The plan, [batch-i-docs.md](plans/batch-i-docs.md), has Phases 1–4 Complete. Phase 5 has
+  the review and handoff done.
+- **Gate:** §7.1/§7.2 are marked FIXED in the review only after the owner confirms the
+  commit. The review currently reads **21 fixed, 11 remaining**; after the gate it reads
+  23 / 9 (0 High, 6 Medium, 3 Low).
 
 **Section 8 is preserved verbatim**, contradictions and all. Its Batch C phase/engine
 wording, its "pending decisions" wording for §1.5, §1.11, §1.12 and §2.1, its §2.2
@@ -21,14 +23,15 @@ bullet, and its tooling pending-decision wording (§6.2/§6.3/§6.5) are **super
 else §8 retains as later scope remains **binding**. Do not edit §8.
 
 Batches A/D, B, C, E, F, G and J are closed and merged to `master` (G and J as PR #49,
-`ec42217`). Do not revisit or re-verify closed batches. Batch H is on `AD/pbi_resolution`
-as uncommitted working-tree changes.
+`ec42217`). Batch H is closed on `AD/pbi_resolution`. Do not revisit or re-verify closed
+batches.
 
 ## 1. Session goal
 
-Plan, implement and verify Batch H from review §9: §6.2 (one linter version), §6.3 (LF
-policy for module/checksum files) and §6.5 (release tag interpolated into shell). The owner
-picked H. Previous session's goal, for context: Batch J (§2.2), closed.
+This session planned, implemented and verified **Batch H**, which the owner then
+committed, released and confirmed. It then planned and implemented **Batch I**
+(README/QUICKSTART accuracy, the stale test observations, two Go comments and the AGENTS.md
+interface example).
 
 ### Previous session goal (Batch J, closed)
 
@@ -39,7 +42,42 @@ turn marked the finding fixed and handed this file forward.
 
 ## 2. Fixes applied
 
-### Batch H, uncommitted, marked FIXED pending the owner's commit
+### Batch I, uncommitted (docs and comments only)
+
+- **[README.md](../README.md):**
+  - Gio is linked without a version.
+  - Per-platform templates-folder detection, and refused export on failure (no
+    working-directory fallback).
+  - The real air flags.
+  - Workflow steps 1 and 6 updated: the template is already in the game folder.
+  - `SingleHero` is emitted, with its hero rules.
+  - The structure tree is completed and corrected (`template_entity/`, `GUIHandler`, 4
+    services, 5 models, data folders, model builders).
+  - The Generation Flow ends in `*template_model.Template`, with the persistence seam
+    `FileService.SaveTemplateWithPreview` → `TemplateMapper.ToEntity` →
+    `TemplateRepository.Save`, and PNG on the save branch.
+  - The composition root names all three injectors.
+  - A working `-run` example, and MIT with a link to LICENSE.
+- **[QUICKSTART.md](../QUICKSTART.md):**
+  - §3 separates the model, the DTO wrapper and the `.gen.json` entity.
+  - The preview and §4 describe the detected folder, the session-only picker and "pick it
+    in-game".
+  - The §5 snippet compiles, writes to `FindGameTemplateDirectory()`, and wraps
+    `NewDefaultEditorStateModel()` in the DTO.
+  - The interface table matches `IGuiHandler`'s six embeds plus the two standalone
+    injectors.
+- **[test_observations.md](backlog/test_observations.md):**
+  - Stale symbols and paths corrected (`AddButtonSemantics`, `groupConnectionsByPair`,
+    `NewUIState`, the snapshot subpackage).
+  - The obsolete template-dir fallback entry deleted, and the CI GUI-job claim corrected.
+  - The io.go entry narrowed to the registry and Windows Steam-path fallbacks.
+  - `reapplyManualEdits` is now recorded as testable but uncovered.
+  - Historical figures labelled, and the older backlog's "Batch I" disambiguated.
+- Comments: [templateHandlerMock.go](../test/test_helpers/templateHandlerMock.go) and
+  `logButtonPositions_test.go`. [AGENTS.md](../AGENTS.md) §4.2.1 example → the real
+  `IGuiHandler`.
+
+### Batch H, committed in `a140e0a` and **marked FIXED**. Closed; do not reopen.
 
 - **§6.3:** [.gitattributes](../.gitattributes) adds `go.mod text eol=lf` and
   `go.sum text eol=lf`. Only the four module/checksum working copies were re-materialized
@@ -96,7 +134,22 @@ All are committed in `35e0fab` and **marked FIXED**. They are closed; do not reo
 
 ## 3. Features added / changed
 
-### Delivered in Batch H, uncommitted
+### Batch I decisions (uncommitted work)
+
+| ID | Decision |
+| --- | --- |
+| I1 | Fix every audited inaccuracy in README/QUICKSTART; no rewrite of correct text. |
+| I2 | Gio named without a version, linked to go.mod. |
+| I3 | Generation Flow ends in the model and shows the Model→Entity persistence seam. |
+| I4 | The QUICKSTART snippet is compile-checked once from gitignored `tmp/`, then deleted. |
+| I5 | Delete obsolete observations, correct stale ones, label historical figures. |
+| I6 | The integration_common entry describes the layout, not a file list. |
+| I7 | Fix the two stale Go comments. |
+| I8 | Update the AGENTS.md interface example to `IGuiHandler`. |
+| I9 | Docs checks only: no coverage, unit or testlayoutcheck runs. |
+| I10 | Reviews by GPT-6.1 Sol. |
+
+### Delivered in Batch H, committed (`a140e0a`) and settled
 
 | ID | Decision |
 | --- | --- |
@@ -212,7 +265,21 @@ in the tree; the merged code is the reference.
 
 ## 4. File modifications
 
-**Batch H, uncommitted** (plan committed by the owner as `25b4c98`):
+**Batch I, uncommitted** (plan and Batch H review close-out committed by the owner as
+`599ff23`):
+- [README.md](../README.md), [QUICKSTART.md](../QUICKSTART.md),
+  [test_observations.md](backlog/test_observations.md): see §2.
+- [AGENTS.md](../AGENTS.md): only the §4.2.1 interface example.
+- [templateHandlerMock.go](../test/test_helpers/templateHandlerMock.go) and
+  `test/unit/app/gui/utils/buttonPositionLogger/logButtonPositions_test.go`: one comment
+  line each.
+- [Batch I plan](plans/batch-i-docs.md): phase summaries.
+- This handoff.
+
+**Not touched:** production Go code, `data/`, the schema, the registry, Wire, the output path,
+the review's §8, and owner_findings.md.
+
+**Batch H, committed in `a140e0a`** (plan `25b4c98`, since deleted):
 - [.gitattributes](../.gitattributes): `go.mod`/`go.sum` `text eol=lf` and a reworded comment.
 - [tools/go.mod](../tools/go.mod), [tools/go.sum](../tools/go.sum): golangci-lint v2.13.1
   plus its forced indirect changes.
@@ -220,7 +287,7 @@ in the tree; the merged code is the reference.
   `version: ${{ steps.lint-version.outputs.version }}`.
 - [release.yml](../.github/workflows/release.yml): the `validate` job, `needs`, `env.VERSION`,
   and validated release inputs plus `prerelease`.
-- [Batch H plan](plans/batch-h-ci-tooling-hardening.md): all phases, recap and deployment.
+- Batch H plan (since deleted by the owner): all phases, recap and deployment.
 - [Surviving review](backlog/review-gpt-6-astra-09-07.md): §6.2, §6.3, §6.5 marked FIXED
   (pending commit), row H, progress line. §8 untouched, nothing renumbered.
 - This handoff.
@@ -307,7 +374,23 @@ batches; the review's §0 is the disposition of record).
 
 ## 5. Tests added or updated
 
-### Batch H (uncommitted)
+### Batch I (uncommitted)
+
+No tests were added or run (I9). The coverage baseline stays **74.5% (6915 / 9263)**.
+Verification of record (Windows):
+- A throwaway link/anchor checker in `%TEMP%` (deleted afterwards) passed README (14
+  relative links) and QUICKSTART (11). Its negative control caught a broken path and anchor.
+  AGENTS.md has only its two literal `[path](path)` placeholders.
+- The QUICKSTART §5 snippet was extracted verbatim into gitignored `tmp/quickstartcheck/`:
+  `go vet` and `go build` exit 0. It was never run and was deleted.
+- `gofmt -l` is clean and `go vet` exits 0 on the two comment-touched packages.
+- Stale-term greps have no hits. 37/37 real paths named in test_observations.md exist.
+- Reviews (GPT-6.1 Sol): plan APPROVE WITH CHANGES (7 findings, all applied);
+  implementation APPROVE WITH CHANGES (7 low findings, all applied: PNG attributed to the
+  save branch, "model builders", the QUICKSTART preview wording, the `handleSaveState`
+  reachability, the castle-branch condition, the composition-root claim, and plan status).
+
+### Batch H (`a140e0a`, owner-released as `v0.3.9-alpha.3`)
 
 No Go tests were added or run: no Go code changed, and the owner waived the build, unit,
 coverage and testlayoutcheck runs (H10). The coverage baseline stays **74.5% (6915 / 9263)**,
@@ -423,30 +506,52 @@ in-game behaviour.
 
 ## 6. Git status snapshot
 
-The branch is **`AD/pbi_resolution`**, HEAD **`25b4c98` ("H Plan")**, on top of `9d302a5`
-("init", AGENTS.md) and `master` `ec42217` (Batches G and J, PR #49). It has no upstream.
+The branch is **`AD/pbi_resolution`**, HEAD **`599ff23` ("Batch I docs")**, **ahead 3** of
+`origin/AD/pbi_resolution` (the owner pushed through `a140e0a`). The history on
+`master` `ec42217` is:
+- `9d302a5` ("init")
+- `25b4c98` ("H Plan")
+- `a140e0a` ("Batch H done", tagged `v0.3.9-alpha.3`)
+- `144d032` ("Agents")
+- `879e41a` ("docs", which deleted the H plan)
+- `599ff23`
 
-`git status --short` shows only Batch H's unstaged edits:
+`git status --short` shows only Batch I's unstaged edits plus this handoff:
 
 ```text
- M .agent/backlog/review-gpt-6-astra-09-07.md
- M .agent/plans/batch-h-ci-tooling-hardening.md
+ M .agent/backlog/test_observations.md
+ M .agent/plans/batch-i-docs.md
  M .agent/session-carry-forward.md
- M .gitattributes
- M .github/workflows/pr-validation.yml
- M .github/workflows/release.yml
- M tools/go.mod
- M tools/go.sum
+ M AGENTS.md
+ M QUICKSTART.md
+ M README.md
+ M test/test_helpers/templateHandlerMock.go
+ M test/unit/app/gui/utils/buttonPositionLogger/logButtonPositions_test.go
 ```
 
 `.agent/memories/` and `tmp/` are gitignored.
 
 **The assistant performed no staging, unstaging, commit, push, stash, branch switch or
-worktree change.** The only Git command that wrote files was the H4-approved
+worktree change.** The only Git command that wrote files was Batch H's H4-approved
 `git checkout -- <path>` restore of the four unmodified module/checksum files.
 
 ## 7. Rejections / things the user declined
 
+- **Batch I.**
+  - Declined alternatives:
+    - a minimal fix of only the review's three items;
+    - writing the Gio version into README;
+    - keeping obsolete observations marked "resolved";
+    - a full helper-file list;
+    - leaving the Go comments alone;
+    - a full unit/coverage run.
+  - Recorded, not assigned:
+    - no unit test covers `reapplyManualEdits`' castle branch, although it is reachable
+      through `Generate` with mocks;
+    - AGENTS.md §4.4.1 rule 4 says Model⇄Entity conversion happens in
+      `internal/repositories`, but the template and editor-state mapping actually runs in
+      `file_service.FileService` (README now documents what the code does);
+    - `ToZoneModels`/`ToZoneEntities` remain dead (an existing observation).
 - **Batch H.**
   - Declined alternatives:
     - downgrading CI to v2.12.2, or moving to the latest linter;
@@ -558,30 +663,37 @@ Other pending decisions: arena/manual invalidation and effective-mode aliases (�
 
 ## 9. Next recommended actions
 
-**Batch H is implemented and awaits the owner's review and commit.** If the owner asks
-for changes, apply them, re-run only the affected Batch H checks, and keep the review's
-Progress paragraphs truthful. Once committed, replace "uncommitted, awaiting owner commit"
-with the commit hash in §6.2, §6.3, §6.5 and row H. After merge, the PR's "PR Tests" and
-"Tools Module" runs are the Linux evidence, and the next legitimate release exercises
-`release.yml`.
+**Batch I is implemented and awaits the owner's review and commit.** If the owner asks
+for changes, apply them and re-run only the affected docs checks (see the plan). **Once the
+owner confirms the commit**, finish Phase 5 of [batch-i-docs.md](plans/batch-i-docs.md):
+- mark §7.1 and §7.2 `✅ FIXED` in place with Progress paragraphs that cite the commit;
+- complete §9 row I;
+- refresh the progress line to 23 fixed / 9 remaining (0 High, 6 Medium, 3 Low);
+- write the plan's Final Recap and Deployment Plan.
+
+Never renumber, and leave §8 alone.
 
 After that, the next unit of work is the **owner's choice** among the remaining batches of
-the surviving review's §9 table (11 items left):
-- **I: docs,** §7.1 and §7.2. This is next in table order.
-- **K–P:** topology retirement, the compact-state investigation, the persistence format,
-  panel/state organization, naming and lookup, and the Vec2 audit. The binding scope for
-  each is in §8's retained decisions.
+the surviving review's §9 table (9 items left), **K–P**:
+- K: topology retirement, §2.3;
+- L: the compact-state investigation, §2.4;
+- M: the persistence format, §2.5 and §2.6;
+- N: panel/state organization, §2.7 and §2.9;
+- O: naming and lookup, §2.8 and §2.10;
+- P: the Vec2 audit, §4.1.
+
+The binding scope for each is in §8's retained decisions.
 
 Routing for the next session, in order:
 1. Read [AGENTS.md](../AGENTS.md), this handoff, then the chosen items and their §9 row.
-2. Inspect the current code yourself, because review line numbers predate Batches F–J and H.
+2. Inspect the current code yourself, because review line numbers predate Batches F–J.
 3. Ask the owner every open decision in the items, summarize the scope, and get approval.
 4. Write a new durable plan under `.agent/plans/`, get an independent review (GPT-6.1 Sol)
    and explicit plan approval, and capture a fresh baseline (coverage 74.5%, 6915 / 9263)
    before the first Go edit.
 
 **Deployment.** Nothing is deployed and nothing is authorized to be. The owner alone
-stages, commits, merges and releases. Batch H's deployment steps are in its plan. No
+stages, commits, merges and releases. Batch I is docs-only and needs no deployment step. No
 schema migration, Wire regeneration or output-directory change is required or pending.
 Native Linux and Steam Deck execution remain unmeasured.
 
@@ -590,28 +702,26 @@ Native Linux and Steam Deck execution remain unmeasured.
 > Read [AGENTS.md](../AGENTS.md) first, then [this handoff](session-carry-forward.md). It
 > is self-contained.
 >
-> **Batch H is IMPLEMENTED, uncommitted, awaiting the owner's review.** It is on
-> `AD/pbi_resolution` (HEAD `25b4c98`, the owner's "H Plan" commit; `master` `ec42217`
-> already contains Batches G and J). It pins golangci-lint v2.13.1 in `tools/go.mod` as
-> CI's single source, adds LF attributes for `go.mod`/`go.sum`, and validates the release
-> tag through `env` in a new `validate` job. Review §6.2, §6.3 and §6.5 are marked
-> **FIXED** ahead of the commit at the owner's request (21 fixed, 11 remaining). The plan
-> [batch-h-ci-tooling-hardening.md](plans/batch-h-ci-tooling-hardening.md) records H1–H12,
-> the verification and the deployment steps. §3 of this handoff restates H1–H12, J1–J9 and
-> G1–G9a. Do not reimplement or re-review Batch H unless the owner asks for changes, and
-> never revisit Batches A–G or J.
+> **Batch H is CLOSED** (owner commit `a140e0a`, release `v0.3.9-alpha.3`, owner-confirmed;
+> §6.2, §6.3 and §6.5 FIXED). **Batch I (docs, §7.1, §7.2) is IMPLEMENTED, uncommitted,
+> awaiting the owner's review.** It is on `AD/pbi_resolution` (HEAD `599ff23`, which holds
+> its plan [batch-i-docs.md](plans/batch-i-docs.md); `master` `ec42217` has Batches G and
+> J). It fixes every audited inaccuracy in README/QUICKSTART, corrects
+> `test_observations.md`, two Go comments and the AGENTS.md `IGuiHandler` example. §3 of
+> this handoff restates I1–I10, H1–H12, J1–J9 and G1–G9a. Do not reimplement or re-review
+> Batch I unless the owner asks for changes, and never revisit Batches A–H or J.
 >
-> **State:** the working tree holds Batch H's eight unstaged edits (see §6). The assistant
-> performed no Git mutation beyond the approved restore of four unmodified module files;
-> preserve the owner's state exactly.
+> **State:** the working tree holds Batch I's unstaged edits (see §6). The assistant
+> performed no Git mutation; preserve the owner's state exactly.
 >
-> **Next:** apply owner feedback on Batch H if any. Then the owner picks the next batch
-> from review §9 (I, docs, is next in order). Follow the gates in §9: read, inspect, ask,
-> summarize, plan, independent review, plan approval, fresh baseline.
+> **Next:** after the owner confirms the Batch I commit, mark §7.1/§7.2 FIXED (23 fixed, 9
+> remaining) and finish the plan's Phase 5. Then the owner picks the next batch from review
+> §9 (K–P). Follow the gates in §9: read, inspect, ask, summarize, plan, independent review,
+> plan approval, fresh baseline.
 >
-> **Verification on record:** Batch H is Windows-only. Both tidy dry-runs pass, the lint
-> pin is confirmed, lint shows 0 issues, every tag case passes and actionlint is clean.
-> Batch J's code baseline (Windows/amd64, Go 1.27.0, empty `GOFLAGS`):
+> **Verification on record:** Batches H and I are Windows-only. For Batch I the docs links
+> check out and the QUICKSTART snippet compiles. Batch J's code baseline (Windows/amd64,
+> Go 1.27.0, empty `GOFLAGS`):
 > - build and tagged `go vet`: PASS;
 > - coverage: PASS, 74.5% (6915 / 9263);
 > - `go test ./test/...`: PASS;

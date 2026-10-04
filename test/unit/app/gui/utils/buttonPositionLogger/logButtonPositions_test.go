@@ -223,8 +223,7 @@ func testFrameSize() image.Point {
 }
 
 // appendButtonOps records the ops a labeled clickable button produces:
-// an offset transform, a clipped input area, and a nested handler-free
-// area carrying the button semantics (mirrors widgets.addButtonSemantics).
+// an offset transform, a clipped input area, and a nested handler-free area carrying the button semantics.
 func appendButtonOps(operations *op.Ops, tag event.Tag, offset image.Point, size image.Point, label string) {
 	transform := op.Offset(offset).Push(operations)
 	area := clip.Rect(image.Rectangle{Max: size}).Push(operations)
@@ -249,8 +248,7 @@ func attrValue(record slog.Record, key string) string {
 	return value
 }
 
-// buttonRecords filters the captured records down to per-button log entries,
-// dropping the intended once-per-call "====== New Frame ======" marker.
+// buttonRecords filters the captured records down to per-button log entries.
 func buttonRecords(handler *recordingHandler) []slog.Record {
 	filtered := make([]slog.Record, 0, len(handler.records))
 	for _, record := range handler.records {
@@ -261,9 +259,7 @@ func buttonRecords(handler *recordingHandler) []slog.Record {
 	return filtered
 }
 
-// centerDistance parses a logged "(x,y)" center attribute and returns its
-// Chebyshev distance from the expected point, so scaled coordinates can be
-// asserted with a rounding tolerance.
+// centerDistance parses a logged "(x,y)" center attribute and returns its Chebyshev distance from the expected point.
 func centerDistance(t *testing.T, logged string, expected image.Point) float64 {
 	t.Helper()
 	var x, y int
