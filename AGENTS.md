@@ -194,8 +194,8 @@ When orchestrating subagents, pick the model per task using these ratings
 | gpt-6-luna        | 9.5  | 6            | 4     |
 | kimi-k3           | 7    | 7            | 7     |
 | grok-4.7          | 8    | 6            | 5     |
-| claude-opus-5     | 4    | 7            | 7     |
-| claude-sonnet-5.5 | 6    | 7            | 6     |
+| claude-opus-5     | 4    | 6.5          | 7     |
+| claude-sonnet-5.5 | 6    | 7            | 5     |
 
 
 Application directives:
@@ -207,7 +207,7 @@ Application directives:
   Instead, take advantage of cheaper options to gather information and try
   things before moving the work to a more expensive option.
 - Anything user-facing (UI, API design, copy) or project-maintainability
-  related requires taste > 7.
+  related requires taste > 7; independent review requires intelligence > 7.
 - Review of plans/implementations must be done by gpt-6.1-sol preferably
   (use fable-5.1/fable-5 sparingly as it is much more costly).
 - **Never use Haiku models.**
