@@ -1,19 +1,24 @@
-# Carry-forward: Batch K (topology retirement) implemented, awaiting owner review and commit
+# Carry-forward: Batch K (topology retirement) CLOSED; the next batch is the owner's choice
 
 Date: 2026-10-04.
 
-**Batch K (review §2.3 / O08) is IMPLEMENTED AND VERIFIED; all four phases are complete. Its
-plan is the source of truth: [batch-k-topology-retirement.md](plans/batch-k-topology-retirement.md)**
-(decisions K1–K16, F1–F6, D1–D4, every phase summary, Final Recap, Deployment Plan).
-- **Commits:** the owner committed the plan as `d50f34d` and Phase 1 as **`1ee746b`**.
-  **Phases 2–4 are uncommitted** and await the owner's review.
-- **Review document:** marks §2.3 FIXED pending owner commit (24 fixed, 8 remaining).
-- **Open owner decision:** coverage is **73.2% (6441 / 8781)**, below the 74.4% line (K16).
-  The drop comes purely from deleting fully-covered code; no surviving file lost coverage.
+**Batch K (review §2.3 / O08) is CLOSED.** It was owner-committed as **`1ee746b`** (Phase 1)
+and **`27b2933`** (Phases 2–4), with the plan in `d50f34d`. The owner reviewed everything and
+approved, including the **73.2% (6441 / 8781)** coverage total (K16). The drop comes purely from
+deleting fully-covered code. The review marks §2.3 FIXED (24 fixed, 8 remaining: 0 High,
+5 Medium, 3 Low). The plan [batch-k-topology-retirement.md](plans/batch-k-topology-retirement.md)
+is the record: decisions K1–K16, F1–F6, D1–D4, every phase summary, Final Recap.
+
+**Owner follow-ups after Batch K** (PR findings, outside the batch):
+- `3e37b9f`: [release.yml](../.github/workflows/release.yml)'s tag regex is now
+  `^v[0-9]+\.[0-9]+(\.[0-9]+)?(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$`. Prerelease identifiers may
+  contain hyphens, and empty ones are rejected. **This supersedes H5's charset.**
+- `002df02`: a README comment on `template_model/`.
 
 **Batches H and I are CLOSED** (owner commits `a140e0a`, released as `v0.3.9-alpha.3`, and
-`dd2b8bf`). Both are on `AD/pbi_resolution`, pushed, not yet merged to `master` (`ec42217`, which
-has G and J). §3 restates I1–I10, H1–H12, J1–J9 and G1–G9a. Never revisit Batches A–J.
+`dd2b8bf`). All of H–K are on `AD/pbi_resolution` and not yet merged to `master` (`ec42217`,
+which has G and J). §3 restates K1–K16 (compact), I1–I10, H1–H12, J1–J9 and G1–G9a.
+**Never revisit Batches A–K.**
 
 **Section 8 is preserved verbatim**, contradictions and all. Its Batch C phase/engine
 wording, its "pending decisions" wording for §1.5, §1.11, §1.12 and §2.1, its §2.2
@@ -37,7 +42,7 @@ released and confirmed both.
 
 ## 2. Fixes applied
 
-### Batch K Phases 2–4, uncommitted (details in the plan's phase summaries)
+### Batch K Phases 2–4, committed in `27b2933` (details in the plan's phase summaries)
 
 - **Generator contract:**
   - `Resolve` → `(creator, bool)`, with no fallback;
@@ -178,7 +183,7 @@ All are committed in `35e0fab` and **marked FIXED**. They are closed; do not reo
 
 ## 3. Features added / changed
 
-### Batch K decisions (owner, 2026-10-04; binding, in progress)
+### Batch K decisions (owner, 2026-10-04; committed, settled)
 
 The full table is in the plan; this is a compact restatement in case it is needed:
 - **K1:** delete the four constants and their `config` aliases.
@@ -337,7 +342,7 @@ in the tree; the merged code is the reference.
 
 ## 4. File modifications
 
-**Batch K Phases 2–4, uncommitted.** The counts are in §6; the plan's Phase 2 summary lists
+**Batch K Phases 2–4, committed in `27b2933`.** The plan's Phase 2 summary lists
 the production and test files. Docs: README, the plan, the review document (§2.3, row K, the
 progress line; §8 untouched), `test_observations.md` (`createTopologyAdjacency` Circles
 branch). Gitignored: `.agent/memories/generator-domain.md`, and the after-coverage and
@@ -476,7 +481,7 @@ batches; the review's §0 is the disposition of record).
 - The balanced-builder probe (0/1/3/5 neutral zones) shows no panic.
 - Artifacts are in `.agent/memories/batch-k-baseline/`.
 
-### Batch K Phases 2–4 (uncommitted, all green)
+### Batch K Phases 2–4 (committed in `27b2933`, all green)
 
 - **Final gate** (Windows/amd64, Go 1.27.0):
   - build and vet × 3 PASS;
@@ -651,16 +656,19 @@ in-game behaviour.
 
 ## 6. Git status snapshot
 
-The branch is **`AD/pbi_resolution`** and HEAD is **`1ee746b` ("Batch K part 1", the owner's
-commit of Phase 1)**. Newest first: `1ee746b`, `d50f34d` ("plan"), `61ecb3b` ("Carry forward"),
-then `dd2b8bf` (Batch I) and `a140e0a` (Batch H). `master` is `ec42217`.
+The branch is **`AD/pbi_resolution`** and HEAD is **`002df02`**. Newest first:
+- `002df02` (README comment, PR finding)
+- `3e37b9f` (release tag regex, PR finding)
+- `27b2933` ("Batch K")
+- `1ee746b` ("Batch K part 1")
+- `d50f34d` ("plan")
+- then `dd2b8bf` (Batch I) and `a140e0a` (Batch H)
 
-`git status --short` shows the **uncommitted Batch K Phases 2–4**:
-- **65 modified:** production, tests, test helpers, README, the plan, the review document,
-  `test_observations.md`, this handoff.
-- **36 deleted:** the 7 retired service files plus their 7 test folders, 9
-  connection-name tests, `createBalancedChainZoneLabels_test.go`, `orderEdgeGap_test.go`.
-- **1 untracked:** `test/integration/gui/layoutPanelTopology_integration_test.go`.
+`master` is `ec42217`.
+
+`git status --short` shows only this closing turn's documentation edits: the review
+(§2.3 heading, row K, progress line), the Batch K plan (CLOSED, Deployment Plan) and this
+handoff.
 
 `.agent/memories/` and `tmp/` are gitignored. **The assistant performed no staging,
 unstaging, commit, push, stash, branch switch or worktree change.** Deletions used
@@ -819,90 +827,125 @@ Other pending decisions: arena/manual invalidation and effective-mode aliases (�
 
 ## 9. Next recommended actions
 
-**Batch K is implemented and verified. Nothing is left for an agent until the owner reviews it.**
-Ordered:
-1. **Owner:** review the uncommitted Phases 2–4 (`git diff 1ee746b`, plus the one untracked GUI
-   test), then commit. The plan's Phase 2–4 summaries explain every change.
-2. **Owner decision:** approve or reject coverage **73.2% (6441 / 8781)** against the 74.4%
-   line (K16). The evidence is in the plan's Phase 4 summary:
-   - the drop is denominator only, with no surviving file losing coverage;
-   - uncovered statements fell 2348 → 2340.
+**Batches A–K are closed, with no open questions and no blockers.** This closing turn marked
+Batch K closed in the review (§2.3 heading, row K, the progress line) and in its plan; those
+edits await the owner's commit. Owner-only actions:
+- push `AD/pbi_resolution` (PR CI covers Linux) and merge it to `master`;
+- decide when to delete the Batch K plan;
+- optionally check in-game a two-player tournament on a former chain-fallback topology (e.g.
+  Random), since that output changed.
 
-   If rejected, a follow-up adds coverage elsewhere; deleted code does not return.
-3. **Owner:** push; PR CI covers Linux. Then decide whether to delete the Batch K plan, mark
-   the review row closed, and merge `AD/pbi_resolution` to `master`.
-4. **Optional in-game check:** a two-player tournament on a former chain-fallback topology
-   (e.g. Random) now uses balanced clusters.
-5. **Next batch:** the owner's choice of L (§2.4), M (§2.5/§2.6), N (§2.7/§2.9),
-   O (§2.8/§2.10) or P (§4.1). The binding scope is in §8's retained decisions.
+**The next batch is the owner's choice.** The binding scope for each is in §8's retained
+decisions:
+- **L:** the compact-state investigation, §2.4 (can start independently; the owner reviews
+  feasibility before any representation change);
+- **M:** the persistence format, §2.5 and §2.6 (after L's decision gate);
+- **N:** panel/state organization, §2.7 and §2.9;
+- **O:** naming and lookup, §2.8 and §2.10;
+- **P:** the Vec2 audit, §4.1.
+
+Routing for the next session, in order:
+1. Read [AGENTS.md](../AGENTS.md), this handoff, then the chosen review item and its §9 row.
+2. Inspect the current code yourself, because review line numbers predate Batches F–K.
+   Delegate the inventory to a cheap read-only subagent.
+3. Ask the owner every open decision, summarize the scope, and get approval.
+4. Write a durable plan under `.agent/plans/`, get an independent review (GPT-6.1 Sol) and
+   explicit approval, and capture a fresh baseline before the first Go edit. The coverage
+   baseline is now **73.2% (6441 / 8781)**, owner-accepted after Batch K.
 
 **Recorded, not assigned (Batch K):**
 - `SaveState` and `UpdateTemplate` do not validate;
-- `createTopologyAdjacency`'s Circles branch is unreachable (kept by K11);
+- `createTopologyAdjacency`'s Circles branch is unreachable (kept by K11, recorded in
+  `test_observations.md`);
 - the pre-existing `common_topologies/topologies/` test folder does not mirror
   `topologyDescriptors.go`.
 
 **Deployment.** Nothing is deployed and nothing is authorized to be. The owner alone stages,
-commits, merges and releases. Batch K changes no schema, no output path and no `wire_gen.go`.
-Users holding a `.gen.json` with a retired topology get a refusal naming it.
-Native Linux and Steam Deck remain unmeasured.
+commits, merges and releases. Release tags now follow the `3e37b9f` regex (see the top of this
+handoff). Batch K needs no schema migration, output-path change or Wire change. Users with a
+retired-topology `.gen.json` get a refusal naming it. Native Linux and Steam Deck remain
+unmeasured.
 
 ## 10. Carry-forward prompt
 
-> Read [AGENTS.md](../AGENTS.md) first, then [this handoff](session-carry-forward.md), then the
-> Batch K plan [batch-k-topology-retirement.md](plans/batch-k-topology-retirement.md). Together
-> they are self-contained.
+> Read [AGENTS.md](../AGENTS.md) first, then [this handoff](session-carry-forward.md). It is
+> self-contained.
 >
-> **Batch K (review §2.3 / O08, topology retirement) is IMPLEMENTED AND VERIFIED; all four
-> phases are complete.**
-> - **Commits:** the plan is `d50f34d` and Phase 1 is `1ee746b`. Phases 2–4 are uncommitted,
->   awaiting the owner's review and commit.
-> - **Review document:** §2.3 is FIXED pending commit (24 fixed, 8 remaining).
-> - **Open owner decision:** approve coverage 73.2% (6441 / 8781) vs the 74.4% line. The drop
->   comes only from deleting fully-covered code, and no surviving file lost coverage.
-> - Never revisit Batches A–J; H and I are closed (`a140e0a`, `dd2b8bf`).
+> **Batches A–K are CLOSED.** Never revisit them.
+> - **Batch K (§2.3, topology retirement):** owner commits `1ee746b` and `27b2933` (plan
+>   `d50f34d`), owner-reviewed. Coverage 73.2% (6441 / 8781) accepted.
+> - **Batch I:** `dd2b8bf`. **Batch H:** `a140e0a`, released as `v0.3.9-alpha.3`.
+> - **Later owner PR-finding commits:** `3e37b9f` (the release tag regex now allows hyphenated
+>   prerelease identifiers and rejects empty ones; this supersedes H5's charset) and `002df02`
+>   (a README comment).
+> - H–K are on `AD/pbi_resolution`, not yet merged to `master` (`ec42217`, which has G and J).
+>   The review reads 24 fixed, 8 remaining (0 High, 5 Medium, 3 Low).
 >
-> **State:** branch `AD/pbi_resolution`, HEAD `1ee746b` plus the uncommitted work in §6 of the
-> handoff. The assistant performed no Git mutation; preserve the owner's state exactly. Do not
-> redo Batch K. Only act on owner review feedback, or start the next batch the owner selects.
+> **State:** HEAD `002df02`. The working tree holds only the closing turn's documentation edits
+> (the review, the Batch K plan, this handoff). The assistant performed no Git mutation;
+> preserve the owner's state exactly.
+>
+> **Next work is the owner's choice of batch** (L §2.4, M §2.5/§2.6, N §2.7/§2.9, O §2.8/§2.10,
+> P §4.1). Follow the routing in §9: read, inspect, ask, summarize, plan, independent review
+> (GPT-6.1 Sol), plan approval, and a fresh baseline (coverage 73.2%, 6441 / 8781) before the
+> first Go edit.
 >
 > **Native Linux, Steam Deck and the race detector are UNAVAILABLE.** No in-game result is
 > claimed.
 >
 > **Traps:**
 > - PowerShell 5.1 splits an unquoted `-bench=.`, so quote flags.
-> - Clear the lint cache before believing an unexpected baseline finding.
+> - Clear the lint cache (`golangci-lint-v2 cache clean`) before believing an unexpected
+>   baseline finding.
 > - Run `gofmt -l` on new files.
 > - `gofmt -r` cannot rewrite statements; use UTF-8-safe .NET file APIs for literal swaps.
 > - `wire diff` is the reliable Wire check.
-> - Never keep a blanket GUI `-update`.
-> - Go 1.27 promoted-field literals stay flat.
+> - Never keep a blanket GUI `-update`; accept only explained `.failure` files.
+> - Go 1.27 promoted-field literals stay flat (`modernize/embedlit`).
+> - The owner's `air` watcher can wipe `tmp/`, so keep artifacts under gitignored
+>   `.agent/memories/`.
 >
 > **Hard rules:**
 > - Never modify `data/`, the template schema or the registry.
 > - Keep Windows/Linux compatibility.
 > - Never change or persist the machine-detected output directory.
 > - Test nontrivial logic, and check coverage before and after.
-> - Never stage, unstage, commit, push, stash, switch branches or manipulate worktrees.
+> - Never stage, unstage, commit, push, stash, switch branches or manipulate worktrees;
+>   preserve owner changes.
 > - Never bulk-rewrite or hand-edit generated Wire.
 > - Never enable global `integration_test`, `gui` or `wireinject` tags, and never introduce
 >   fake unit seams.
 > - Keep plans durable and resumable.
 >
-> **Out of scope** unless the owner selects it: §1.12 (the Batch E tournament lock stays
-> untouched), new tournament designs, direct `GeneratorConfig` rejection, further
-> DTO/schema/package work, allocation tuning, and every settled alternative in §7. §8 stays
-> verbatim; its superseded wording is listed at the top of the handoff.
+> **Out of scope** unless the owner selects that batch: direct `GeneratorConfig` rejection, DTO
+> cleanup, schema and package work beyond the selected batch, allocation tuning, and every
+> settled alternative in §7. §8 stays verbatim. Its Batch C wording, its pending-decision
+> wording for §1.5, §1.11, §1.12, §2.1 and §6.2/§6.3/§6.5, its §2.2 bullet and its §2.3/O08
+> retained decision are now delivered or superseded; its other retained later-scope decisions
+> remain binding.
 >
 > **Preserve:**
 > - explicit Portal Road `false`/`nil` and valid approaches;
-> - the tri-state road display;
-> - independent internal roads, nil-state preservation and source cloning;
-> - the single half-opacity PNG edge mask and the Preview-only legend;
-> - the shared curve builder;
-> - live-list hit tests;
-> - the graph cache's own dirty flag and the full-state status key;
-> - `zone_content` naming no DTO;
-> - `tools/go.mod` as the single linter source, LF module files, and the env-only release tag;
-> - Geometric Hub and the shared hub-zone concepts;
-> - Batch K's no-fallback lookup and its load rejection.
+> - the tri-state road display (`nil` is roaded only for explicit Portals, and effective
+>   classification never feeds roads);
+> - independent internal roads, nil-state content/road preservation, and source cloning;
+> - the single reusable half-opacity PNG edge mask, and the Preview-only legend;
+> - the shared curve builder, as the single source of curves;
+> - hit tests resolving against the live connection list;
+> - the graph cache's own dirty flag (`markGraphDirty` on every edit that replaces the zone or
+>   connection lists), and a status key built from the full state;
+> - `internal/services/zone_content` naming no DTO, with conversion in the handlers;
+> - `tools/go.mod` as the single linter-version source, LF module/checksum files, and the
+>   release tag reaching shell only through `env` after validation;
+> - **Batch K:**
+>   - the 7-topology catalogue with Random as the fallback;
+>   - retired or unknown saved IDs rejected at load through the blocking validator issue
+>     (`EditorStateValidationDto.Rejection`, `ErrUnsupportedTopology`), with the document
+>     unchanged;
+>   - `""` → Random with a warning;
+>   - the no-fallback `Resolve (creator, bool)`, with the provider and `Generate` returning
+>     errors;
+>   - balanced-only tournaments;
+>   - Geometric Hub and the shared hub-zone concepts.
+>
+> This handoff contains the full continuation context.

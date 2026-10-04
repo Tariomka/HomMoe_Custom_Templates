@@ -453,14 +453,16 @@ topologies:
 - **Deleted:** every retirement-only service, helper, constant and test.
 - **Preserved:** Geometric Hub and the shared hub-zone concepts; Wire is unchanged; no golden
   moved.
-- **Coverage:** 74.5% → 73.2%, purely from deleting fully-covered code, pending owner
-  approval.
+- **Coverage:** 74.5% → 73.2%, purely from deleting fully-covered code; **accepted by the
+  owner** with the review on 2026-10-04.
+
+**CLOSED (2026-10-04).** Owner commits `1ee746b` (Phase 1) and `27b2933` (Phases 2–4). The
+owner reviewed everything and approved. Later PR-finding follow-ups `3e37b9f` (release tag
+regex) and `002df02` (a README comment) are outside Batch K.
 
 ## Deployment Plan
-1. The owner reviews and commits the uncommitted Phases 2–4 (Phase 1 is `1ee746b`),
-   including this plan, the review document, `test_observations.md` and the handoff.
-2. The owner approves or rejects the 73.2% coverage total (K16). If rejected, the next
-   session adds coverage elsewhere; no deleted code returns.
+1. ~~Commit~~: done, `1ee746b` and `27b2933`.
+2. ~~Coverage approval (K16)~~: done, 73.2% accepted.
 3. Push `AD/pbi_resolution`; PR CI runs on Linux. Native Linux was not run locally.
 4. Merge to `master` when ready. A release only needs the normal tag flow (no schema
    migration, no output-path change).
