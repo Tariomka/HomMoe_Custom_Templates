@@ -11,9 +11,10 @@
 **Finding count:** **32 actionable items: 8 High, 17 Medium, 7 Low.** This includes owner-requested architecture/product work scoped on 2026-09-08, not just proved defects. Informational observations and prior-item dispositions are not included in that count. Findings are source-verified unless a runtime reproduction is explicitly recorded. Performance claims are reasoned, not benchmark measurements. In-game behavior was not tested.
 
 **Current progress (2026-10-04):** **21 fixed, 11 remaining**: 0 High, 6 Medium,
-5 Low. Batches A/D, B, C, E, F, G and J are owner-committed and closed; Batch H
-(§6.2, §6.3, §6.5) is implemented and independently reviewed on 2026-10-04, awaiting the
-owner's review and commit. Batch F closed with
+5 Low. Batches A/D, B, C, E, F, G, H and J are owner-committed and closed; Batch H
+(§6.2, §6.3, §6.5) closed with owner commit `a140e0a` on 2026-10-04, independent
+plan/implementation reviews, Windows verification, and the owner's report that the pushed
+changes and release `v0.3.9-alpha.3` work. Batch F closed with
 owner commit `b9c47a7` on 2026-09-28, independent review and Windows verification,
 coverage **74.6%** (owner-accepted, GUI-only decrease) and lint zero. Batch G closed with
 owner commit `35e0fab` on 2026-09-28, independent plan/implementation reviews and Windows
@@ -589,14 +590,14 @@ These are specific test-plan gaps attached to the production findings, not six a
 
 ### 6.2 ✅ FIXED — The tools module installs a different linter than CI and this baseline
 
-**Progress (2026-10-04, uncommitted, awaiting owner commit).** `tools/go.mod` now pins
+**Progress (2026-10-04).** Owner commit `a140e0a`. `tools/go.mod` now pins
 `golangci-lint/v2 v2.13.1`; MVS/tidy moved only indirect requirements (47 bumps, 2 added,
 2 removed), and the `go` directive, `tool` block, `wire` and `gcov2lcov` are unchanged. The
 PR lint job reads the version from `tools/go.mod` with `go list -m` in a fail-fast step that
 rejects an empty value, so `tools/go.mod` is the single source. The warning-only `--disable`
 list stays explicit. Tools and root `go mod tidy -diff` exit 0; the built tool's
-`go version -m` matches the installed binary's module sum; lint 0 issues. Plan:
-[batch-h-ci-tooling-hardening.md](../plans/batch-h-ci-tooling-hardening.md).
+`go version -m` matches the installed binary's module sum; lint 0 issues. The Batch H plan
+has since been deleted by the owner.
 
 **Evidence.** [tools/go.mod](../../tools/go.mod#L90-L98) pins `github.com/golangci/golangci-lint/v2 v2.12.2`; [PR lint](../../.github/workflows/pr-validation.yml#L72-L77) specifies `version: v2.13.1`. The installed executable used here reports `2.13.1`.
 
@@ -608,11 +609,11 @@ list stays explicit. Tools and root `go mod tidy -diff` exit 0; the built tool's
 
 ### 6.3 ✅ FIXED — Module/checksum files lack the LF policy their tidy checks require on Windows
 
-**Progress (2026-10-04, uncommitted, awaiting owner commit).** `.gitattributes` adds
+**Progress (2026-10-04).** Owner commit `a140e0a`. `.gitattributes` adds
 `go.mod text eol=lf` and `go.sum text eol=lf` (any depth). Only the four paths were
 refreshed in the working tree; the index was already LF, so nothing was normalized or
 staged. All four now report `i/lf w/lf attr/text eol=lf`, and both Windows `go mod tidy -diff`
-runs exit 0. The Linux dry-run is left to the owner's PR CI.
+runs exit 0. The owner reports the pushed changes work.
 
 **Evidence.** [.gitattributes](../../.gitattributes#L1-L5) says `* text=auto` and only `*.go text eol=lf`, despite the comment mentioning modules. `git ls-files --eol` reports `i/lf w/crlf attr/text=auto` for both module files and both checksum files. Both `go mod tidy -diff` runs exit **1** and produce only checksum-file line replacements: root **45 removed/45 added**, tools **988/988**. Comparing normalized removed/added lines yielded **zero content differences** in both.
 
@@ -624,14 +625,14 @@ runs exit 0. The Linux dry-run is left to the owner's PR CI.
 
 ### 6.5 ✅ FIXED — Release tag input is interpolated directly into shell source
 
-**Progress (2026-10-04, uncommitted, awaiting owner commit).** A new first `validate` job
+**Progress (2026-10-04).** Owner commit `a140e0a`. A new first `validate` job
 reads the tag only through `env` and requires
 `^v[0-9]+\.[0-9]+(\.[0-9]+)?(-[0-9A-Za-z.]+)?$` (every existing tag matches). Its outputs feed
 `main.version` (via `env.VERSION`), the release name and tag, and `prerelease` (true for a
 `-` suffix). No tag expression remains inside a `run:` block. By owner decision, the checkout
 ref and concurrency group are unchanged and there is no separate tag-existence check. The exact
 step was exercised once against 25 crafted cases and all 26 tags; actionlint v1.7.12 is clean.
-No release was dispatched; runtime confirmation is the next legitimate release.
+The owner released `v0.3.9-alpha.3` (tag on `a140e0a`, the prerelease path) and reports it works.
 
 **Evidence.** [release build](../../.github/workflows/release.yml#L60-L63) contains `go build -trimpath -ldflags "-s -w -X main.version=${{ github.event.inputs.tag || github.ref_name }}" ...`. [workflow_dispatch](../../.github/workflows/release.yml#L7-L11) accepts a free-form tag input.
 
@@ -700,7 +701,7 @@ The configured run includes existing exclusions (protected registry duplication,
 | E: effective modes and guard propagation | §1.5, §1.11, §1.12 | Complete: owner commits `1b4658c` and `2062932`, Windows verification and independent review; findings marked fixed 2026-09-12. Accepted 74.9% coverage; native Linux unavailable. |
 | F: editor geometry | §1.13, §1.14, §1.15; optionally §2.1 | Complete: owner commit `b9c47a7` with §2.1 approved into scope, Windows verification and independent plan/implementation reviews; findings marked fixed 2026-09-28. Accepted 74.6% coverage; native Linux unavailable. |
 | G: measured performance | §3.1 | Complete: owner commit `35e0fab`, Windows verification and independent plan/implementation reviews; finding marked fixed 2026-09-28. Accepted 74.5% coverage (covered statements unchanged); native Linux unavailable. |
-| H: CI/tooling hardening | §6.2, §6.3, §6.5 | Implemented 2026-10-04, awaiting owner commit: linter pinned to v2.13.1 with `tools/go.mod` as CI's single source, LF attributes for module/checksum files, env-only release tag with format validation and prerelease detection. Independent plan/implementation reviews (GPT-6.1 Sol); Windows-only verification; no Go code changed, so coverage was not rerun (owner decision). |
+| H: CI/tooling hardening | §6.2, §6.3, §6.5 | Complete: owner commit `a140e0a`, linter pinned to v2.13.1 with `tools/go.mod` as CI's single source, LF attributes for module/checksum files, env-only release tag with format validation and prerelease detection. Independent plan/implementation reviews (GPT-6.1 Sol); Windows verification; owner-confirmed push and release `v0.3.9-alpha.3`. No Go code changed, so coverage was not rerun (owner decision). |
 | I: docs | §7.1, §7.2 | Can run independently after owner approves retirement scope. |
 | J: reopened service boundary | §2.2 | Complete: owner commit `3c0ad87`, whole zone-content exception removed (bonuses kept), Windows verification and independent plan/implementation reviews; finding marked fixed 2026-09-28. Coverage 74.5% (covered statements 6909 → 6915); native Linux unavailable. |
 | K: topology retirement | §2.3 | Inventory shared builders before removal; reject retired saved IDs, reroute surviving tournament fallbacks to balanced generation, and coordinate §1.12. |
