@@ -184,18 +184,19 @@ When orchestrating subagents, pick the model per task using these ratings
 - **Intelligence** — how hard a problem you can hand the model unsupervised.
 - **Taste** — code quality, API design, UI/UX and other subjective decisions.
 
-| model            | cost | intelligence | taste |
-|------------------|------|--------------|-------|
-| claude-opus-5.5  | 5    | 8            | 9     |
-| claude-fable-5.1 | 3    | 9.5          | 10    |
-| claude-fable-5   | 2    | 9            | 10    |
-| gpt-6-astra      | 5    | 8            | 6     |
-| gpt-6-sol        | 6    | 7            | 6     |
-| gpt-6-luna       | 8    | 6            | 4     |
-| kimi-k3          | 7    | 7            | 7     |
-| grok-4.7         | 8    | 6            | 5     |
-| claude-opus-5    | 4    | 7            | 7     |
-| gpt-5.6-terra    | 6    | 6            | 5     |
+| model             | cost | intelligence | taste |
+|-------------------|------|--------------|-------|
+| claude-opus-5.5   | 5    | 8            | 9     |
+| claude-fable-5.1  | 3    | 9.5          | 10    |
+| claude-fable-5    | 2    | 9            | 10    |
+| gpt-6-astra       | 5    | 8            | 6     |
+| gpt-6.1-sol       | 6    | 7.5          | 6     |
+| gpt-6-luna        | 9.5  | 6            | 4     |
+| kimi-k3           | 7    | 7            | 7     |
+| grok-4.7          | 8    | 6            | 5     |
+| claude-opus-5     | 4    | 7            | 7     |
+| claude-sonnet-5.5 | 6    | 7            | 6     |
+
 
 Application directives:
 
@@ -207,12 +208,11 @@ Application directives:
   things before moving the work to a more expensive option.
 - Anything user-facing (UI, API design, copy) or project-maintainability
   related requires taste > 7.
-- Review of plans/implementations must be done by opus-5.5 preferably
-  (use fable-5.1/fable-5 sparingly as it is much more costly);
-  optionally add gpt-6-sol/gpt-6-astra as an extra independent perspective.
+- Review of plans/implementations must be done by gpt-6.1-sol preferably
+  (use fable-5.1/fable-5 sparingly as it is much more costly).
 - **Never use Haiku models.**
-- Match model to task shape: use cheap, high-cost-rating models (kimi-k3, gpt-6-luna, grok-4.7)
-  for read-only exploration, searching, summarizing, and mechanical/repetitive edits;
+- Match model to task shape: use cheap, high-cost-rating models (gpt-6-luna, claude-sonnet-5.5,
+  kimi-k3, grok-4.7) for read-only exploration, searching, summarizing, and mechanical/repetitive edits;
   reserve opus-5.5/fable-5.1 for design decisions, tricky debugging, and final review.
 - Parallelize independent exploration and/or action execution
   (like running tests) across cheap subagents rather than serializing
