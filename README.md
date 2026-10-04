@@ -76,7 +76,7 @@ Generated template preview:
 │   │   ├── neutral_zone/                    # Neutral-zone plans, profiles and qualities
 │   │   ├── preview/                         # Preview layout and the shared connection-curve builder
 │   │   ├── regeneration/                    # Regeneration and manual-edit decisions
-│   │   └── template_model/                  # The generated template, wrapping the .rmg.json entities
+│   │   └── template_model/                  # Generated-template models, mapped to/from .rmg.json entities
 │   ├── repositories/                        # Atomic file read/write per persisted artifact
 │   ├── validators/                          # Editor-state validation rules
 │   └── services/                            # Business logic
