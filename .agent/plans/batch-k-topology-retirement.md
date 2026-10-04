@@ -156,52 +156,72 @@ rewrites therefore land in the same phase as the production change that would br
   (gitignored). No GUI golden is named after a retired topology; `output/` has no retired IDs.
 
 ## Phase 0: Baseline (no Go edits)
-Status: Not started
+Status: Complete
 
-- [ ] Record HEAD, `git status --short`, `go version`, `go env GOFLAGS` (must be empty).
-- [ ] `go build ./...`; `go vet ./...`; `go vet -tags=integration_test ./...`; `go vet -tags=integration_test,gui ./...`.
-- [ ] Coverage: `go test -count=1 '-coverpkg=./internal/...,./app/...' '-coverprofile=coverage.txt' ./test/unit/...`, then `go tool cover '-func=coverage.txt'` saved to `tmp/batch-k-coverage-before.txt` (gitignored). Expect 74.5% (6915 / 9263).
-- [ ] `go test ./test/... -count=1`; `go test -tags=integration_test ./test/integration/... -count=1`; `go test -tags=integration_test,gui ./test/integration/gui/... -count=1` (record times, no `.failure` files).
-- [ ] Benchmarks (record only) to `tmp/batch-k-bench-before.txt`: `go test -bench=. -run=xxx ./test/performance/... -benchtime=20x -timeout=120s` and `go test -tags='integration_test,gui' -bench=BenchmarkEditorWindow_TabCycling -run=xxx ./test/performance/... -benchtime=20x -timeout=120s`.
-- [ ] `go run ./cmd/testlayoutcheck .`; `gofmt -l` over Go dirs (never `data/`); lint report-only (0 issues expected).
-- [ ] Probe: the balanced cluster builder with 0 neutral plans for a player and with uneven per-player counts (odd neutral total) must not panic (`createSortedPairs` slices `tierKeys[:len-1]`). Throwaway test in gitignored `tmp/`, deleted afterwards. If it panics, **stop and ask the owner** before Phase 2.
+- [x] Record HEAD, `git status --short`, `go version`, `go env GOFLAGS` (must be empty).
+- [x] `go build ./...`; `go vet ./...`; `go vet -tags=integration_test ./...`; `go vet -tags=integration_test,gui ./...`.
+- [x] Coverage: `go test -count=1 '-coverpkg=./internal/...,./app/...' '-coverprofile=coverage.txt' ./test/unit/...`, then `go tool cover '-func=coverage.txt'` saved to `tmp/batch-k-coverage-before.txt` (gitignored). Expect 74.5% (6915 / 9263).
+- [x] `go test ./test/... -count=1`; `go test -tags=integration_test ./test/integration/... -count=1`; `go test -tags=integration_test,gui ./test/integration/gui/... -count=1` (record times, no `.failure` files).
+- [x] Benchmarks (record only) to `tmp/batch-k-bench-before.txt`: `go test -bench=. -run=xxx ./test/performance/... -benchtime=20x -timeout=120s` and `go test -tags='integration_test,gui' -bench=BenchmarkEditorWindow_TabCycling -run=xxx ./test/performance/... -benchtime=20x -timeout=120s`.
+- [x] `go run ./cmd/testlayoutcheck .`; `gofmt -l` over Go dirs (never `data/`); lint report-only (0 issues expected).
+- [x] Probe: the balanced cluster builder with 0 neutral plans for a player and with uneven per-player counts (odd neutral total) must not panic (`createSortedPairs` slices `tierKeys[:len-1]`). Throwaway test in gitignored `tmp/`, deleted afterwards. If it panics, **stop and ask the owner** before Phase 2.
 
 ### Verification Plan
 - All commands exit 0; coverage equals the recorded baseline; probe result recorded.
 
 ### Phase Summary
-_(write when phase completes)_
+Complete, 2026-10-04, Windows/amd64, Go 1.27.0, empty `GOFLAGS`. HEAD `d50f34d` ("plan",
+the owner's commit of this file), clean tree, branch `AD/pbi_resolution`.
+- Build PASS; `go vet` PASS under no tag, `integration_test` and `integration_test,gui`.
+- Coverage PASS: **74.5% (6915 / 9263)**, identical to the record. The func report is in
+  `tmp/batch-k-coverage-before.txt`, the raw profile in `tmp/batch-k-coverage-before.out`.
+- `go test ./test/...` PASS; tagged integration PASS (root 3.116s); tagged GUI PASS (28.946s);
+  0 `.failure` files.
+- Benchmarks recorded: `tmp/batch-k-bench-before-nogpu.txt` (GPU-free) and
+  `tmp/batch-k-bench-before.txt` (TabCycling, 3239085 ns/op). Key rows: Generate Ring 45160,
+  HubAndSpoke 49670, GeometricHub 42385, Fractal 45425, Tournament(Chain) 13890 ns/op;
+  BuildPreviewLayout RingLarge 14805, CirclesLarge 49855 ns/op.
+- testlayoutcheck PASS; `gofmt -l` clean; lint **0 issues** after `golangci-lint-v2 cache
+  clean`. The first run reported 3 `nolintlint` hits in two untouched `editorState` test files,
+  which were stale cache artifacts (same v2.13.1 binary).
+- Probe (Circles, the balanced builder today): 0, 1, 3 and 5 neutral zones, with portals on and
+  off, all ran without a panic (0 → 2 zones, 0 connections). The probe was deleted.
+- **PowerShell 5.1 gotcha:** an unquoted `-bench=.` is split into `-bench=` and `.`, which
+  silently runs nothing. Quote every flag containing `.` or `,` (`'-bench=.'`,
+  `'-tags=integration_test,gui'`).
+- **Artifacts:** `tmp/` can be wiped by the owner's `air` watcher, so all four baseline files
+  are also copied to gitignored `.agent/memories/batch-k-baseline/`. Compare against that copy.
 
 ## Phase 1: Catalogue, validation and load rejection
-Status: Not started
+Status: Complete
 
 Production (the retired services and constants still exist after this phase):
-- [ ] `common_topologies`: delete the four descriptors and their display-order entries (order: Random, Circles, Geometric Hub, Square, Geometric, Cross, Fractal); `GetTopologyDescriptorFromType` falls back to `descriptorValues.Random` (K9). Add the private retired table and `GetRetiredTopologyLabel` (K2) in a new file `retiredTopologies.go`, keyed by raw `config.MapTopology("Default")` etc. so it survives K1.
-- [ ] `models.TopologyDescriptors`: drop the four fields. Rename `TopologyLayoutRingHub` → `TopologyLayoutGeneric` (K10) everywhere; fix the stale comments in `layoutRingHub.go` and `previewLayoutService.go`.
-- [ ] `common_errors`: add `ErrUnsupportedTopology` to `handlerErrors.go`.
-- [ ] `validators`: `blockingIssueError.go` (D2); `ValidationIssue` gains the unexported rejection, `IsBlocking()`, `Rejection()`, and the no-op `Fix` for blocking issues.
-- [ ] `validateTopology`: `""` → non-blocking, `topology is empty; using Random`, fix → Random. Retired → blocking with the K4 retired message. Otherwise not catalogued → blocking with the K4 unknown message. Catalogued → nil.
-- [ ] `EditorStateValidationDto.Rejection` (D1). `stateHandler.ValidateEditorState` sets it and skips blocking fixes; `LoadState` returns `nil, Rejection` when set, regardless of `fixIssues`.
-- [ ] `templateHandler.GenerateTemplate`: return `validation.Rejection` when set, before the mapper or generator.
-- [ ] Fixtures: v0/v1/v2 `"Chain"` → `"Square"`; `allFieldsEditorState` → `config.TopologySquare`. New in `test/test_helpers/testdata/`: `editorState_v2_retired_{Default,HubAndSpoke,Chain,SharedWeb}.gen.json` (copies of the v2 fixture, topology only changed) and `editorState_v0_retired_Chain.gen.json` (copy of the v0 fixture).
+- [x] `common_topologies`: delete the four descriptors and their display-order entries (order: Random, Circles, Geometric Hub, Square, Geometric, Cross, Fractal); `GetTopologyDescriptorFromType` falls back to `descriptorValues.Random` (K9). Add the private retired table and `GetRetiredTopologyLabel` (K2) in a new file `retiredTopologies.go`, keyed by raw `config.MapTopology("Default")` etc. so it survives K1.
+- [x] `models.TopologyDescriptors`: drop the four fields. Rename `TopologyLayoutRingHub` → `TopologyLayoutGeneric` (K10) everywhere; fix the stale comments in `layoutRingHub.go` and `previewLayoutService.go`.
+- [x] `common_errors`: add `ErrUnsupportedTopology` to `handlerErrors.go`.
+- [x] `validators`: `blockingIssueError.go` (D2); `ValidationIssue` gains the unexported rejection, `IsBlocking()`, `Rejection()`, and the no-op `Fix` for blocking issues.
+- [x] `validateTopology`: `""` → non-blocking, `topology is empty; using Random`, fix → Random. Retired → blocking with the K4 retired message. Otherwise not catalogued → blocking with the K4 unknown message. Catalogued → nil.
+- [x] `EditorStateValidationDto.Rejection` (D1). `stateHandler.ValidateEditorState` sets it and skips blocking fixes; `LoadState` returns `nil, Rejection` when set, regardless of `fixIssues`.
+- [x] `templateHandler.GenerateTemplate`: return `validation.Rejection` when set, before the mapper or generator.
+- [x] Fixtures: v0/v1/v2 `"Chain"` → `"Square"`; `allFieldsEditorState` → `config.TopologySquare`. New in `test/test_helpers/testdata/`: `editorState_v2_retired_{Default,HubAndSpoke,Chain,SharedWeb}.gen.json` (copies of the v2 fixture, topology only changed) and `editorState_v0_retired_Chain.gen.json` (copy of the v0 fixture).
 
 Tests moved in this phase because the catalogue change breaks them:
-- [ ] Every test that **validates, describes or selects** a retired topology through the catalogue or the GUI: `generateStructure_test.go` (retired labels), `mandatoryContentProvider/createContents_test.go` (Hub content via `UsesHub`), `common_topologies/topologies/*`, the preview tests whose behaviour depends on `GetTopologyCapabilities` (retired IDs now resolve to Random's capabilities, so Ring-as-"no metadata" cases move to zones without positions or to a survivor with the same path, checked per test), `guiHandler` preview/save, `editorState`/`drivers.State` tests that run the validator, regeneration decision, layout-defining options, zone-editor options, and GUI `zoneEditorGeometry_integration_test.go` (Ring → a survivor per test intent, Hub → Geometric Hub; the `Ring-A-B` edge lookup changes with it). Tests that call a retired **service** directly stay until Phase 2.
-- [ ] Run the search `TopologyRing\b|TopologyHubAndSpoke|TopologyChain|TopologySharedWeb|"Ring"|"Hub"|"Chain"|"Shared Web"` over `test/` and `app/` and record each remaining hit as "Phase 2" (service-level) or fixed.
+- [x] Every test that **validates, describes or selects** a retired topology through the catalogue or the GUI: `generateStructure_test.go` (retired labels), `mandatoryContentProvider/createContents_test.go` (Hub content via `UsesHub`), `common_topologies/topologies/*`, the preview tests whose behaviour depends on `GetTopologyCapabilities` (retired IDs now resolve to Random's capabilities, so Ring-as-"no metadata" cases move to zones without positions or to a survivor with the same path, checked per test), `guiHandler` preview/save, `editorState`/`drivers.State` tests that run the validator, regeneration decision, layout-defining options, zone-editor options, and GUI `zoneEditorGeometry_integration_test.go` (Ring → a survivor per test intent, Hub → Geometric Hub; the `Ring-A-B` edge lookup changes with it). Tests that call a retired **service** directly stay until Phase 2.
+- [x] Run the search `TopologyRing\b|TopologyHubAndSpoke|TopologyChain|TopologySharedWeb|"Ring"|"Hub"|"Chain"|"Shared Web"` over `test/` and `app/` and record each remaining hit as "Phase 2" (service-level) or fixed.
 
 New tests (mirrored layout, triple-A, `t.Parallel()`, one assertion each, `gofakeit` where meaningful):
-- [ ] `test/unit/internal/common/common_topologies/retiredTopologies/getRetiredTopologyLabel_test.go`: each retired ID → its label and true (named subtests); a survivor, an unknown ID and `""` → false.
-- [ ] `common_topologies/topologies/*`: 7 entries in exact order; `getTopologyDescriptorFromType` unknown → Random; `getTopologyCapabilities` unknown → Random's capabilities.
-- [ ] `test/unit/internal/validators/validationIssue/{fix,isBlocking,rejection}_test.go`: the blocking `Fix` leaves the state unchanged; the non-blocking `Fix` applies the correction; `IsBlocking`; `Rejection` is nil for non-blocking and `errors.Is(…, ErrUnsupportedTopology)` with the exact text for blocking.
-- [ ] `test/unit/internal/validators/blockingIssueError/{error,unwrap}_test.go` (unconditional, AGENTS.md §4.6): obtain the error through production validation and `ValidationIssue.Rejection()`; assert the exact text and the `ErrUnsupportedTopology` cause without exporting the private type.
-- [ ] `editorStateValidator`: retired (table over the 4 IDs) → blocking + exact message; unknown → blocking + exact message; `""` → non-blocking, exact message, fix sets Random; each survivor → no topology issue.
-- [ ] `stateHandler/validateEditorState_test.go`: blocking listed in `Warnings`, `Rejection` set, state not fixed; non-blocking `Rejection` nil.
-- [ ] `stateHandler/loadState_test.go`: blocking → nil result and the wrapped error with exact text, for both `fixIssues` values; `""` → loads with the warning.
-- [ ] `templateHandler/generateTemplate_test.go`: `Rejection` set → returned error; mapper and generator not called.
-- [ ] `guiHandler/loadState_test.go` (real file service): each committed retired fixture rejected; an unknown-ID temp file rejected (F6).
-- [ ] `app/gui/models/editorState/updateCurrentState_test.go`: a dropdown-style update to every catalogued topology yields no rejection (D1 unreachability).
-- [ ] Integration, through the production load handler (not only the migrator): a table over v0/v1/v2 for missing key → Random, explicit `""` → Random with the warning, and the converted fixtures loading as Square; the four v2 retired fixtures and the v0 Chain fixture → `ErrUnsupportedTopology` with exact text; a v1 retired case from a temp file; an unknown-ID temp file → the unknown message. Existing migrator-level assertions stay. Place it in `editorStateWireFormat_integration_test.go` or a sibling, untagged unless it needs `*_testexports.go` (§4.6.1).
-- [ ] Unchanged-document-after-failure, legacy and current: covered in Phase 3's GUI test (both a v2 and the v0 fixture). If `drivers.State` load can be unit-tested without test exports, add it here too.
+- [x] `test/unit/internal/common/common_topologies/retiredTopologies/getRetiredTopologyLabel_test.go`: each retired ID → its label and true (named subtests); a survivor, an unknown ID and `""` → false.
+- [x] `common_topologies/topologies/*`: 7 entries in exact order; `getTopologyDescriptorFromType` unknown → Random; `getTopologyCapabilities` unknown → Random's capabilities.
+- [x] `test/unit/internal/validators/validationIssue/{fix,isBlocking,rejection}_test.go`: the blocking `Fix` leaves the state unchanged; the non-blocking `Fix` applies the correction; `IsBlocking`; `Rejection` is nil for non-blocking and `errors.Is(…, ErrUnsupportedTopology)` with the exact text for blocking.
+- [x] `test/unit/internal/validators/blockingIssueError/{error,unwrap}_test.go` (unconditional, AGENTS.md §4.6): obtain the error through production validation and `ValidationIssue.Rejection()`; assert the exact text and the `ErrUnsupportedTopology` cause without exporting the private type.
+- [x] `editorStateValidator`: retired (table over the 4 IDs) → blocking + exact message; unknown → blocking + exact message; `""` → non-blocking, exact message, fix sets Random; each survivor → no topology issue.
+- [x] `stateHandler/validateEditorState_test.go`: blocking listed in `Warnings`, `Rejection` set, state not fixed; non-blocking `Rejection` nil.
+- [x] `stateHandler/loadState_test.go`: blocking → nil result and the wrapped error with exact text, for both `fixIssues` values; `""` → loads with the warning.
+- [x] `templateHandler/generateTemplate_test.go`: `Rejection` set → returned error; mapper and generator not called.
+- [x] `guiHandler/loadState_test.go` (real file service): each committed retired fixture rejected; an unknown-ID temp file rejected (F6).
+- [x] `app/gui/models/editorState/updateCurrentState_test.go`: a dropdown-style update to every catalogued topology yields no rejection (D1 unreachability). **Replaced, see summary:** proven by existing and new tests instead of a new test file.
+- [x] Integration, through the production load handler (not only the migrator): a table over v0/v1/v2 for missing key → Random, explicit `""` → Random with the warning, and the converted fixtures loading as Square; the four v2 retired fixtures and the v0 Chain fixture → `ErrUnsupportedTopology` with exact text; a v1 retired case from a temp file; an unknown-ID temp file → the unknown message. Existing migrator-level assertions stay. Place it in `editorStateWireFormat_integration_test.go` or a sibling, untagged unless it needs `*_testexports.go` (§4.6.1).
+- [x] Unchanged-document-after-failure, legacy and current: covered in Phase 3's GUI test (both a v2 and the v0 fixture). If `drivers.State` load can be unit-tested without test exports, add it here too. **Done here instead, see summary:** `integration_test`-tagged, GPU-free.
 
 ### Verification Plan
 - `go build ./...`; `go vet` under no tag, `integration_test`, `integration_test,gui`.
@@ -209,7 +229,55 @@ New tests (mirrored layout, triple-A, `t.Parallel()`, one assertion each, `gofak
 - Search `descriptorValues\.(Default|HubAndSpoke|Chain|SharedWeb)|TopologyLayoutRingHub` → no hits.
 
 ### Phase Summary
-_(write when phase completes)_
+Complete, 2026-10-04. All verification passed: build; `go vet` × 3 tag sets; `go test ./test/...`;
+tagged integration; tagged GUI (30.081s, **0 `.failure` files, no golden moved**); forbidden-symbol
+search empty; testlayoutcheck PASS; lint 0 issues (fixed 1 `godoclint`, 1 `golines`); new files
+`gofmt -w`'d by explicit list (CRLF from file creation).
+
+Production (as planned): catalogue down to 7 in K14 order with the Random fallback;
+`retiredTopologies.go` (`GetRetiredTopologyLabel`); `TopologyLayoutGeneric` (one-line doc) and the
+`layoutRingOrHub` comment; `ErrUnsupportedTopology`; `blockingIssueError.go`; `ValidationIssue`
+`rejection`/`IsBlocking`/`Rejection` with a no-op blocking `Fix`; `validateTopology` (`""`
+→ fixable, retired/unknown → blocking, shared `recreateTemplateAdvice` const);
+`EditorStateValidationDto.Rejection`; `stateHandler` (first blocking issue wins, `LoadState` fails);
+`templateHandler.GenerateTemplate` returns the rejection before mapping.
+
+Deviations:
+- **No `updateCurrentState_test.go`.** D1 unreachability already follows from two tested facts:
+  `GetTopologyDescriptorFromIndex` falls back to Random (existing tests), and every catalogued
+  type validates without a topology issue (new `TestWhenTopologyIsSupported_ReturnsNoTopologyIssue`).
+  A GUI-model test would need the real validator behind the handler, which `app/` unit tests
+  mock.
+- **The unchanged-document check moved here** from Phase 3, as GPU-free
+  `test/integration/topologyLoadRejection_integration_test.go` (`integration_test` tag, because it
+  uses `LoadStateFromFile`/`SetCurrentPath`). For the v2 `Default` and v0 `Chain` fixtures it pins
+  the exact `Load failed: ….` status, the error flag, and an unchanged
+  state/path/unsaved/template snapshot. **Negative control:** with the `LoadState` rejection
+  disabled, all 13 rejection subtests failed; reverted, and the diff was re-checked.
+- **Untagged load matrix** in `test/integration/editorStateTopologyLoad_integration_test.go`,
+  through `composition.InitializeGuiHandler().LoadState`. Temp files are written by
+  re-marshalling a fixture's keys, so no line-ending assumptions are made.
+- **GUI geometry tests.** No survivor's default 2-player template has a doubled pair or a zone on
+  a chord (a throwaway `cmd/tmpprobe` printed all 7 layouts, then was deleted). The four Ring/Hub
+  tests now draw connections with the editor:
+  - grouping uses Geometric Hub plus drawn A→B, B→A and Hub→A;
+  - spread and label use Square plus a drawn A→B: control points `(275.15076, 304.84924)` and
+    `(304.84924, 275.15076)`, ±21px off the diagonal chord as in Batch F; the label midpoint is
+    `(P0 + 2C + P2) / 4`;
+  - bulge uses Geometric Hub plus a drawn A→B: control point `(380.97144, 290)`, clearing the
+    hub by the same 90.97px the old Hub case did, on the positive side.
+- **Preview tests did not fail.** Ring now resolves to Random's capabilities, and those zones carry
+  no positions, so they still take the generic layout. They still name the constant, so they move
+  in Phase 2.
+- **Also moved early, because their file was touched anyway:** `roadPolicyApply` (castleless hub
+  arena: Hub → Geometric Hub, passes), the `mandatoryContentProvider` hub tests (Hub → Geometric
+  Hub, Ring → Circles), the description tests (Chain → Square; Ring/Hub/Shared Web →
+  Circles/Geometric Hub/Cross).
+- **Phase 2 search inventory** (files still naming a retired constant): the production
+  `mapTopology.go`, `types.go`, `generatorConfig.go`, `topologyServiceLookup.go`,
+  `tournamentTopology.go` and `zoneLabelProvider.go`, plus 37 test files. The heaviest are
+  `previewLayoutService/buildPreviewLayout_test.go` (56), `templateGenerator/generate_test.go` (28)
+  and `previewGeneratorService/createPreviewImage_test.go` (16).
 
 ## Phase 2: Generator contract, tournament rewiring and code deletion
 Status: Not started
@@ -250,7 +318,7 @@ _(write when phase completes)_
 Status: Not started
 
 - [ ] GUI test (`integration_test && gui`, `test/integration/gui/`): the topology dropdown lists exactly the 7 K14 labels in order.
-- [ ] GUI test: with a modified current document, loading the v2 retired fixture and then the v0 retired fixture each show the exact K4 status `Load failed: topology "…" (saved as "…") has been retired and is no longer supported; re-create the template with a supported topology.`; the state, current path, unsaved flag and generated template are unchanged. Reuse existing harness accessors; add `*_testexports.go` accessors only if unavoidable, and record them.
+- [x] GUI test: with a modified current document, loading the v2 retired fixture and then the v0 retired fixture each show the exact K4 status `Load failed: topology "…" (saved as "…") has been retired and is no longer supported; re-create the template with a supported topology.`; the state, current path, unsaved flag and generated template are unchanged. **Delivered in Phase 1** as the GPU-free `topologyLoadRejection_integration_test.go`.
 - [ ] Plain GUI run; for each `.failure`, confirm the batch explains it (tournament output for non-Circles topologies, moved fixtures or selections), accept only those files, and list each with its reason in the Phase Summary for owner approval (K15). Never a blanket `-update`.
 - [ ] Benchmarks after: both commands from Phase 0 to `tmp/batch-k-bench-after.txt` (recorded, no gate).
 - [ ] README topology table → 7 rows (Random, Circles, Square, Geometric, Geometric Hub, Cross, Fractal). Search README/QUICKSTART/docs for the retired names and any Ring fallback.

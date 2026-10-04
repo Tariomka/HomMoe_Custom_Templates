@@ -8,14 +8,6 @@ import (
 )
 
 var descriptorValues = models.TopologyDescriptors{ //nolint:gochecknoglobals // Immutable topology catalog.
-	Default: models.TopologyDescriptor{
-		Type:        config.TopologyRing,
-		Label:       "Ring",
-		Description: "Ring: each player borders two neighbors in a closed loop.",
-		Capabilities: models.TopologyCapabilities{
-			LayoutKind: models.TopologyLayoutRingHub,
-		},
-	},
 	Circles: models.TopologyDescriptor{
 		Type:        config.TopologyCircles,
 		Label:       "Circles",
@@ -35,15 +27,6 @@ var descriptorValues = models.TopologyDescriptors{ //nolint:gochecknoglobals // 
 			UsesGeneratorPosition: true,
 		},
 	},
-	HubAndSpoke: models.TopologyDescriptor{
-		Type:        config.TopologyHubAndSpoke,
-		Label:       "Hub",
-		Description: "Hub: central neutral hub connects all player zones.",
-		Capabilities: models.TopologyCapabilities{
-			LayoutKind: models.TopologyLayoutRingHub,
-			UsesHub:    true,
-		},
-	},
 	GeometricHub: models.TopologyDescriptor{
 		Type:        config.TopologyGeometricHub,
 		Label:       "Geometric Hub",
@@ -52,22 +35,6 @@ var descriptorValues = models.TopologyDescriptors{ //nolint:gochecknoglobals // 
 			LayoutKind:            models.TopologyLayoutFixedGeometry,
 			UsesHub:               true,
 			UsesGeneratorPosition: true,
-		},
-	},
-	Chain: models.TopologyDescriptor{
-		Type:        config.TopologyChain,
-		Label:       "Chain",
-		Description: "Chain: linear series, harder for outer players to interact.",
-		Capabilities: models.TopologyCapabilities{
-			LayoutKind: models.TopologyLayoutRingHub,
-		},
-	},
-	SharedWeb: models.TopologyDescriptor{
-		Type:        config.TopologySharedWeb,
-		Label:       "Shared Web",
-		Description: "Shared web: heavy interconnection through central neutral mesh.",
-		Capabilities: models.TopologyCapabilities{
-			LayoutKind: models.TopologyLayoutRingHub,
 		},
 	},
 	Square: models.TopologyDescriptor{
@@ -110,12 +77,8 @@ var descriptorValues = models.TopologyDescriptors{ //nolint:gochecknoglobals // 
 
 var topologies = []models.TopologyDescriptor{ //nolint:gochecknoglobals // Immutable display order.
 	descriptorValues.Random,
-	descriptorValues.Default,
 	descriptorValues.Circles,
-	descriptorValues.HubAndSpoke,
 	descriptorValues.GeometricHub,
-	descriptorValues.Chain,
-	descriptorValues.SharedWeb,
 	descriptorValues.Square,
 	descriptorValues.Geometric,
 	descriptorValues.Cross,
@@ -143,7 +106,7 @@ func GetTopologyDescriptorFromType(topology config.MapTopology) models.TopologyD
 		}
 	}
 
-	return descriptorValues.Default
+	return descriptorValues.Random
 }
 
 func GetTopologyCapabilities(topology config.MapTopology) models.TopologyCapabilities {

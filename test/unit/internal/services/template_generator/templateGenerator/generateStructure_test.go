@@ -58,9 +58,10 @@ func TestWhenTopologySelected_IncludesTopologyNameInDescription(t *testing.T) {
 		topology       config.MapTopology
 		expectedPhrase string
 	}{
-		{"WhenRingTopologySelected_IncludesRingInDescription", config.TopologyRing, "Ring"},
-		{"WhenHubAndSpokeTopologySelected_IncludesHubInDescription", config.TopologyHubAndSpoke, "Hub"},
-		{"WhenSharedWebTopologySelected_IncludesSharedWebInDescription", config.TopologySharedWeb, "Shared Web"},
+		{"WhenCirclesTopologySelected_IncludesCirclesInDescription", config.TopologyCircles, "Circles"},
+		{"WhenGeometricHubTopologySelected_IncludesGeometricHubInDescription",
+			config.TopologyGeometricHub, "Geometric Hub"},
+		{"WhenCrossTopologySelected_IncludesCrossInDescription", config.TopologyCross, "Cross"},
 		{"WhenRandomTopologySelected_IncludesRandomInDescription", config.TopologyRandom, "Random"},
 	}
 	for _, testCase := range cases {

@@ -215,14 +215,14 @@ func TestWhenZeroCastleZoneStripsRules_DoesNotMutateConfiguredRows(t *testing.T)
 		"configured rows must keep all their rules after generation")
 }
 
-// The hub content group is created only for the Hub & Spoke topology and only
+// The hub content group is created only for topologies with a hub zone and only
 // when the user configured hub rows, matching the parallel C# editor.
 func TestWhenHubTopologyWithHubRows_EmitsHubGroupWithConfiguredRows(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	provider := newMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
-	configuration.Topology = config.TopologyHubAndSpoke
+	configuration.Topology = config.TopologyGeometricHub
 	configuration.SpawnRemoteFootholds = false
 	configuration.HubZoneMandatoryContent = []template_model.MandatoryContentItem{{SID: "hub_treasure"}}
 
@@ -238,7 +238,7 @@ func TestWhenHubTopologyWithoutHubRows_OmitsHubGroup(t *testing.T) {
 	// Arrange
 	provider := newMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
-	configuration.Topology = config.TopologyHubAndSpoke
+	configuration.Topology = config.TopologyGeometricHub
 
 	// Act
 	groups := provider.CreateContents(*configuration, nil, nil)
@@ -252,7 +252,7 @@ func TestWhenNonHubTopologyWithHubRows_OmitsHubGroup(t *testing.T) {
 	// Arrange
 	provider := newMandatoryContentProvider()
 	configuration := config.NewGeneratorConfig()
-	configuration.Topology = config.TopologyRing
+	configuration.Topology = config.TopologyCircles
 	configuration.HubZoneMandatoryContent = []template_model.MandatoryContentItem{{SID: "hub_treasure"}}
 
 	// Act

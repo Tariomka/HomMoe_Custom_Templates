@@ -3,7 +3,9 @@ package stateHandler_test
 import (
 	"testing"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
@@ -61,6 +63,62 @@ func TestWhenIssuesAreFixed_AppliesEachIssueFix(t *testing.T) {
 
 	// Assert
 	assert.Equal(t, 8, validation.State.PlayerCount)
+}
+
+func TestWhenTopologyIsRetired_ReportsUnsupportedTopologyRejection(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	state := editor_state_model.NewDefaultEditorStateModel()
+	state.Topology = "Chain"
+	handler := handlers.NewStateHandler(&test_helpers.FileServiceMock{}, validators.NewEditorStateValidator())
+
+	// Act
+	validation := handler.ValidateEditorState(state, true)
+
+	// Assert
+	assert.ErrorIs(t, validation.Rejection, common_errors.ErrUnsupportedTopology)
+}
+
+func TestWhenTopologyIsRetired_ListsTheRejectionAsAWarning(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	state := editor_state_model.NewDefaultEditorStateModel()
+	state.Topology = "Chain"
+	handler := handlers.NewStateHandler(&test_helpers.FileServiceMock{}, validators.NewEditorStateValidator())
+
+	// Act
+	validation := handler.ValidateEditorState(state, true)
+
+	// Assert
+	assert.Equal(t, []string{validation.Rejection.Error()}, validation.Warnings)
+}
+
+func TestWhenTopologyIsRetiredAndIssuesAreFixed_KeepsTheTopology(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	state := editor_state_model.NewDefaultEditorStateModel()
+	state.Topology = "Chain"
+	handler := handlers.NewStateHandler(&test_helpers.FileServiceMock{}, validators.NewEditorStateValidator())
+
+	// Act
+	validation := handler.ValidateEditorState(state, true)
+
+	// Assert
+	assert.Equal(t, config.MapTopology("Chain"), validation.State.Topology)
+}
+
+func TestWhenNoIssueIsBlocking_ReportsNoRejection(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	state := editor_state_model.NewDefaultEditorStateModel()
+	state.Topology = ""
+	handler := handlers.NewStateHandler(&test_helpers.FileServiceMock{}, validators.NewEditorStateValidator())
+
+	// Act
+	validation := handler.ValidateEditorState(state, true)
+
+	// Assert
+	assert.NoError(t, validation.Rejection)
 }
 
 func TestWhenAdvancedModeIsOn_ZeroesTheSimpleNeutralZoneCount(t *testing.T) {

@@ -60,6 +60,9 @@ func NewTemplateHandler(
 func (this *templateHandler) GenerateTemplate(
 	state editor_state_dto.EditorStateDto) (dtos.TemplateLoadDto, error) {
 	validation := this.stateHandler.ValidateEditorState(state.EditorState, true)
+	if validation.Rejection != nil {
+		return dtos.TemplateLoadDto{}, validation.Rejection
+	}
 
 	configuration := this.mapper.FromEditorState(validation.State)
 	if configuration.TemplateName == "" {

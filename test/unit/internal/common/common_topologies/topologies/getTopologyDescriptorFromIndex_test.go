@@ -10,7 +10,7 @@ import (
 func TestWhenIndexIsWithinRange_ReturnsDescriptorAtIndex(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	expected := common_topologies.GetTopologyDescriptors().Circles
+	expected := common_topologies.GetTopologyDescriptors().GeometricHub
 
 	// Act
 	actual := common_topologies.GetTopologyDescriptorFromIndex(2)

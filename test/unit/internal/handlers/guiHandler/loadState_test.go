@@ -165,3 +165,41 @@ func TestWhenFixIssuesIsFalse_StillReturnsWarnings(t *testing.T) {
 	require.NoError(t, err)
 	assert.NotEmpty(t, loaded.Warnings)
 }
+
+func TestWhenCommittedStateHasARetiredTopology_ReturnsUnsupportedTopologyError(t *testing.T) {
+	t.Parallel()
+	for _, name := range []string{
+		"editorState_v2_retired_Default.gen.json",
+		"editorState_v2_retired_HubAndSpoke.gen.json",
+		"editorState_v2_retired_Chain.gen.json",
+		"editorState_v2_retired_SharedWeb.gen.json",
+		"editorState_v0_retired_Chain.gen.json",
+	} {
+		t.Run(name+"_ReturnsUnsupportedTopologyError", func(t *testing.T) {
+			t.Parallel()
+			// Arrange
+			handler := newProductionGuiHandler()
+			statePath := filepath.Join("..", "..", "..", "..", "test_helpers", "testdata", name)
+
+			// Act
+			_, err := handler.LoadState(statePath, false)
+
+			// Assert
+			assert.ErrorIs(t, err, common_errors.ErrUnsupportedTopology)
+		})
+	}
+}
+
+func TestWhenStateFileHasAnUnknownTopology_ReturnsUnsupportedTopologyError(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	handler := newProductionGuiHandler()
+	statePath := filepath.Join(t.TempDir(), "unknown-topology.gen.json")
+	require.NoError(t, os.WriteFile(statePath, []byte(`{"schemaVersion": 2, "topology": "NotARealTopology"}`), 0o644))
+
+	// Act
+	_, err := handler.LoadState(statePath, true)
+
+	// Assert
+	assert.ErrorIs(t, err, common_errors.ErrUnsupportedTopology)
+}

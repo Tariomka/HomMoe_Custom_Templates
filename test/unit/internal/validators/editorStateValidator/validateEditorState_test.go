@@ -2,14 +2,18 @@ package editorStateValidator_test
 
 import (
 	"fmt"
+	"strings"
 	"testing"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_topologies"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/Tariomka/hommoe_custom_templates/internal/validators"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
 func TestWhenStateIsDefault_ReturnsNoIssues(t *testing.T) {
@@ -252,7 +256,7 @@ func TestWhenFloatFieldIsOutOfRange_FixClampsToNearestBound(t *testing.T) {
 	assert.InDelta(t, 0.5, state.PlayerZoneSize, 0.0001)
 }
 
-func TestWhenTopologyIsUnknown_ReturnsIssue(t *testing.T) {
+func TestWhenTopologyIsUnknown_ReturnsUnknownTopologyMessage(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	state := editor_state_model.NewDefaultEditorStateModel()
@@ -262,10 +266,37 @@ func TestWhenTopologyIsUnknown_ReturnsIssue(t *testing.T) {
 	issues := validate(&state)
 
 	// Assert
-	assert.Contains(t, issueMessages(issues), `topology "NotARealTopology" is not a known topology`)
+	assert.Contains(t, issueMessages(issues),
+		`topology "NotARealTopology" is not a known topology; re-create the template with a supported topology`)
 }
 
-func TestWhenTopologyIsUnknown_FixRestoresRandom(t *testing.T) {
+func TestWhenTopologyIsUnknown_IssueIsBlocking(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	state := editor_state_model.NewDefaultEditorStateModel()
+	state.Topology = "NotARealTopology"
+
+	// Act
+	issue := topologyIssue(t, validate(&state))
+
+	// Assert
+	assert.True(t, issue.IsBlocking())
+}
+
+func TestWhenTopologyIsUnknown_RejectionIsUnsupportedTopology(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	state := editor_state_model.NewDefaultEditorStateModel()
+	state.Topology = "NotARealTopology"
+
+	// Act
+	issue := topologyIssue(t, validate(&state))
+
+	// Assert
+	assert.ErrorIs(t, issue.Rejection(), common_errors.ErrUnsupportedTopology)
+}
+
+func TestWhenTopologyIsUnknown_FixLeavesTopologyUnchanged(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	state := editor_state_model.NewDefaultEditorStateModel()
@@ -277,7 +308,111 @@ func TestWhenTopologyIsUnknown_FixRestoresRandom(t *testing.T) {
 	}
 
 	// Assert
+	assert.Equal(t, config.MapTopology("NotARealTopology"), state.Topology)
+}
+
+func TestWhenTopologyIsRetired_ReturnsRetiredTopologyMessage(t *testing.T) {
+	t.Parallel()
+	testCases := map[config.MapTopology]string{
+		"Default":     "Ring",
+		"HubAndSpoke": "Hub",
+		"Chain":       "Chain",
+		"SharedWeb":   "Shared Web",
+	}
+	for topology, label := range testCases {
+		t.Run(string(topology)+"_ReturnsRetiredTopologyMessage", func(t *testing.T) {
+			t.Parallel()
+			// Arrange
+			state := editor_state_model.NewDefaultEditorStateModel()
+			state.Topology = topology
+			expected := fmt.Sprintf(
+				"topology %q (saved as %q) has been retired and is no longer supported; "+
+					"re-create the template with a supported topology", label, topology)
+
+			// Act
+			issues := validate(&state)
+
+			// Assert
+			assert.Contains(t, issueMessages(issues), expected)
+		})
+	}
+}
+
+func TestWhenTopologyIsRetired_IssueIsBlocking(t *testing.T) {
+	t.Parallel()
+	for _, topology := range []config.MapTopology{"Default", "HubAndSpoke", "Chain", "SharedWeb"} {
+		t.Run(string(topology)+"_IssueIsBlocking", func(t *testing.T) {
+			t.Parallel()
+			// Arrange
+			state := editor_state_model.NewDefaultEditorStateModel()
+			state.Topology = topology
+
+			// Act
+			issue := topologyIssue(t, validate(&state))
+
+			// Assert
+			assert.True(t, issue.IsBlocking())
+		})
+	}
+}
+
+func TestWhenTopologyIsEmpty_ReturnsEmptyTopologyMessage(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	state := editor_state_model.NewDefaultEditorStateModel()
+	state.Topology = ""
+
+	// Act
+	issues := validate(&state)
+
+	// Assert
+	assert.Contains(t, issueMessages(issues), "topology is empty; using Random")
+}
+
+func TestWhenTopologyIsEmpty_IssueIsNotBlocking(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	state := editor_state_model.NewDefaultEditorStateModel()
+	state.Topology = ""
+
+	// Act
+	issue := topologyIssue(t, validate(&state))
+
+	// Assert
+	assert.False(t, issue.IsBlocking())
+}
+
+func TestWhenTopologyIsEmpty_FixRestoresRandom(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	state := editor_state_model.NewDefaultEditorStateModel()
+	state.Topology = ""
+
+	// Act
+	for _, issue := range validate(&state) {
+		issue.Fix(&state)
+	}
+
+	// Assert
 	assert.Equal(t, config.TopologyRandom, state.Topology)
+}
+
+func TestWhenTopologyIsSupported_ReturnsNoTopologyIssue(t *testing.T) {
+	t.Parallel()
+	for descriptor := range common_topologies.GetTopologyDescriptorSeq() {
+		t.Run(string(descriptor.Type)+"_ReturnsNoTopologyIssue", func(t *testing.T) {
+			t.Parallel()
+			// Arrange
+			state := editor_state_model.NewDefaultEditorStateModel()
+			state.Topology = descriptor.Type
+
+			// Act
+			issues := validate(&state)
+
+			// Assert
+			assert.Empty(t, topologyIssues(issues))
+		})
+	}
 }
 
 func TestWhenHeroMaxIsLessThanHeroMin_ReturnsIssue(t *testing.T) {
@@ -523,4 +658,21 @@ func issueMessages(issues []validators.ValidationIssue) []string {
 
 func validate(state *editor_state_model.EditorState) []validators.ValidationIssue {
 	return validators.NewEditorStateValidator().Validate(state)
+}
+
+func topologyIssues(issues []validators.ValidationIssue) []validators.ValidationIssue {
+	var matching []validators.ValidationIssue
+	for _, issue := range issues {
+		if strings.HasPrefix(issue.Message, "topology ") {
+			matching = append(matching, issue)
+		}
+	}
+	return matching
+}
+
+func topologyIssue(t *testing.T, issues []validators.ValidationIssue) validators.ValidationIssue {
+	t.Helper()
+	matching := topologyIssues(issues)
+	require.Len(t, matching, 1)
+	return matching[0]
 }

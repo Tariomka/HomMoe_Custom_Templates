@@ -854,11 +854,11 @@ func TestWhenGenerating_ProducesContentCountLimits(t *testing.T) {
 
 // ── Description ──────────────────────────────────────────────────────
 
-func TestWhenChainTopologySelected_IncludesTopologyNameInDescription(t *testing.T) {
+func TestWhenSquareTopologySelected_IncludesTopologyNameInDescription(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
-	configuration.Topology = config.TopologyChain
+	configuration.Topology = config.TopologySquare
 	configuration.PlayerCount = gofakeit.Number(2, 8)
 	configuration.ZoneConfiguration.NeutralZoneCount = gofakeit.Number(0, 5)
 	generator := test_helpers.NewTemplateGenerator(configuration)
@@ -867,7 +867,7 @@ func TestWhenChainTopologySelected_IncludesTopologyNameInDescription(t *testing.
 	actual, _ := generateTemplate(generator)
 
 	// Assert
-	assert.Contains(t, actual.Description, "Chain")
+	assert.Contains(t, actual.Description, "Square")
 }
 
 func TestWhenDescriptionOptionsEnabled_AppendsOptionPhrases(t *testing.T) {

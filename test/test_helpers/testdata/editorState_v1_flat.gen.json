@@ -32,7 +32,7 @@
   "neutralZoneSize": 1.5,
   "hubZoneSize": 1.75,
   "guardRandomization": 0.35,
-  "topology": "Chain",
+  "topology": "Square",
   "randomPortals": true,
   "maxPortalConns": 17,
   "spawnFootholds": true,

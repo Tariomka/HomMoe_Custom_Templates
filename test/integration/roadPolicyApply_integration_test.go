@@ -485,7 +485,7 @@ func applyCurrentGraph(t *testing.T, state *drivers.State, settings func(*editor
 func newArenaHubSession(t *testing.T) *drivers.State {
 	t.Helper()
 	return newRoadSession(t, func(editorState *editor_state_model.EditorState) {
-		editorState.Topology = topology.TopologyHubAndSpoke
+		editorState.Topology = topology.TopologyGeometricHub
 		editorState.HubZoneCastles = 0
 		editorState.GladiatorArena = true
 		editorState.GenerateRoads = true

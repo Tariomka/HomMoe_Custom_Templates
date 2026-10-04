@@ -5,6 +5,7 @@ import (
 	"slices"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common"
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_topologies"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
@@ -45,6 +46,8 @@ const (
 	zoneSizeHighest           = 2.0
 	guardRandomizationLowest  = 0.0
 	guardRandomizationHighest = 0.5
+
+	recreateTemplateAdvice = "re-create the template with a supported topology"
 )
 
 type EditorStateValidator struct{}
@@ -168,17 +171,30 @@ func (this *EditorStateValidator) validateVictoryCondition(
 }
 
 func (this *EditorStateValidator) validateTopology(state *editor_state_model.EditorState) []ValidationIssue {
+	if state.Topology == "" {
+		return []ValidationIssue{{
+			Message: "topology is empty; using Random",
+			fix: func(state *editor_state_model.EditorState) {
+				state.Topology = config.TopologyRandom
+			},
+		}}
+	}
+
 	for descriptor := range common_topologies.GetTopologyDescriptorSeq() {
 		if descriptor.Type == state.Topology {
 			return nil
 		}
 	}
 
+	message := fmt.Sprintf("topology %q is not a known topology; %s", state.Topology, recreateTemplateAdvice)
+	if label, retired := common_topologies.GetRetiredTopologyLabel(state.Topology); retired {
+		message = fmt.Sprintf("topology %q (saved as %q) has been retired and is no longer supported; %s",
+			label, state.Topology, recreateTemplateAdvice)
+	}
+
 	return []ValidationIssue{{
-		Message: fmt.Sprintf("topology %q is not a known topology", state.Topology),
-		fix: func(state *editor_state_model.EditorState) {
-			state.Topology = config.TopologyRandom
-		},
+		Message:   message,
+		rejection: newBlockingIssueError(message, common_errors.ErrUnsupportedTopology),
 	}}
 }
 

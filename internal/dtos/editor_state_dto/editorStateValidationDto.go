@@ -7,4 +7,6 @@ import (
 type EditorStateValidationDto struct {
 	State    editor_state_model.EditorState
 	Warnings []string
+	// Rejection is set when the state cannot be accepted at all; State is then not usable.
+	Rejection error
 }

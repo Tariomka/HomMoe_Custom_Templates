@@ -2,14 +2,14 @@
   "templateName": "All Fields Fixture",
   "gameMode": "SingleHero",
   "mapSize": 208,
+  "experimentalMapSizes": true,
   "playerCount": 7,
+  "heroMin": 2,
+  "heroMax": 9,
+  "heroIncrement": 3,
   "neutralZoneCount": 13,
-  "playerOwnedCastles": 3,
-  "playerCastles": 4,
-  "neutralCastles": 2,
   "spawnAbandonedOutposts": true,
   "abandonedOutpostCount": 4,
-  "advancedMode": true,
   "neutralLowestNoCastle": 21,
   "neutralLowestCastle": 22,
   "neutralLowNoCastle": 23,
@@ -18,21 +18,21 @@
   "neutralMediumCastle": 26,
   "neutralHighNoCastle": 27,
   "neutralHighCastle": 28,
+  "advancedMode": true,
+  "playerOwnedCastles": 3,
+  "playerCastles": 4,
+  "neutralCastles": 2,
+  "hubCastles": 5,
   "neutralLowestCastlesPerZone": 31,
   "neutralLowCastlesPerZone": 32,
   "neutralMedCastlesPerZone": 33,
   "neutralHighCastlesPerZone": 34,
   "matchPlayerCastleFactions": true,
-  "experimentalMapSizes": true,
   "playerZoneSize": 1.25,
   "neutralZoneSize": 1.5,
   "hubZoneSize": 1.75,
-  "hubCastles": 5,
   "guardRandomization": 0.35,
-  "heroMin": 2,
-  "heroMax": 9,
-  "heroIncrement": 3,
-  "topology": "Square",
+  "topology": "Default",
   "randomPortals": true,
   "maxPortalConns": 17,
   "spawnFootholds": true,
@@ -205,10 +205,15 @@
           "args": null
         }
       },
-      "manualPosition": [
-        0.25,
-        0.75
-      ]
+      "generatorPosition": {
+        "X": 0.4,
+        "Y": 0.6
+      },
+      "generatorRing": 2,
+      "manualPosition": {
+        "X": 0.25,
+        "Y": 0.75
+      }
     }
   ],
   "manualConnections": [
@@ -223,5 +228,6 @@
       },
       "isUserAdded": true
     }
-  ]
+  ],
+  "schemaVersion": 2
 }
