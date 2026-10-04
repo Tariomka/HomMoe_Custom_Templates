@@ -40,18 +40,18 @@ directory; no bulk rewrites; never dispatch or publish a release to test anythin
 
 **Plan review** (GPT-6.1 Sol): APPROVE WITH CHANGES; all 4 findings applied (fail-fast
 non-empty lint version lookup, H4 exception stated, step id/output mappings, actionlint static
-check). **Owner plan approval:** pending.
+check). **Owner plan approval:** 2026-10-04, "approved … do all the phases without stopping".
 
 **Out of scope:** `wire`/`gcov2lcov` versions, other workflow hardening (static
 `matrix`/`env` interpolations in `run:`), README/docs (Batch I), `.golangci.yml`, any Go code.
 
 ## Phase 1: LF policy for module/checksum files (§6.3)
-Status: Not started
+Status: Complete
 
-- [ ] In [.gitattributes](../../.gitattributes) add `go.mod text eol=lf` and
+- [x] In [.gitattributes](../../.gitattributes) add `go.mod text eol=lf` and
       `go.sum text eol=lf` (slash-less patterns match at any depth, so `tools/` is covered).
       Reword the comment so it no longer claims `*.go` covers modules.
-- [ ] Refresh exactly `go.mod`, `go.sum`, `tools/go.mod`, `tools/go.sum`: confirm each is
+- [x] Refresh exactly `go.mod`, `go.sum`, `tools/go.mod`, `tools/go.sum`: confirm each is
       unmodified (`git status --short -- <path>` empty) and `i/lf` in `git ls-files --eol`,
       then `Remove-Item <path>` and `git checkout -- <path>`. Index is already LF, so no
       content diff results; the explicit attribute overrides `core.autocrlf`, and no index
@@ -63,14 +63,19 @@ Status: Not started
 - `go mod tidy -diff` in root and in `tools/` → both exit 0, no output.
 
 ### Phase Summary
-_(write when phase completes)_
+Done 2026-10-04 (the owner committed this plan as `25b4c98` first). `.gitattributes` gained
+`go.mod`/`go.sum` `text eol=lf` with a reworded comment. All four files were verified
+unmodified and `i/lf`, then removed and restored with `git checkout --`. Result: all four
+`i/lf w/lf attr/text eol=lf`; `git status` shows only `.gitattributes` and this plan; root
+and tools `go mod tidy -diff` both exit 0 with no output (previously exit 1 with CRLF-only
+checksum diffs).
 
 ## Phase 2: Single linter version (§6.2)
-Status: Not started
+Status: Complete
 
-- [ ] In `tools/`: `go get github.com/golangci/golangci-lint/v2@v2.13.1`, then `go mod tidy`.
+- [x] In `tools/`: `go get github.com/golangci/golangci-lint/v2@v2.13.1`, then `go mod tidy`.
       Record which other requirements moved (expected: indirect only).
-- [ ] In [pr-validation.yml](../../.github/workflows/pr-validation.yml) `run-gci-lint` job,
+- [x] In [pr-validation.yml](../../.github/workflows/pr-validation.yml) `run-gci-lint` job,
       add a step (id `lint-version`, `working-directory: tools`, `shell: bash`) before the
       action. The lookup is a standalone assignment so a failure fails the step, and an empty
       value is rejected (an empty `version` would make the action pick the latest release):
@@ -98,12 +103,28 @@ Status: Not started
 - actionlint (see Phase 3) also covers `pr-validation.yml`.
 
 ### Phase Summary
-_(write when phase completes)_
+Done 2026-10-04. `golangci-lint/v2` moved v2.12.2 → v2.13.1; MVS/tidy also changed only
+`// indirect` requirements: 47 version bumps (e.g. `golang.org/x/tools` v0.44.0 → v0.49.0,
+`honnef.co/go/tools` v0.7.0 → v0.8.0, `gosec/v2` v2.26.1 → v2.28.0), 2 additions
+(`dev.gaijin.team/go/exhaustruct/v5`, `github.com/dlclark/regexp2/v2`) and 2 removals
+(`github.com/davecgh/go-spew`, `github.com/dlclark/regexp2`). `go 1.27.0`, the
+`tool` block, `goforj/wire v1.2.0` and `gcov2lcov v1.1.1` are unchanged. Diff:
+`tools/go.mod` 100 lines, `tools/go.sum` 216 lines, both still LF.
+
+Verification: tools and root `tidy -diff` exit 0; `go list` → `v2.13.1`; the built tool's
+`go version -m` shows `golangci-lint/v2 v2.13.1 h1:RuM4Ocl…`, the same module sum as the
+installed `golangci-lint-v2` binary (temp binary deleted); report-only lint **0 issues**
+(only the three pre-existing unused-exclusion warnings from review §8).
+
+The new `lint-version` step body was run once (throwaway) through Git for Windows bash:
+success prints `version=v2.13.1`; under GitHub's `bash --noprofile --norc -eo pipefail`, an
+unknown module and an empty value both exit 1. (A first failure-path attempt inside an
+`&&` list was invalid, because `set -e` is ignored there; it was rerun correctly.)
 
 ## Phase 3: Release tag validation (§6.5)
-Status: Not started
+Status: Complete
 
-- [ ] In [release.yml](../../.github/workflows/release.yml) add a first job `validate`
+- [x] In [release.yml](../../.github/workflows/release.yml) add a first job `validate`
       (`runs-on: ubuntu-latest`, inherits `contents: read`, no checkout) with job outputs
       `tag: ${{ steps.release-tag.outputs.tag }}` and
       `prerelease: ${{ steps.release-tag.outputs.prerelease }}`. Its single step
@@ -120,12 +141,12 @@ Status: Not started
       echo "prerelease=$prerelease" >> "$GITHUB_OUTPUT"
       ```
       The rejected value is not echoed (avoids workflow-command injection in logs).
-- [ ] `build`: add `needs: validate`; in "Build binary" add `VERSION: ${{ needs.validate.outputs.tag }}`
+- [x] `build`: add `needs: validate`; in "Build binary" add `VERSION: ${{ needs.validate.outputs.tag }}`
       to `env` and use `-X main.version=${VERSION}` inside the existing double-quoted
       `-ldflags`. Checkout `ref` unchanged (H8).
-- [ ] `release`: `needs: [validate, build]`; `tag_name` and `name` from
+- [x] `release`: `needs: [validate, build]`; `tag_name` and `name` from
       `${{ needs.validate.outputs.tag }}`; `prerelease: ${{ needs.validate.outputs.prerelease == 'true' }}`.
-- [ ] No other changes: triggers, dispatch input, concurrency, permissions, artifact and
+- [x] No other changes: triggers, dispatch input, concurrency, permissions, artifact and
       checksum steps stay as they are.
 
 ### Verification Plan
@@ -149,25 +170,72 @@ Status: Not started
   legitimate release; never dispatch or publish a test release.
 
 ### Phase Summary
-_(write when phase completes)_
+Done 2026-10-04. `release.yml` has the `validate` job exactly as specified (the `if` for
+`prerelease` is spread over three lines), with a one-line comment that the rejected value is
+never echoed. `build` needs `validate` and injects `main.version` from `env.VERSION`;
+`release` needs `[validate, build]` and takes `tag_name`, `name` and `prerelease` from the
+validated outputs. Checkout `ref`, triggers, concurrency, permissions and artifact steps are
+unchanged.
+
+Verification:
+- The exact step body was extracted from `release.yml` into a temp script and run (Git for
+  Windows bash, `--noprofile --norc -eo pipefail`, temp `GITHUB_OUTPUT`): 25 crafted cases
+  (4 stable, 3 prerelease, 18 rejects; the plan's list plus `v1.0.0\n`, `\nv1.0.0`,
+  `v1.0.0\t`) and all 26 existing tags gave the exact expected output; rejects exit 1 with an
+  empty output. Temp script deleted.
+- Tag references: only `env.TAG`, checkout `ref`, `env.VERSION`, job outputs and the release
+  action inputs; none inside `run:`.
+- actionlint **v1.7.12** (`go run …@v1.7.12`, module cache only): both workflows clean, exit 0.
+  Negative control: a temp copy outside the repo with a misspelled `needs.validate.outputs`
+  property failed with `property "prerelaese" is not defined`, so output plumbing is checked.
+  shellcheck is not installed, so actionlint's embedded shell lint did not run.
+- `release.yml` was not executed (PR CI never runs it); no release was dispatched.
 
 ## Phase 4: Review and close-out
-Status: Not started
+Status: Complete
 
-- [ ] Independent implementation review by gpt-6.1-sol; apply or record findings.
-- [ ] After the owner reviews/commits: mark §6.2, §6.3, §6.5 `✅ FIXED` in place in the
+- [x] Independent implementation review by gpt-6.1-sol; apply or record findings.
+- [x] After the owner reviews/commits: mark §6.2, §6.3, §6.5 `✅ FIXED` in place in the
       review, complete §9 row H, refresh the progress line (expected 21 fixed / 11 remaining);
       never renumber; §8 untouched.
-- [ ] Update `.agent/session-carry-forward.md`.
+- [x] Update `.agent/session-carry-forward.md`.
 
 ### Verification Plan
 - Review verdict recorded; `git status --short` lists only the intended files.
 
 ### Phase Summary
-_(write when phase completes)_
+Done 2026-10-04. Implementation review (GPT-6.1 Sol): **APPROVE**, no findings; it
+independently re-ran the tidy dry-runs, the EOL check, the lint-version paths, the tag cases
+and actionlint. The owner asked for every phase to run without stopping and will review at
+the end, so the review was marked ahead of the commit: §6.2, §6.3 and §6.5 are `✅ FIXED`
+with Progress paragraphs that say "uncommitted, awaiting owner commit", row H is complete, and
+the progress line reads 21 fixed / 11 remaining (0 High, 6 Medium, 5 Low; recounted from the
+headings). Nothing was renumbered and §8 is untouched. If the owner rejects any part, revert
+the matching review entries.
 
 ## Final Recap
-_(write when all phases complete: summary of the entire piece of work)_
+Batch H closes three CI/tooling items with configuration-only changes and no Go code:
+- **§6.3:** `.gitattributes` forces LF for `go.mod`/`go.sum`, so Windows `go mod tidy -diff`
+  passes in both modules.
+- **§6.2:** golangci-lint is pinned once, to v2.13.1 in `tools/go.mod`, and the PR lint job
+  reads it from there with a fail-fast lookup.
+- **§6.5:** the release tag reaches shell only through `env`, is validated against
+  `vMAJOR.MINOR[.PATCH][-PRERELEASE]` in a new `validate` job, and drives the version, the
+  release name/tag and the prerelease flag.
+
+Files: `.gitattributes`, `tools/go.mod`, `tools/go.sum`, `.github/workflows/pr-validation.yml`,
+`.github/workflows/release.yml`, plus this plan, the review and the handoff. Verified on
+Windows only. The owner waived coverage, unit and test-layout reruns because no Go code
+changed. Not verified: Linux tidy, the PR lint job and the release workflow at runtime.
 
 ## Deployment Plan
-_(write when all phases complete: step-by-step deployment instructions)_
+1. The owner reviews the diff, then stages and commits it (the agent never does).
+2. Open the PR to `master`: "PR Tests" runs the new `lint-version` step and lint;
+   "Tools Module" runs (paths include `tools/**`) and checks `tools` tidiness on Linux;
+   `check-go-mod` covers the root module on Linux.
+3. After merge, the next legitimate release tag (`vX.Y[.Z][-pre]`) exercises `release.yml`:
+   check that the `validate` job passes, binaries report the tag as `main.version`, and a
+   `-` suffix tag is published as a prerelease. Never dispatch a release only to test this.
+4. No migration, Wire regeneration, dependency install or output-directory change is needed.
+   Contributors on Windows with CRLF module files get LF after their next checkout of
+   those paths.

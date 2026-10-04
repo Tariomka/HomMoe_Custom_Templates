@@ -1,31 +1,36 @@
-# Carry-forward: Batch J closed, next batch not started
+# Carry-forward: Batch H implemented, awaiting owner review and commit
 
-Date: 2026-09-28. **Batch J (review §2.2, the reopened zone-content service boundary) is
-closed.** The owner reviewed it, committed it as **`6649def` ("Batch J start", the plan)**
-and **`3c0ad87` ("Batch J")** on `AD/performance`, and authorized the close-out with
-*"Changes have been reviewed, please proceed"*. The committed tree builds and passes the
-unit suite.
+Date: 2026-10-04. **Batch H (review §6.2, §6.3, §6.5: CI/tooling hardening) is
+implemented, verified on Windows, and approved by independent review. It is uncommitted.**
+The owner approved the plan (committed by the owner as `25b4c98` "H Plan") and asked for every
+phase to run without stopping, with their review at the end.
 
-**§2.2 is marked FIXED** in the
-[surviving review](backlog/review-gpt-6-astra-09-07.md). Its §9 row J is complete, and
-its progress line reads **18 fixed, 14 remaining** (0 High, 8 Medium, 6 Low).
+**§6.2, §6.3 and §6.5 are marked FIXED ahead of the commit** in the
+[surviving review](backlog/review-gpt-6-astra-09-07.md), at the owner's request. Their
+Progress paragraphs say "uncommitted, awaiting owner commit". Row H of §9 is complete, and
+the progress line reads **21 fixed, 11 remaining** (0 High, 6 Medium, 5 Low). If the owner
+rejects any part, revert the matching review entries.
 
-The plan, [batch-j-zone-content-dto-boundary.md](plans/batch-j-zone-content-dto-boundary.md),
-is marked CLOSED; §3 below restates its settled decisions (J1–J9) in case it is deleted. The
-Batch G plan is already gone from the tree; §3 still restates G1–G9a. Do not recreate either
-plan, and do not reimplement, re-verify or re-review Batch J or Batch G.
+The plan, [batch-h-ci-tooling-hardening.md](plans/batch-h-ci-tooling-hardening.md), has all
+four phases Complete, plus its Final Recap and Deployment Plan. It records the owner decisions
+H1–H12. §3 below restates them, along with J1–J9 and G1–G9a.
 
 **Section 8 is preserved verbatim**, contradictions and all. Its Batch C phase/engine
-wording, its "pending decisions" wording for §1.5, §1.11, §1.12 and §2.1, and its §2.2
-bullet ("zone-content DTO removal reopened … still need approval") are **superseded**: all
-were settled, implemented and marked fixed. Everything else §8 retains as later scope
-remains **binding**. Do not edit §8.
+wording, its "pending decisions" wording for §1.5, §1.11, §1.12 and §2.1, its §2.2
+bullet, and its tooling pending-decision wording (§6.2/§6.3/§6.5) are **superseded**. Everything
+else §8 retains as later scope remains **binding**. Do not edit §8.
 
-Batches A/D, B, C, E, F, G and J are closed. A/D through F are merged to `master` (Batch F
-as PR #48, `f78caeb`). Batches G and J are pushed on `AD/performance` and are not yet merged.
-Do not revisit or re-verify closed batches.
+Batches A/D, B, C, E, F, G and J are closed and merged to `master` (G and J as PR #49,
+`ec42217`). Do not revisit or re-verify closed batches. Batch H is on `AD/pbi_resolution`
+as uncommitted working-tree changes.
 
 ## 1. Session goal
+
+Plan, implement and verify Batch H from review §9: §6.2 (one linter version), §6.3 (LF
+policy for module/checksum files) and §6.5 (release tag interpolated into shell). The owner
+picked H. Previous session's goal, for context: Batch J (§2.2), closed.
+
+### Previous session goal (Batch J, closed)
 
 Plan, implement, verify and close Batch J from review §9: §2.2, where
 `internal/services/zone_content` consumed and built DTOs under an accepted allow-list
@@ -33,6 +38,23 @@ exception the owner had reopened. The owner picked J over H in this session. Thi
 turn marked the finding fixed and handed this file forward.
 
 ## 2. Fixes applied
+
+### Batch H, uncommitted, marked FIXED pending the owner's commit
+
+- **§6.3:** [.gitattributes](../.gitattributes) adds `go.mod text eol=lf` and
+  `go.sum text eol=lf`. Only the four module/checksum working copies were re-materialized
+  (the index was already LF). Windows `go mod tidy -diff` now exits 0 in both modules.
+- **§6.2:** [tools/go.mod](../tools/go.mod) pins `golangci-lint/v2 v2.13.1`. MVS/tidy changed
+  only indirect requirements: 47 bumps, 2 added, 2 removed. `wire`, `gcov2lcov`, `go 1.27.0`
+  and the `tool` block are unchanged. The [PR lint job](../.github/workflows/pr-validation.yml)
+  reads the version with a fail-fast `go list -m` step, so `tools/go.mod` is the single
+  source.
+- **§6.5:** [release.yml](../.github/workflows/release.yml) has a new `validate` job. It reads
+  the tag only through `env`, enforces
+  `^v[0-9]+\.[0-9]+(\.[0-9]+)?(-[0-9A-Za-z.]+)?$`, and outputs `tag` and `prerelease`.
+  - The build injects `main.version` from `env.VERSION`.
+  - The release takes `tag_name`, `name` and `prerelease` from the validated outputs.
+  - The checkout ref and concurrency group are unchanged, and there is no existence check.
 
 ### Batch J, committed in `3c0ad87` and **marked FIXED**. Closed; do not reopen.
 
@@ -73,6 +95,23 @@ All are committed in `35e0fab` and **marked FIXED**. They are closed; do not reo
   so redraws always settle, even in the error branch.
 
 ## 3. Features added / changed
+
+### Delivered in Batch H, uncommitted
+
+| ID | Decision |
+| --- | --- |
+| H1 | Single linter version v2.13.1. |
+| H2 | `tools/go.mod` is the single source; CI reads it. |
+| H3 | `go get` + `tidy` in `tools/` only; accept the indirect bumps MVS forces. |
+| H4 | `eol=lf` for `go.mod`/`go.sum`; the agent refreshes only those four working copies. |
+| H5 | Tag format `v` + 2–3 numeric parts + optional `-[0-9A-Za-z.]+` prerelease. |
+| H6 | Bash validation step in a `validate` job; tag only via `env`. |
+| H7 | A `-` suffix publishes as a GitHub prerelease. |
+| H8 | Checkout ref, concurrency group unchanged; no tag-existence check. |
+| H9 | Local tag cases are a throwaway one-off run (Git for Windows bash); nothing committed for it; no WSL. |
+| H10 | No build/unit/coverage/testlayoutcheck baseline or rerun: no Go code changes (owner override). |
+| H11 | Windows-only verification; Linux via the owner's PR CI. |
+| H12 | Reviews by GPT-6.1 Sol. |
 
 ### Delivered in Batch J, committed and settled
 
@@ -173,12 +212,30 @@ in the tree; the merged code is the reference.
 
 ## 4. File modifications
 
-**This closing turn is documentation only, in three files:**
+**Batch H, uncommitted** (plan committed by the owner as `25b4c98`):
+- [.gitattributes](../.gitattributes): `go.mod`/`go.sum` `text eol=lf` and a reworded comment.
+- [tools/go.mod](../tools/go.mod), [tools/go.sum](../tools/go.sum): golangci-lint v2.13.1
+  plus its forced indirect changes.
+- [pr-validation.yml](../.github/workflows/pr-validation.yml): the `lint-version` step and
+  `version: ${{ steps.lint-version.outputs.version }}`.
+- [release.yml](../.github/workflows/release.yml): the `validate` job, `needs`, `env.VERSION`,
+  and validated release inputs plus `prerelease`.
+- [Batch H plan](plans/batch-h-ci-tooling-hardening.md): all phases, recap and deployment.
+- [Surviving review](backlog/review-gpt-6-astra-09-07.md): §6.2, §6.3, §6.5 marked FIXED
+  (pending commit), row H, progress line. §8 untouched, nothing renumbered.
+- This handoff.
+
+`go.mod` and `go.sum` at the root were re-materialized to LF in the working tree, with no
+content or Git change. **Not touched:** any Go code, tests, `data/`, the schema, the
+registry, Wire, the output path, `.golangci.yml`, README/QUICKSTART/AGENTS.md, and `wire`
+and `gcov2lcov` versions.
+
+**Previous closing turn (Batch J, merged):** documentation only, in three files:
 - [Surviving review](backlog/review-gpt-6-astra-09-07.md): §2.2 marked `✅ FIXED` in place
   with a Progress paragraph (J9 recorded, not assigned), the §2 architecture-inventory
   bullet updated, the §9 row J completed, and the progress line refreshed to 18 fixed /
   14 remaining. Nothing was renumbered, and the review's §8 hash is unchanged.
-- [Batch J plan](plans/batch-j-zone-content-dto-boundary.md): Phase 4, Final Recap and
+- The Batch J plan (since deleted by the owner): Phase 4, Final Recap and
   Deployment Plan marked complete/CLOSED.
 - This handoff.
 
@@ -250,7 +307,31 @@ batches; the review's §0 is the disposition of record).
 
 ## 5. Tests added or updated
 
-**This closing turn added no tests and reran nothing** beyond confirming that the committed
+### Batch H (uncommitted)
+
+No Go tests were added or run: no Go code changed, and the owner waived the build, unit,
+coverage and testlayoutcheck runs (H10). The coverage baseline stays **74.5% (6915 / 9263)**,
+from Batch J. Verification of record (Windows/amd64, Go 1.27.0):
+- `git ls-files --eol` on the four module/checksum files: `i/lf w/lf attr/text eol=lf`.
+- `go mod tidy -diff`: root and `tools/` both exit 0, before and after the bump.
+- `go list -m` in `tools/` returns `v2.13.1`. A temporary build's `go version -m` matches the
+  installed binary's module sum `h1:RuM4Ocl…`.
+- Report-only lint: **0 issues** (only the three pre-existing unused-exclusion warnings).
+- The lint-version step was run once in Git bash. Success prints `version=v2.13.1`; an
+  unknown module and an empty value both exit 1 under `bash --noprofile --norc -eo pipefail`.
+- The release `validate` step body was extracted from the YAML and run against 25 crafted
+  cases (4 stable, 3 prerelease, 18 rejects including quotes, `;`, `$()`, a backtick,
+  newlines, a tab and whitespace) and all 26 existing tags. All pass. Temp files deleted.
+- actionlint v1.7.12: both workflows clean. A negative control with a misspelled output
+  property is caught. shellcheck is not installed.
+- Reviews (GPT-6.1 Sol): plan APPROVE WITH CHANGES (4 findings, all applied);
+  implementation **APPROVE**, no findings.
+- Not run: Linux tidy, the PR lint job and `release.yml` at runtime (PR CI and the next real
+  release do that).
+
+### Batch J, previous closing turn
+
+**That closing turn added no tests and reran nothing** beyond confirming that the committed
 `3c0ad87` builds and passes `go test ./test/unit/...`. The Batch J verification below is the
 evidence of record.
 
@@ -342,27 +423,46 @@ in-game behaviour.
 
 ## 6. Git status snapshot
 
-The branch is **`AD/performance`**, HEAD **`3c0ad87` ("Batch J")**, level with
-`origin/AD/performance`. The history on top of `master` (`f78caeb`, Batch F #48) is
-`a587617` ("plan"), `35e0fab` ("Batch G"), `33bff1f` ("docs"), `6649def` ("Batch J
-start"), then `3c0ad87`. Batches G and J are not yet merged to `master`.
+The branch is **`AD/pbi_resolution`**, HEAD **`25b4c98` ("H Plan")**, on top of `9d302a5`
+("init", AGENTS.md) and `master` `ec42217` (Batches G and J, PR #49). It has no upstream.
 
-The tree was clean when this closing turn began. `git status --short` now shows only this
-turn's three documentation edits, all unstaged:
+`git status --short` shows only Batch H's unstaged edits:
 
 ```text
  M .agent/backlog/review-gpt-6-astra-09-07.md
- M .agent/plans/batch-j-zone-content-dto-boundary.md
+ M .agent/plans/batch-h-ci-tooling-hardening.md
  M .agent/session-carry-forward.md
+ M .gitattributes
+ M .github/workflows/pr-validation.yml
+ M .github/workflows/release.yml
+ M tools/go.mod
+ M tools/go.sum
 ```
 
 `.agent/memories/` and `tmp/` are gitignored.
 
 **The assistant performed no staging, unstaging, commit, push, stash, branch switch or
-worktree change in this session.**
+worktree change.** The only Git command that wrote files was the H4-approved
+`git checkout -- <path>` restore of the four unmodified module/checksum files.
 
 ## 7. Rejections / things the user declined
 
+- **Batch H.**
+  - Declined alternatives:
+    - downgrading CI to v2.12.2, or moving to the latest linter;
+    - hard-coding the linter version in both places;
+    - strict `vX.Y.Z` (it rejects `v0.1`) and a loose charset;
+    - a Go helper for tag validation;
+    - checking out `refs/tags/<tag>` explicitly;
+    - an explicit tag-existence check;
+    - grouping concurrency by tag;
+    - any WSL use.
+  - The owner waived the build, unit, coverage and testlayoutcheck baseline and reruns,
+    because no Go code changed.
+  - The owner does not want local test scripts for the workflow in the repository; the
+    validation lives only in the pipeline.
+  - Recorded, not assigned: other static `${{ matrix.* }}`/`${{ env.* }}` interpolations in
+    `run:` blocks are not user-controlled and were left alone.
 - **Batch J.**
   - Rejected designs: keeping `ContentRuleKey` in `internal/common` (breaks models'
     import rule), a `dtos` type alias, nesting the option inside `ContentRuleComposition`,
@@ -458,62 +558,60 @@ Other pending decisions: arena/manual invalidation and effective-mode aliases (�
 
 ## 9. Next recommended actions
 
-**Batch J is closed, with no open Batch J questions and no blockers.** The owner merges
-`AD/performance` to `master` and decides when to delete the Batch J plan. Neither is an
-agent action.
+**Batch H is implemented and awaits the owner's review and commit.** If the owner asks
+for changes, apply them, re-run only the affected Batch H checks, and keep the review's
+Progress paragraphs truthful. Once committed, replace "uncommitted, awaiting owner commit"
+with the commit hash in §6.2, §6.3, §6.5 and row H. After merge, the PR's "PR Tests" and
+"Tools Module" runs are the Linux evidence, and the next legitimate release exercises
+`release.yml`.
 
-The next unit of work is the **owner's choice** among the remaining batches of the
-surviving review's §9 table (14 items left):
-- **H: CI/tooling hardening,** §6.2, §6.3 and §6.5. This is next in table order, and the
-  items are independent configuration changes:
-  - linter version alignment;
-  - LF attributes for module and checksum files, with owner-approved normalization of
-    those four paths only;
-  - release-tag input validation.
-
-  Each has open owner decisions recorded in its review item.
-- **I: docs,** §7.1 and §7.2.
+After that, the next unit of work is the **owner's choice** among the remaining batches of
+the surviving review's §9 table (11 items left):
+- **I: docs,** §7.1 and §7.2. This is next in table order.
 - **K–P:** topology retirement, the compact-state investigation, the persistence format,
   panel/state organization, naming and lookup, and the Vec2 audit. The binding scope for
   each is in §8's retained decisions.
 
 Routing for the next session, in order:
 1. Read [AGENTS.md](../AGENTS.md), this handoff, then the chosen items and their §9 row.
-2. Inspect the current code yourself, because review line numbers predate Batches F, G and J.
+2. Inspect the current code yourself, because review line numbers predate Batches F–J and H.
 3. Ask the owner every open decision in the items, summarize the scope, and get approval.
-4. Write a new durable plan under `.agent/plans/`, get an independent review and explicit
-   plan approval, and capture a fresh baseline (coverage 74.5%, 6915 / 9263) before the
-   first edit.
+4. Write a new durable plan under `.agent/plans/`, get an independent review (GPT-6.1 Sol)
+   and explicit plan approval, and capture a fresh baseline (coverage 74.5%, 6915 / 9263)
+   before the first Go edit.
 
 **Deployment.** Nothing is deployed and nothing is authorized to be. The owner alone
-stages, commits, merges and releases. Batches G and J still await the owner's merge to
-`master`. No schema migration, dependency installation, Wire regeneration or
-output-directory change is required or pending. Native Linux and Steam Deck execution
-remain unmeasured.
+stages, commits, merges and releases. Batch H's deployment steps are in its plan. No
+schema migration, Wire regeneration or output-directory change is required or pending.
+Native Linux and Steam Deck execution remain unmeasured.
 
 ## 10. Carry-forward prompt
 
 > Read [AGENTS.md](../AGENTS.md) first, then [this handoff](session-carry-forward.md). It
 > is self-contained.
 >
-> **Batch J is CLOSED.** The owner reviewed it and committed it as `6649def` (plan) and
-> `3c0ad87` on `AD/performance`, which (with Batch G, `35e0fab`) is not yet merged to
-> `master` (`f78caeb`). Review §2.2 is marked **FIXED** in the
-> [surviving review](backlog/review-gpt-6-astra-09-07.md), whose §9 table shows batch `J`
-> complete, with 18 fixed and 14 remaining. Coverage stays at the 74.5% baseline. The
-> Batch J plan is CLOSED; §3 of this handoff restates its settled decisions (J1–J9) and
-> Batch G's (G1–G9a). Do not reimplement, re-verify or re-review Batch J or Batch G.
+> **Batch H is IMPLEMENTED, uncommitted, awaiting the owner's review.** It is on
+> `AD/pbi_resolution` (HEAD `25b4c98`, the owner's "H Plan" commit; `master` `ec42217`
+> already contains Batches G and J). It pins golangci-lint v2.13.1 in `tools/go.mod` as
+> CI's single source, adds LF attributes for `go.mod`/`go.sum`, and validates the release
+> tag through `env` in a new `validate` job. Review §6.2, §6.3 and §6.5 are marked
+> **FIXED** ahead of the commit at the owner's request (21 fixed, 11 remaining). The plan
+> [batch-h-ci-tooling-hardening.md](plans/batch-h-ci-tooling-hardening.md) records H1–H12,
+> the verification and the deployment steps. §3 of this handoff restates H1–H12, J1–J9 and
+> G1–G9a. Do not reimplement or re-review Batch H unless the owner asks for changes, and
+> never revisit Batches A–G or J.
 >
-> **State:** the only working-tree changes are the closing turn's three documentation
-> edits: the review, the Batch J plan and this handoff. The assistant performed no Git
-> mutation; preserve the owner's state exactly.
+> **State:** the working tree holds Batch H's eight unstaged edits (see §6). The assistant
+> performed no Git mutation beyond the approved restore of four unmodified module files;
+> preserve the owner's state exactly.
 >
-> **Next work is the owner's choice of batch from review §9.** H (CI/tooling: §6.2,
-> §6.3, §6.5) is next in order. No plan exists yet. Follow the gates in §9: read,
-> inspect, ask, summarize, plan, independent review, plan approval, fresh baseline.
+> **Next:** apply owner feedback on Batch H if any. Then the owner picks the next batch
+> from review §9 (I, docs, is next in order). Follow the gates in §9: read, inspect, ask,
+> summarize, plan, independent review, plan approval, fresh baseline.
 >
-> **Verification on record** (Batch J final code, Windows/amd64, Go 1.27.0, empty
-> `GOFLAGS`; the committed tree was re-checked with build + unit tests at close-out):
+> **Verification on record:** Batch H is Windows-only. Both tidy dry-runs pass, the lint
+> pin is confirmed, lint shows 0 issues, every tag case passes and actionlint is clean.
+> Batch J's code baseline (Windows/amd64, Go 1.27.0, empty `GOFLAGS`):
 > - build and tagged `go vet`: PASS;
 > - coverage: PASS, 74.5% (6915 / 9263);
 > - `go test ./test/...`: PASS;
@@ -544,8 +642,8 @@ remain unmeasured.
 > **Out of scope** unless the owner selects that batch: Batch K topology retirement,
 > direct `GeneratorConfig` rejection, DTO cleanup, schema and package work, allocation
 > tuning, and every settled alternative in §7. §8 stays verbatim. Its Batch C wording,
-> its pending-decision wording for §1.5, §1.11, §1.12 and §2.1, and its §2.2 bullet are
-> superseded; its retained later-scope decisions remain binding.
+> its pending-decision wording for §1.5, §1.11, §1.12, §2.1 and §6.2/§6.3/§6.5, and its
+> §2.2 bullet are superseded; its retained later-scope decisions remain binding.
 >
 > **Preserve:**
 > - explicit Portal Road `false`/`nil` and valid approaches;
@@ -557,6 +655,8 @@ remain unmeasured.
 > - hit tests resolving against the live connection list;
 > - the graph cache's own dirty flag (`markGraphDirty` on every edit that replaces the
 >   zone or connection lists), and a status key built from the full state;
-> - `internal/services/zone_content` naming no DTO, with conversion in the handlers.
+> - `internal/services/zone_content` naming no DTO, with conversion in the handlers;
+> - `tools/go.mod` as the single linter-version source, LF module/checksum files, and the
+>   release tag reaching shell only through `env` after validation.
 >
 > This handoff contains the full continuation context.
