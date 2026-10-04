@@ -1,4 +1,4 @@
-# Carry-forward: Batches H and I closed, next batch not started
+# Carry-forward: Batches H and I closed; Batch K selected, not started
 
 Date: 2026-10-04.
 
@@ -23,6 +23,9 @@ else §8 retains as later scope remains **binding**. Do not edit §8.
 Batches A/D, B, C, E, F, G and J are closed and merged to `master` (G and J as PR #49,
 `ec42217`). Batches H and I are closed on `AD/pbi_resolution` (pushed, not yet merged to
 `master`). Do not revisit or re-verify closed batches.
+
+**The owner selected Batch K (review §2.3, topology retirement) as the next batch, to be
+started in a fresh session.** No plan exists and no K work has begun. See §9.
 
 ## 1. Session goal
 
@@ -608,7 +611,8 @@ worktree change.** The only Git command that wrote files was Batch H's H4-approv
     counts, persisted guard preset identity, the Plastic/Bronze tables, `GeneratorConfig`
     player rejection.
   - Keep the Batch E safeguards.
-  - Topology retirement (Batch K) stays out of scope.
+  - Topology retirement (Batch K) was out of scope for Batches A–J. It is now the selected
+    next batch, limited to review §2.3's approved scope.
   - No opportunistic DTO, schema, package, allocation or output-path work.
   - Never claim unobserved engine outcomes.
 - **Recorded, not assigned:**
@@ -662,9 +666,46 @@ turn marked §7.1 and §7.2 FIXED (23 fixed, 9 remaining) and completed the Batc
 those edits await the owner's commit. The owner merges `AD/pbi_resolution` to `master` and
 decides when to delete the Batch I plan. Neither is an agent action.
 
-The next unit of work is the **owner's choice** among the remaining batches of
-the surviving review's §9 table (9 items left), **K–P**:
-- K: topology retirement, §2.3;
+The next unit of work is **Batch K, chosen by the owner on 2026-10-04**: review §2.3,
+"Retire Ring, Hub, Chain, and Shared Web topologies and their tournament builders". The
+approved scope is in the review item itself (search `### 2.3`) and in §8's §2.3/O08
+retained decision, both binding. In short:
+- **Remove** the four ordinary choices (serialized IDs `Default`, `HubAndSpoke`, `Chain`,
+  `SharedWeb`), together with their implementations, dedicated wiring, unused helpers and
+  tests, and the Ring/Hub/chain tournament builders.
+- **Rewire tournaments:** every surviving tournament selection that used the chain fallback
+  (Random, Square, Geometric, Cross, Fractal, Geometric Hub) uses the balanced builder.
+- **Preserve** the surviving ordinary implementations, Circles and the shared hub-zone
+  concepts.
+- **Saved states with a retired ID are rejected** with a clear message:
+  - the current document stays unchanged;
+  - no silent substitution and no default fallback;
+  - retired IDs are kept distinct from unknown/invalid ones, with only the minimal
+    legacy-ID recognition needed for the error.
+- **Replace** `TopologyServiceLookup`'s Ring fallback with an explicit, panic-free
+  invalid-selection contract, covering zero and unknown IDs.
+- **Before deleting anything,** inventory:
+  - descriptors (`internal/common/common_topologies`) and the IDs in
+    `internal/entities/topology/mapTopology.go`. That package is not on the §2.1 read-only
+    list, but confirm with the owner before editing entity constants.
+  - validation and load paths, dispatch, preview helpers, zone labelling, factories,
+    constructors, benchmarks and fixtures.
+- **Follow-through:**
+  - regenerate Wire;
+  - update the README topology table (it currently lists 11, including the four);
+  - extend the topology-provider, tournament and wire-format integration tests;
+  - add GUI selection coverage;
+  - run the unit, integration, GUI and performance suites explicitly (tags) so no retired
+    constant hides behind a build tag;
+  - remeasure coverage after the deliberate deletions.
+- **Out of K:** §1.12's two-player enforcement stays a separate, coordinated item (already
+  settled in Batch E), and no new tournament designs.
+
+This is a code batch, so the full gates apply: a fresh baseline before the first Go edit
+(coverage, build, unit, tagged suites, testlayoutcheck, gofmt, lint), and a before/after
+coverage comparison, because deletions move the denominator.
+
+After K, the remaining batches (L–P) are the owner's choice:
 - L: the compact-state investigation, §2.4;
 - M: the persistence format, §2.5 and §2.6;
 - N: panel/state organization, §2.7 and §2.9;
@@ -674,8 +715,9 @@ the surviving review's §9 table (9 items left), **K–P**:
 The binding scope for each is in §8's retained decisions.
 
 Routing for the next session, in order:
-1. Read [AGENTS.md](../AGENTS.md), this handoff, then the chosen items and their §9 row.
+1. Read [AGENTS.md](../AGENTS.md), this handoff, then review §2.3 and its §9 row K.
 2. Inspect the current code yourself, because review line numbers predate Batches F–J.
+   Delegate the inventory to a cheap read-only subagent.
 3. Ask the owner every open decision in the items, summarize the scope, and get approval.
 4. Write a new durable plan under `.agent/plans/`, get an independent review (GPT-6.1 Sol)
    and explicit plan approval, and capture a fresh baseline (coverage 74.5%, 6915 / 9263)
@@ -704,9 +746,11 @@ Native Linux and Steam Deck execution remain unmeasured.
 > the Batch I plan and this handoff). The assistant performed no Git mutation; preserve the
 > owner's state exactly.
 >
-> **Next work is the owner's choice of batch from review §9 (K–P).** No plan exists yet.
-> Follow the gates in §9: read, inspect, ask, summarize, plan, independent review, plan
-> approval, fresh baseline.
+> **Next work is Batch K (review §2.3, topology retirement), selected by the owner.** No
+> plan exists yet. §9 of this handoff summarizes the binding scope from review §2.3 and §8's
+> §2.3/O08. Follow the gates in §9: read, inspect (inventory before deletion), ask,
+> summarize, plan, independent review (GPT-6.1 Sol), plan approval, fresh baseline
+> (coverage 74.5%, 6915 / 9263) before the first Go edit.
 >
 > **Verification on record:** Batches H and I are Windows-only. For Batch I the docs links
 > check out and the QUICKSTART snippet compiles. Batch J's code baseline (Windows/amd64,
@@ -738,8 +782,8 @@ Native Linux and Steam Deck execution remain unmeasured.
 >   introduce fake unit seams.
 > - Keep plans durable and resumable.
 >
-> **Out of scope** unless the owner selects that batch: Batch K topology retirement,
-> direct `GeneratorConfig` rejection, DTO cleanup, schema and package work, allocation
+> **Out of scope** unless the owner selects that batch: direct `GeneratorConfig` rejection,
+> DTO cleanup, schema and package work beyond Batch K's approved scope, allocation
 > tuning, and every settled alternative in §7. §8 stays verbatim. Its Batch C wording,
 > its pending-decision wording for §1.5, §1.11, §1.12, §2.1 and §6.2/§6.3/§6.5, and its
 > §2.2 bullet are superseded; its retained later-scope decisions remain binding.
