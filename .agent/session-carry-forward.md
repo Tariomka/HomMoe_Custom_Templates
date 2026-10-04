@@ -1,4 +1,4 @@
-# Carry-forward: Batch H closed; Batch I implemented, awaiting owner commit
+# Carry-forward: Batches H and I closed, next batch not started
 
 Date: 2026-10-04.
 
@@ -8,14 +8,12 @@ prerelease path) and reports that everything works. The review marks all three i
 with that commit, and row H is complete. The Batch H plan has been deleted by the owner; §3
 restates H1–H12.
 
-**Batch I (review §7.1, §7.2: docs) is implemented, verified and approved by independent
-review, but its file edits are uncommitted.** Its plan and the Batch H review close-out were
-committed by the owner as `599ff23`.
-- The plan, [batch-i-docs.md](plans/batch-i-docs.md), has Phases 1–4 Complete. Phase 5 has
-  the review and handoff done.
-- **Gate:** §7.1/§7.2 are marked FIXED in the review only after the owner confirms the
-  commit. The review currently reads **21 fixed, 11 remaining**; after the gate it reads
-  23 / 9 (0 High, 6 Medium, 3 Low).
+**Batch I (review §7.1, §7.2: docs) is CLOSED.** It was owner-committed as **`dd2b8bf`**
+(plan `599ff23`) and pushed. Before committing, the owner removed `TemplateHandlerMock`'s
+doc comment and shortened three comments in `logButtonPositions_test.go`. The review marks
+§7.1 and §7.2 FIXED, row I is complete, and the progress line reads **23 fixed, 9 remaining**
+(0 High, 6 Medium, 3 Low). The plan [batch-i-docs.md](plans/batch-i-docs.md) is fully
+complete; §3 restates I1–I10.
 
 **Section 8 is preserved verbatim**, contradictions and all. Its Batch C phase/engine
 wording, its "pending decisions" wording for §1.5, §1.11, §1.12 and §2.1, its §2.2
@@ -23,8 +21,8 @@ bullet, and its tooling pending-decision wording (§6.2/§6.3/§6.5) are **super
 else §8 retains as later scope remains **binding**. Do not edit §8.
 
 Batches A/D, B, C, E, F, G and J are closed and merged to `master` (G and J as PR #49,
-`ec42217`). Batch H is closed on `AD/pbi_resolution`. Do not revisit or re-verify closed
-batches.
+`ec42217`). Batches H and I are closed on `AD/pbi_resolution` (pushed, not yet merged to
+`master`). Do not revisit or re-verify closed batches.
 
 ## 1. Session goal
 
@@ -42,7 +40,7 @@ turn marked the finding fixed and handed this file forward.
 
 ## 2. Fixes applied
 
-### Batch I, uncommitted (docs and comments only)
+### Batch I, committed in `dd2b8bf` and **marked FIXED** (docs and comments only). Closed.
 
 - **[README.md](../README.md):**
   - Gio is linked without a version.
@@ -134,7 +132,7 @@ All are committed in `35e0fab` and **marked FIXED**. They are closed; do not reo
 
 ## 3. Features added / changed
 
-### Batch I decisions (uncommitted work)
+### Batch I decisions (committed, settled)
 
 | ID | Decision |
 | --- | --- |
@@ -265,8 +263,8 @@ in the tree; the merged code is the reference.
 
 ## 4. File modifications
 
-**Batch I, uncommitted** (plan and Batch H review close-out committed by the owner as
-`599ff23`):
+**Batch I, committed in `dd2b8bf`** (plan and Batch H review close-out in `599ff23`; the owner
+removed the mock's doc comment and trimmed the button-logger test comments before committing):
 - [README.md](../README.md), [QUICKSTART.md](../QUICKSTART.md),
   [test_observations.md](backlog/test_observations.md): see §2.
 - [AGENTS.md](../AGENTS.md): only the §4.2.1 interface example.
@@ -374,7 +372,7 @@ batches; the review's §0 is the disposition of record).
 
 ## 5. Tests added or updated
 
-### Batch I (uncommitted)
+### Batch I (`dd2b8bf`)
 
 No tests were added or run (I9). The coverage baseline stays **74.5% (6915 / 9263)**.
 Verification of record (Windows):
@@ -506,27 +504,23 @@ in-game behaviour.
 
 ## 6. Git status snapshot
 
-The branch is **`AD/pbi_resolution`**, HEAD **`599ff23` ("Batch I docs")**, **ahead 3** of
-`origin/AD/pbi_resolution` (the owner pushed through `a140e0a`). The history on
-`master` `ec42217` is:
+The branch is **`AD/pbi_resolution`**, HEAD **`dd2b8bf` ("Batch I")**, level with
+`origin/AD/pbi_resolution`. The history on `master` `ec42217` is:
 - `9d302a5` ("init")
 - `25b4c98` ("H Plan")
 - `a140e0a` ("Batch H done", tagged `v0.3.9-alpha.3`)
 - `144d032` ("Agents")
 - `879e41a` ("docs", which deleted the H plan)
-- `599ff23`
+- `599ff23` ("Batch I docs")
+- `dd2b8bf`
 
-`git status --short` shows only Batch I's unstaged edits plus this handoff:
+`git status --short` shows only this closing turn's two documentation edits, plus this
+handoff:
 
 ```text
- M .agent/backlog/test_observations.md
+ M .agent/backlog/review-gpt-6-astra-09-07.md
  M .agent/plans/batch-i-docs.md
  M .agent/session-carry-forward.md
- M AGENTS.md
- M QUICKSTART.md
- M README.md
- M test/test_helpers/templateHandlerMock.go
- M test/unit/app/gui/utils/buttonPositionLogger/logButtonPositions_test.go
 ```
 
 `.agent/memories/` and `tmp/` are gitignored.
@@ -663,17 +657,12 @@ Other pending decisions: arena/manual invalidation and effective-mode aliases (�
 
 ## 9. Next recommended actions
 
-**Batch I is implemented and awaits the owner's review and commit.** If the owner asks
-for changes, apply them and re-run only the affected docs checks (see the plan). **Once the
-owner confirms the commit**, finish Phase 5 of [batch-i-docs.md](plans/batch-i-docs.md):
-- mark §7.1 and §7.2 `✅ FIXED` in place with Progress paragraphs that cite the commit;
-- complete §9 row I;
-- refresh the progress line to 23 fixed / 9 remaining (0 High, 6 Medium, 3 Low);
-- write the plan's Final Recap and Deployment Plan.
+**Batches H and I are closed, with no open questions and no blockers.** This closing
+turn marked §7.1 and §7.2 FIXED (23 fixed, 9 remaining) and completed the Batch I plan;
+those edits await the owner's commit. The owner merges `AD/pbi_resolution` to `master` and
+decides when to delete the Batch I plan. Neither is an agent action.
 
-Never renumber, and leave §8 alone.
-
-After that, the next unit of work is the **owner's choice** among the remaining batches of
+The next unit of work is the **owner's choice** among the remaining batches of
 the surviving review's §9 table (9 items left), **K–P**:
 - K: topology retirement, §2.3;
 - L: the compact-state investigation, §2.4;
@@ -702,22 +691,22 @@ Native Linux and Steam Deck execution remain unmeasured.
 > Read [AGENTS.md](../AGENTS.md) first, then [this handoff](session-carry-forward.md). It
 > is self-contained.
 >
-> **Batch H is CLOSED** (owner commit `a140e0a`, release `v0.3.9-alpha.3`, owner-confirmed;
-> §6.2, §6.3 and §6.5 FIXED). **Batch I (docs, §7.1, §7.2) is IMPLEMENTED, uncommitted,
-> awaiting the owner's review.** It is on `AD/pbi_resolution` (HEAD `599ff23`, which holds
-> its plan [batch-i-docs.md](plans/batch-i-docs.md); `master` `ec42217` has Batches G and
-> J). It fixes every audited inaccuracy in README/QUICKSTART, corrects
-> `test_observations.md`, two Go comments and the AGENTS.md `IGuiHandler` example. §3 of
-> this handoff restates I1–I10, H1–H12, J1–J9 and G1–G9a. Do not reimplement or re-review
-> Batch I unless the owner asks for changes, and never revisit Batches A–H or J.
+> **Batches H and I are CLOSED.**
+> - Batch H: owner commit `a140e0a`, release `v0.3.9-alpha.3`, owner-confirmed; §6.2, §6.3
+>   and §6.5 FIXED.
+> - Batch I: owner commit `dd2b8bf`, plan `599ff23`; §7.1 and §7.2 FIXED.
 >
-> **State:** the working tree holds Batch I's unstaged edits (see §6). The assistant
-> performed no Git mutation; preserve the owner's state exactly.
+> Both are pushed on `AD/pbi_resolution` and not yet merged to `master` (`ec42217`, which
+> has Batches G and J). The review reads 23 fixed, 9 remaining (0 High, 6 Medium, 3 Low).
+> §3 of this handoff restates I1–I10, H1–H12, J1–J9 and G1–G9a. Never revisit Batches A–J.
 >
-> **Next:** after the owner confirms the Batch I commit, mark §7.1/§7.2 FIXED (23 fixed, 9
-> remaining) and finish the plan's Phase 5. Then the owner picks the next batch from review
-> §9 (K–P). Follow the gates in §9: read, inspect, ask, summarize, plan, independent review,
-> plan approval, fresh baseline.
+> **State:** the working tree holds only the closing turn's documentation edits (the review,
+> the Batch I plan and this handoff). The assistant performed no Git mutation; preserve the
+> owner's state exactly.
+>
+> **Next work is the owner's choice of batch from review §9 (K–P).** No plan exists yet.
+> Follow the gates in §9: read, inspect, ask, summarize, plan, independent review, plan
+> approval, fresh baseline.
 >
 > **Verification on record:** Batches H and I are Windows-only. For Batch I the docs links
 > check out and the QUICKSTART snippet compiles. Batch J's code baseline (Windows/amd64,

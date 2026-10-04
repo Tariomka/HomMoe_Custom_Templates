@@ -261,12 +261,12 @@ Verification:
   placeholders in §6, which are formatting examples, not links.
 
 ## Phase 5: Review and close-out
-Status: In progress (waiting on the owner-commit gate)
+Status: Complete
 
 - [x] Independent implementation review (GPT-6.1 Sol): factual accuracy of every changed
       sentence against source; apply or record findings.
 - [x] Update `.agent/session-carry-forward.md`.
-- [ ] **Gate: owner commit.** Only after the owner confirms the commit (the agent never
+- [x] **Gate: owner commit.** Only after the owner confirms the commit (the agent never
       commits): mark §7.1 and §7.2 `✅ FIXED` in place in the review, complete §9 row I, and
       refresh the progress line (23 fixed / 9 remaining: 0 High, 6 Medium, 3 Low). Never
       renumber; §8 untouched.
@@ -292,8 +292,26 @@ After the fixes, the README/QUICKSTART links are re-checked OK and the greps are
 handoff link check found the deleted Batch H plan link; it is now plain text. The temp link
 checker is deleted. `git status --short` lists exactly the 8 intended files.
 
+**Gate passed 2026-10-04:** the owner reviewed and committed everything as `dd2b8bf`
+("Batch I", pushed). Before committing, the owner removed `TemplateHandlerMock`'s doc comment
+entirely and shortened three comments in `logButtonPositions_test.go`, including the one this
+batch edited. The review now marks §7.1 and §7.2 `✅ FIXED`, row I is complete, and the
+progress line reads 23 fixed / 9 remaining (0 High, 6 Medium, 3 Low; recounted from the
+headings).
+
 ## Final Recap
-_(write after the owner-commit gate)_
+Batch I brought the user-facing docs and the test-observation registry in line with the
+code, with no behaviour change:
+- **README and QUICKSTART:** every audited inaccuracy is fixed. The most consequential were
+  a false working-directory fallback that contradicted the output-folder hard rule, a
+  non-compiling QUICKSTART example that wrote templates to `"."`, a non-existent `IBackend`
+  and a pipeline diagram ending in an entity.
+- **test_observations.md:** reconciled with the current tests and CI.
+- **AGENTS.md:** the interface example names the real `IGuiHandler`.
+
+Verification was docs-only by owner decision (links, a one-off snippet compile, vet). The
+coverage baseline is unchanged at 74.5% (6915 / 9263).
 
 ## Deployment Plan
-_(write after the owner-commit gate)_
+Nothing to deploy: documentation and comments only, committed and pushed by the owner as
+`dd2b8bf`. No migration, Wire regeneration, dependency or output-path change.

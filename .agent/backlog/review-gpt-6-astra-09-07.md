@@ -10,8 +10,10 @@
 
 **Finding count:** **32 actionable items: 8 High, 17 Medium, 7 Low.** This includes owner-requested architecture/product work scoped on 2026-09-08, not just proved defects. Informational observations and prior-item dispositions are not included in that count. Findings are source-verified unless a runtime reproduction is explicitly recorded. Performance claims are reasoned, not benchmark measurements. In-game behavior was not tested.
 
-**Current progress (2026-10-04):** **21 fixed, 11 remaining**: 0 High, 6 Medium,
-5 Low. Batches A/D, B, C, E, F, G, H and J are owner-committed and closed; Batch H
+**Current progress (2026-10-04):** **23 fixed, 9 remaining**: 0 High, 6 Medium,
+3 Low. Batches A/D, B, C, E, F, G, H, I and J are owner-committed and closed; Batch I
+(§7.1, §7.2) closed with owner commit `dd2b8bf` on 2026-10-04 (plan `599ff23`),
+independent plan/implementation reviews and docs-only Windows checks. Batch H
 (§6.2, §6.3, §6.5) closed with owner commit `a140e0a` on 2026-10-04, independent
 plan/implementation reviews, Windows verification, and the owner's report that the pushed
 changes and release `v0.3.9-alpha.3` work. Batch F closed with
@@ -654,7 +656,23 @@ The owner released `v0.3.9-alpha.3` (tag on `a140e0a`, the prerelease path) and 
 
 ## §7 Docs and developer experience
 
-### 7.1 🟡 README's dependency, pipeline, and license descriptions are stale
+### 7.1 ✅ FIXED — README's dependency, pipeline, and license descriptions are stale
+
+**Progress (2026-10-04).** Owner commit `dd2b8bf`. README now:
+- links Gio without a version (the version is in go.mod);
+- ends the Generation Flow in `*template_model.Template`, with the persistence seam
+  `FileService.SaveTemplateWithPreview` → `TemplateMapper.ToEntity` →
+  `TemplateRepository.Save`;
+- states MIT with a link to LICENSE.
+
+By owner decision the batch also fixed every other audited inaccuracy, without a rewrite:
+- README: per-platform templates-folder detection and refused export on failure (no
+  working-directory fallback); the air flags; `SingleHero`; the structure tree; the
+  composition-root injectors; the `-run` example.
+- QUICKSTART: the persistence layering, a compiling §5 example that writes to the detected
+  folder, and the `IGuiHandler` table.
+
+Links were checked and the snippet was compile-checked once.
 
 **Evidence.** [README](../../README.md#L88-L91) advertises `gioui.org v0.10.0`; [go.mod](../../go.mod#L5-L12) requires `v0.10.2`. The [pipeline diagram](../../README.md#L243-L257) ends in `entities.RmgTemplate`, whereas [Generate](../../internal/services/template_generator/templateGenerator.go#L57-L91) returns a model. [license text](../../README.md#L314-L316) says “See the main project repository,” although [LICENSE](../../LICENSE) is present.
 
@@ -664,7 +682,22 @@ The owner released `v0.3.9-alpha.3` (tag on `a140e0a`, the prerelease path) and 
 
 **Owner decision.** None; do not expand this into a documentation rewrite.
 
-### 7.2 🟡 Remaining observation paths and CI claims need reconciliation
+### 7.2 ✅ FIXED — Remaining observation paths and CI claims need reconciliation
+
+**Progress (2026-10-04).** Owner commit `dd2b8bf`. [test_observations.md](test_observations.md):
+- **Paths and symbols:** the stale ones are corrected (the snapshot subpackage,
+  `AddButtonSemantics`, `groupConnectionsByPair`, the 4-argument `NewUIState`), and
+  `suggestDirectory`/`tabCalibration.go` are gone.
+- **Removed:** the obsolete template-dir fallback entry.
+- **CI claim:** "never run in CI" is scoped to the GPU benchmark, noting that the Mesa/Xvfb
+  GUI job runs on PRs.
+- **Narrowed:** the io.go limitation, to the registry and the Windows Steam-path fallbacks.
+- **History:** historical figures are labelled, and the deliberate absence of an allocation
+  threshold is kept.
+- **Recorded, not assigned:** the untested `reapplyManualEdits` castle branch.
+
+Also, the AGENTS.md §4.2.1 example now shows the real `IGuiHandler`. The owner removed the
+mock's stale doc comment and trimmed the button-logger test comments.
 
 **Evidence / progress.** The obsolete branch/push instructions identified in the original review have been replaced by the owner-requested [current handoff](../session-carry-forward.md). That portion is addressed. Remaining [test observations](test_observations.md) still refer to older flat snapshot-helper paths, `suggestDirectory`, and GPU tests never running in CI. Current source uses [snapshot helpers](../../test/test_helpers/integration_common/snapshot), [getWorkingDirectory](../../app/gui/drivers/stateFiles.go), and a [Mesa/Xvfb GUI job](../../.github/workflows/pr-validation.yml#L235-L278). The old benchmark figures are historical, not current measurements.
 
@@ -702,7 +735,7 @@ The configured run includes existing exclusions (protected registry duplication,
 | F: editor geometry | §1.13, §1.14, §1.15; optionally §2.1 | Complete: owner commit `b9c47a7` with §2.1 approved into scope, Windows verification and independent plan/implementation reviews; findings marked fixed 2026-09-28. Accepted 74.6% coverage; native Linux unavailable. |
 | G: measured performance | §3.1 | Complete: owner commit `35e0fab`, Windows verification and independent plan/implementation reviews; finding marked fixed 2026-09-28. Accepted 74.5% coverage (covered statements unchanged); native Linux unavailable. |
 | H: CI/tooling hardening | §6.2, §6.3, §6.5 | Complete: owner commit `a140e0a`, linter pinned to v2.13.1 with `tools/go.mod` as CI's single source, LF attributes for module/checksum files, env-only release tag with format validation and prerelease detection. Independent plan/implementation reviews (GPT-6.1 Sol); Windows verification; owner-confirmed push and release `v0.3.9-alpha.3`. No Go code changed, so coverage was not rerun (owner decision). |
-| I: docs | §7.1, §7.2 | Can run independently after owner approves retirement scope. |
+| I: docs | §7.1, §7.2 | Complete: owner commit `dd2b8bf` (plan `599ff23`); every audited README/QUICKSTART inaccuracy, test observations, AGENTS.md interface example. Independent plan/implementation reviews (GPT-6.1 Sol); docs-only checks (links, snippet compile, vet on comment-touched packages); no coverage run (owner decision). |
 | J: reopened service boundary | §2.2 | Complete: owner commit `3c0ad87`, whole zone-content exception removed (bonuses kept), Windows verification and independent plan/implementation reviews; finding marked fixed 2026-09-28. Coverage 74.5% (covered statements 6909 → 6915); native Linux unavailable. |
 | K: topology retirement | §2.3 | Inventory shared builders before removal; reject retired saved IDs, reroute surviving tournament fallbacks to balanced generation, and coordinate §1.12. |
 | L: compact-state investigation | §2.4 | Can begin independently; owner reviews live/persisted feasibility and reconstruction semantics before implementation or schema design. |
