@@ -110,8 +110,7 @@ func (this *GeneratorConfig) IsCityHoldMode() bool {
 }
 
 func (this *GeneratorConfig) IsHubCityToHold() bool {
-	return (this.Topology == TopologyHubAndSpoke || this.Topology == TopologyGeometricHub) &&
-		this.IsCityHoldMode()
+	return this.Topology == TopologyGeometricHub && this.IsCityHoldMode()
 }
 
 func (this *GeneratorConfig) IsSingleHeroMode() bool {

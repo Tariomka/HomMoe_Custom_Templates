@@ -14,10 +14,7 @@ import (
 type TournamentTopologyService struct {
 	base.TopologyBase
 
-	hubClusterService      tournament_variant.IClusterService
-	balancedClusterService tournament_variant.IClusterService
-	ringClusterService     tournament_variant.IClusterService
-	chainClusterService    tournament_variant.IClusterService
+	clusterService tournament_variant.IClusterService
 }
 
 func NewTournamentTopologyService(
@@ -25,17 +22,10 @@ func NewTournamentTopologyService(
 	roadFactory zone_interfaces.IRoadFactory,
 	zoneLabelProvider zone_interfaces.IZoneLabelProvider,
 	connectionService base.ITopologyConnectionService,
-	hubClusterService tournament_variant.IClusterService,
-	balancedClusterService tournament_variant.IClusterService,
-	ringClusterService tournament_variant.IClusterService,
-	chainClusterService tournament_variant.IClusterService,
-) *TournamentTopologyService {
+	clusterService tournament_variant.IClusterService) *TournamentTopologyService {
 	return &TournamentTopologyService{
-		TopologyBase:           base.NewTopologyBase(zoneFactory, roadFactory, zoneLabelProvider, connectionService),
-		hubClusterService:      hubClusterService,
-		balancedClusterService: balancedClusterService,
-		ringClusterService:     ringClusterService,
-		chainClusterService:    chainClusterService,
+		TopologyBase:   base.NewTopologyBase(zoneFactory, roadFactory, zoneLabelProvider, connectionService),
+		clusterService: clusterService,
 	}
 }
 
@@ -46,12 +36,11 @@ func (this *TournamentTopologyService) CreateTopologyVariant(
 	tuning models.GenerationTuning,
 	_ string) template_model.Variant {
 	perPlayerNeutralZones := this.createPerPlayerNeutralZonePlans(neutralZones)
-	clusterService := this.selectClusterService(configuration.Topology)
 
 	var zones []template_model.Zone
 	var conns []template_model.Connection
 	for playerIndex := range 2 {
-		perPlayerZones, perPlayerConns := clusterService.CreateClusterVariant(
+		perPlayerZones, perPlayerConns := this.clusterService.CreateClusterVariant(
 			configuration,
 			tuning,
 			neutralZones,
@@ -73,21 +62,6 @@ func (this *TournamentTopologyService) CreateTopologyVariant(
 		}
 	}
 	return this.CreateVariant(playerLabels, playerLabels[0], len(zones), zones, conns)
-}
-
-func (this *TournamentTopologyService) selectClusterService(
-	mapTopology config.MapTopology) tournament_variant.IClusterService {
-	switch mapTopology {
-	case config.TopologyHubAndSpoke:
-		return this.hubClusterService
-	case config.TopologyCircles:
-		return this.balancedClusterService
-	case config.TopologyRing:
-		return this.ringClusterService
-	default:
-		// Chain, SharedWeb, Random → chain-per-cluster fallback.
-		return this.chainClusterService
-	}
 }
 
 // createPerPlayerNeutralZonePlans splits neutral zone plans into two per-player lists

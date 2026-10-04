@@ -133,7 +133,7 @@ func TestWhenPlayerZoneCastlesConfigured_CreatesSpawnPlusConfiguredCastleMainObj
 	extraCastles := gofakeit.Number(1, 5)
 	playerCount := gofakeit.Number(2, 8)
 	configuration := config.NewGeneratorConfig()
-	configuration.Topology = config.TopologyRing
+	configuration.Topology = config.TopologySquare
 	configuration.PlayerCount = playerCount
 	configuration.ZoneConfiguration.PlayerZoneCastles = extraCastles
 	generator := test_helpers.NewTemplateGenerator(configuration)
@@ -153,7 +153,7 @@ func TestWhenGenerating_AssignsPlayerToEachSpawnMainObject(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
-	configuration.Topology = config.TopologyRing
+	configuration.Topology = config.TopologySquare
 	configuration.PlayerCount = gofakeit.Number(2, 8)
 	generator := test_helpers.NewTemplateGenerator(configuration)
 
@@ -168,12 +168,12 @@ func TestWhenGenerating_AssignsPlayerToEachSpawnMainObject(t *testing.T) {
 	assert.NotContains(t, spawnAssignments, "")
 }
 
-// newPlayerOwnedCastlesConfiguration builds a deterministic two-player ring
+// newPlayerOwnedCastlesConfiguration builds a deterministic two-player Square
 // configuration with one unclaimed extra castle and the given number of
 // pre-owned castles per spawn zone.
 func newPlayerOwnedCastlesConfiguration(ownedPerZone int) *config.GeneratorConfig {
 	configuration := config.NewGeneratorConfig()
-	configuration.Topology = config.TopologyRing
+	configuration.Topology = config.TopologySquare
 	configuration.PlayerCount = 2
 	configuration.ZoneConfiguration.PlayerZoneCastles = 1
 	configuration.ZoneConfiguration.PlayerOwnedCastles = ownedPerZone
@@ -192,12 +192,12 @@ func countZoneCitiesWhere(zone template_entity.Zone, predicate func(template_ent
 	return count
 }
 
-// newAbandonedOutpostConfiguration builds a deterministic two-player ring
+// newAbandonedOutpostConfiguration builds a deterministic two-player Square
 // configuration with one low- and one medium-tier neutral castle zone, so
 // abandoned-outpost behaviour can be compared with and without the option.
 func newAbandonedOutpostConfiguration(spawnOutposts bool) *config.GeneratorConfig {
 	configuration := config.NewGeneratorConfig()
-	configuration.Topology = config.TopologyRing
+	configuration.Topology = config.TopologySquare
 	configuration.PlayerCount = 2
 	configuration.ZoneConfiguration.Advanced.Enabled = true
 	configuration.ZoneConfiguration.Advanced.NeutralLowCastleCount = 1

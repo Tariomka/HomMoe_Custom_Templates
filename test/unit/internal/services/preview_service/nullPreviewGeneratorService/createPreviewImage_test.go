@@ -16,7 +16,7 @@ func TestWhenTemplateIsProvided_ReturnsNoImage(t *testing.T) {
 	template := &template_model.Template{Variants: []template_model.Variant{{}}}
 
 	// Act
-	image := generator.CreatePreviewImage(template, config.TopologyRing)
+	image := generator.CreatePreviewImage(template, config.TopologyRandom)
 
 	// Assert
 	assert.Nil(t, image)
@@ -28,7 +28,7 @@ func TestWhenTemplateIsNil_ReturnsNoImage(t *testing.T) {
 	generator := preview_service.NewNullPreviewGenerator()
 
 	// Act
-	image := generator.CreatePreviewImage(nil, config.TopologyRing)
+	image := generator.CreatePreviewImage(nil, config.TopologyRandom)
 
 	// Assert
 	assert.Nil(t, image)

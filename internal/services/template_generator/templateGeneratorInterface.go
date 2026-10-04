@@ -7,5 +7,5 @@ import (
 
 type ITemplateGenerator interface {
 	SetConfiguration(configuration *config.GeneratorConfig)
-	Generate() (*template_model.Template, []string)
+	Generate() (*template_model.Template, []string, error)
 }

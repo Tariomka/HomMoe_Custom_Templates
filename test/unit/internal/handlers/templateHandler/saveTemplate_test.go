@@ -121,14 +121,14 @@ func TestWhenPreviewIsRendered_SavesItAlongsideTheTemplate(t *testing.T) {
 	fixture := newTemplateHandlerFixture()
 	template := &template_model.Template{}
 	previewImage := image.NewRGBA(image.Rect(0, 0, 1, 1))
-	fixture.previewGenerator.On("CreatePreviewImage", template, config.TopologyChain).Return(previewImage)
+	fixture.previewGenerator.On("CreatePreviewImage", template, config.TopologySquare).Return(previewImage)
 	fixture.fileService.On("SaveTemplateWithPreview", mock.Anything, mock.Anything, mock.Anything).
 		Return(gofakeit.Word(), nil)
 
 	// Act
 	_, _ = fixture.handler.SaveTemplate(dtos.TemplateSaveDto{
 		Template:   template,
-		Topology:   config.TopologyChain,
+		Topology:   config.TopologySquare,
 		OutputPath: gofakeit.Word(),
 	})
 

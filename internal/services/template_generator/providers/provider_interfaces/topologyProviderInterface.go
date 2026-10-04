@@ -13,5 +13,5 @@ type ITopologyProvider interface {
 		playerLabels []string,
 		neutralZones neutral_zone.Plans,
 		tuning models.GenerationTuning,
-		holdCityNeutralLabel string) template_model.Variant
+		holdCityNeutralLabel string) (template_model.Variant, error)
 }

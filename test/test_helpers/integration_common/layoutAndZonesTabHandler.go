@@ -40,6 +40,15 @@ func (this *LayoutAndZonesTabHandler) SelectTopology(name string) *LayoutAndZone
 	return this
 }
 
+// TopologyOptionLabels opens the topology dropdown and reports its rows in the
+// order they are drawn. The dropdown is left open.
+func (this *LayoutAndZonesTabHandler) TopologyOptionLabels() []string {
+	this.runner.tb.Helper()
+	this.runner.NextFrame()
+	this.runner.ClickAt(f32.Pt(topologySelectorTriggerX, topologySelectorTriggerY))
+	return this.runner.ButtonLabelsIn(topologyOptionsRect())
+}
+
 func (this *LayoutAndZonesTabHandler) OpenZoneEditor() *ZoneEditorHandler {
 	this.runner.tb.Helper()
 	this.runner.ClickAt(f32.Pt(zoneEditorButtonX, zoneEditorButtonY))

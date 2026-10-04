@@ -17,7 +17,7 @@ func TestWhenTopologyAndCityHoldCombinationsVary_ReportsHubCityToHoldAccordingly
 		{
 			"WhenHubTopologyHasCityHoldFlag_ReturnsTrue",
 			func(configuration *config.GeneratorConfig) {
-				configuration.Topology = config.TopologyHubAndSpoke
+				configuration.Topology = config.TopologyGeometricHub
 				configuration.GameEndConditions.CityHold = true
 			},
 			true,
@@ -25,7 +25,7 @@ func TestWhenTopologyAndCityHoldCombinationsVary_ReportsHubCityToHoldAccordingly
 		{
 			"WhenHubTopologyHasCityHoldVictoryCondition_ReturnsTrue",
 			func(configuration *config.GeneratorConfig) {
-				configuration.Topology = config.TopologyHubAndSpoke
+				configuration.Topology = config.TopologyGeometricHub
 				configuration.GameEndConditions.VictoryCondition = "win_condition_5"
 			},
 			true,
@@ -33,7 +33,15 @@ func TestWhenTopologyAndCityHoldCombinationsVary_ReportsHubCityToHoldAccordingly
 		{
 			"WhenTopologyIsNotHubDespiteCityHold_ReturnsFalse",
 			func(configuration *config.GeneratorConfig) {
-				configuration.Topology = config.TopologyRing
+				configuration.Topology = config.TopologyCircles
+				configuration.GameEndConditions.CityHold = true
+			},
+			false,
+		},
+		{
+			"WhenTopologyIsTheRetiredHubDespiteCityHold_ReturnsFalse",
+			func(configuration *config.GeneratorConfig) {
+				configuration.Topology = config.MapTopology("HubAndSpoke")
 				configuration.GameEndConditions.CityHold = true
 			},
 			false,
@@ -41,14 +49,14 @@ func TestWhenTopologyAndCityHoldCombinationsVary_ReportsHubCityToHoldAccordingly
 		{
 			"WhenHubTopologyHasNoCityHoldMode_ReturnsFalse",
 			func(configuration *config.GeneratorConfig) {
-				configuration.Topology = config.TopologyHubAndSpoke
+				configuration.Topology = config.TopologyGeometricHub
 			},
 			false,
 		},
 		{
 			"WhenHubTopologyHasNilGameEndConditions_ReturnsFalse",
 			func(configuration *config.GeneratorConfig) {
-				configuration.Topology = config.TopologyHubAndSpoke
+				configuration.Topology = config.TopologyGeometricHub
 				configuration.GameEndConditions = nil
 			},
 			false,

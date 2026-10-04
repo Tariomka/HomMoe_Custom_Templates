@@ -10,8 +10,10 @@
 
 **Finding count:** **32 actionable items: 8 High, 17 Medium, 7 Low.** This includes owner-requested architecture/product work scoped on 2026-09-08, not just proved defects. Informational observations and prior-item dispositions are not included in that count. Findings are source-verified unless a runtime reproduction is explicitly recorded. Performance claims are reasoned, not benchmark measurements. In-game behavior was not tested.
 
-**Current progress (2026-10-04):** **23 fixed, 9 remaining**: 0 High, 6 Medium,
-3 Low. Batches A/D, B, C, E, F, G, H, I and J are owner-committed and closed; Batch I
+**Current progress (2026-10-04):** **24 fixed, 8 remaining**: 0 High, 5 Medium,
+3 Low. Batch K (§2.3) is implemented and verified; Phase 1 is owner commit `1ee746b` and
+Phases 2–4 await the owner's commit and review. Batches A/D, B, C, E, F, G, H, I and J are
+owner-committed and closed; Batch I
 (§7.1, §7.2) closed with owner commit `dd2b8bf` on 2026-10-04 (plan `599ff23`),
 independent plan/implementation reviews and docs-only Windows checks. Batch H
 (§6.2, §6.3, §6.5) closed with owner commit `a140e0a` on 2026-10-04, independent
@@ -462,7 +464,24 @@ catalogue and describe logic, which is business logic in a handler.
 
 **Owner decision.** Reopening is authorized; the API/result shape and whole-exception vs single-seam scope still require the normal ask/plan/approval protocol. The bonuses DTO exception is not reopened by this decision.
 
-### 2.3 🟠 Retire Ring, Hub, Chain, and Shared Web topologies and their tournament builders
+### 2.3 ✅ FIXED (pending owner commit) — Retire Ring, Hub, Chain, and Shared Web topologies and their tournament builders
+
+**Progress (2026-10-04).** Batch K, plan
+[batch-k-topology-retirement.md](../plans/batch-k-topology-retirement.md) (owner decisions
+K1–K16, F1–F6), Phase 1 owner commit `1ee746b`, Phases 2–4 uncommitted:
+- **Gone:** the four constants and aliases; their descriptors, services, wiring and tests;
+  the Ring/Hub/Chain tournament builders.
+- **Tournaments:** every tournament builds balanced clusters.
+- **Load rejection:** retired and unknown saved IDs are refused at load by a blocking validation
+  issue (`ErrUnsupportedTopology`). Retired IDs give a distinct message naming the former
+  topology, and the current document stays unchanged. A missing key loads as Random; `""` is
+  fixed to Random with a warning.
+- **Lookup:** `Resolve` returns `(creator, bool)` with no fallback, and the provider and
+  `Generate` return the error.
+- **Verification:** Windows: unit, integration, GUI and both performance suites run
+  explicitly; independent reviews (GPT-6.1 Sol).
+- **Coverage:** 74.5% → 73.2%, purely from deleting fully-covered code. No surviving file lost
+  coverage, and the owner decides on that total.
 
 **Evidence / owner request O08.** [Topology descriptors](../../internal/common/common_topologies/topologyDescriptors.go) still expose all four ordinary choices. Their serialized IDs in [mapTopology.go](../../internal/entities/topology/mapTopology.go) are `Default`, `HubAndSpoke`, `Chain`, and `SharedWeb`. [TopologyServiceLookup](../../internal/services/template_generator/providers/topologyServiceLookup.go) uses Ring as a fallback. [TournamentTopology](../../internal/services/template_generator/providers/topology/tournamentTopology.go) selects dedicated Ring/Hub builders, a balanced builder for Circles, and a chain fallback for other IDs, including surviving choices such as Random.
 
@@ -737,7 +756,7 @@ The configured run includes existing exclusions (protected registry duplication,
 | H: CI/tooling hardening | §6.2, §6.3, §6.5 | Complete: owner commit `a140e0a`, linter pinned to v2.13.1 with `tools/go.mod` as CI's single source, LF attributes for module/checksum files, env-only release tag with format validation and prerelease detection. Independent plan/implementation reviews (GPT-6.1 Sol); Windows verification; owner-confirmed push and release `v0.3.9-alpha.3`. No Go code changed, so coverage was not rerun (owner decision). |
 | I: docs | §7.1, §7.2 | Complete: owner commit `dd2b8bf` (plan `599ff23`); every audited README/QUICKSTART inaccuracy, test observations, AGENTS.md interface example. Independent plan/implementation reviews (GPT-6.1 Sol); docs-only checks (links, snippet compile, vet on comment-touched packages); no coverage run (owner decision). |
 | J: reopened service boundary | §2.2 | Complete: owner commit `3c0ad87`, whole zone-content exception removed (bonuses kept), Windows verification and independent plan/implementation reviews; finding marked fixed 2026-09-28. Coverage 74.5% (covered statements 6909 → 6915); native Linux unavailable. |
-| K: topology retirement | §2.3 | Inventory shared builders before removal; reject retired saved IDs, reroute surviving tournament fallbacks to balanced generation, and coordinate §1.12. |
+| K: topology retirement | §2.3 | Implemented and verified 2026-10-04: Phase 1 owner commit `1ee746b`, Phases 2–4 pending owner commit. Retired IDs rejected at load, balanced tournaments, panic-free lookup contract; independent plan/implementation reviews (GPT-6.1 Sol). Coverage 74.5% → 73.2% from deleted fully-covered code, pending owner approval; native Linux unavailable. |
 | L: compact-state investigation | §2.4 | Can begin independently; owner reviews live/persisted feasibility and reconstruction semantics before implementation or schema design. |
 | M: coordinated persistence format | §2.5, §2.6; approved outcome of §2.4 only | Follow L's decision gate. One migration plan, supported legacy loading, typed entries, and explicit root-versus-section wire assertions. |
 | N: panel/state organization | §2.7, §2.9 | Driver accessors first; preserve public panel API, GUI snapshots, and state round trips. Coordinate Bonuses work with M. |

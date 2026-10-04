@@ -7,21 +7,14 @@ import (
 )
 
 // TopologyServiceLookup resolves a map topology to the service that builds it.
-// Every service is supplied once and shared, so resolving allocates nothing on
-// the auto-regeneration path.
 type TopologyServiceLookup struct {
 	tournament provider_interfaces.TopologyVariantCreator
-	ring       provider_interfaces.TopologyVariantCreator
 	byTopology map[config.MapTopology]provider_interfaces.TopologyVariantCreator
 }
 
 func NewTopologyServiceLookup(
 	tournament *topology.TournamentTopologyService,
-	ring *topology.RingTopologyService,
-	hub *topology.HubTopologyService,
 	geometricHub *topology.GeometricHubTopologyService,
-	chain *topology.ChainTopologyService,
-	sharedWeb *topology.SharedWebTopologyService,
 	random *topology.RandomTopologyService,
 	circles *topology.CirclesTopologyService,
 	square *topology.SquareTopologyService,
@@ -30,12 +23,8 @@ func NewTopologyServiceLookup(
 	fractal *topology.FractalTopologyService) provider_interfaces.ITopologyServiceLookup {
 	return &TopologyServiceLookup{
 		tournament: tournament.CreateTopologyVariant,
-		ring:       ring.CreateTopologyVariant,
 		byTopology: map[config.MapTopology]provider_interfaces.TopologyVariantCreator{
-			config.TopologyHubAndSpoke:  hub.CreateTopologyVariant,
 			config.TopologyGeometricHub: geometricHub.CreateTopologyVariant,
-			config.TopologyChain:        chain.CreateTopologyVariant,
-			config.TopologySharedWeb:    sharedWeb.CreateTopologyVariant,
 			config.TopologyRandom:       random.CreateTopologyVariant,
 			config.TopologyCircles:      circles.CreateTopologyVariant,
 			config.TopologySquare:       square.CreateTopologyVariant,
@@ -52,12 +41,9 @@ func (this *TopologyServiceLookup) Tournament() provider_interfaces.TopologyVari
 	return this.tournament
 }
 
-// Resolve falls back to the ring topology for any topology without an entry,
-// which is what config.TopologyRing ("Default") and unknown values get.
+// Resolve returns a registered topology variant creator or reports false for a topology without a service.
 func (this *TopologyServiceLookup) Resolve(
-	mapTopology config.MapTopology) provider_interfaces.TopologyVariantCreator {
-	if creator, found := this.byTopology[mapTopology]; found {
-		return creator
-	}
-	return this.ring
+	mapTopology config.MapTopology) (provider_interfaces.TopologyVariantCreator, bool) {
+	creator, found := this.byTopology[mapTopology]
+	return creator, found
 }

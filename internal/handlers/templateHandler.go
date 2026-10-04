@@ -70,7 +70,10 @@ func (this *templateHandler) GenerateTemplate(
 	}
 
 	this.templateGenerator.SetConfiguration(configuration)
-	generated, generationWarnings := this.templateGenerator.Generate()
+	generated, generationWarnings, err := this.templateGenerator.Generate()
+	if err != nil {
+		return dtos.TemplateLoadDto{}, err
+	}
 	if generated == nil {
 		return dtos.TemplateLoadDto{}, common_errors.ErrGeneratedTemplateInvalid
 	}

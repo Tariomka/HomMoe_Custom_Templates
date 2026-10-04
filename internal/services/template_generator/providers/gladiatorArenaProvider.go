@@ -17,9 +17,8 @@ import (
 // also needs the arena itself somewhere on the map. Which wire form is used
 // depends on the topology, mirroring how the shipped templates express it:
 //
-//   - Topologies with a hub zone (Hub & Spoke, Geometric Hub) get a
-//     GladiatorArena main object inside the hub, like Blitz places one in its
-//     super-treasure zone.
+//   - Topologies with a hub zone (Geometric Hub) get GladiatorArena main object
+//     inside the hub, like Blitz places one in its super-treasure zone.
 //   - Every other topology marks the connection between its two richest
 //     neutral zones as a GladiatorArena connection, like Helltide's
 //     "Win-Connection" and Symmetry's "Arena-Connection".
@@ -35,15 +34,8 @@ func NewGladiatorArenaProvider(
 	return &GladiatorArenaProvider{tierService: tierService}
 }
 
-// PlaceArena writes the arena into the variant when the configuration asks for
-// the Gladiator Arena win condition. Templates without a hub and without any
-// neutral zone are left untouched - there is nowhere neutral to put it.
-//
-// A zone carries the tier the generator planned for it; a zone that carries
-// none falls back to inference.
-func (this *GladiatorArenaProvider) PlaceArena(
-	configuration config.GeneratorConfig,
-	variant *template_model.Variant) {
+// PlaceArena writes the arena into the variant when the configuration asks for the Gladiator Arena win condition.
+func (this *GladiatorArenaProvider) PlaceArena(configuration config.GeneratorConfig, variant *template_model.Variant) {
 	if !configuration.IsGladiatorArenaMode() {
 		return
 	}
@@ -64,9 +56,7 @@ func (this *GladiatorArenaProvider) PlaceArena(
 }
 
 // findArenaConnectionIndex returns the neutral-to-neutral connection whose two
-// endpoints are the richest, or -1 when the variant has none. Ties are broken
-// on the connection name so the same configuration always yields the same
-// template.
+// endpoints are the richest, or -1 when the variant has none.
 func (this *GladiatorArenaProvider) findArenaConnectionIndex(variant template_model.Variant) int {
 	qualities := this.mapNeutralZoneQualities(variant.Zones)
 
@@ -88,7 +78,7 @@ func (this *GladiatorArenaProvider) findArenaConnectionIndex(variant template_mo
 }
 
 // findRichestNeutralZoneIndex returns the highest-quality neutral zone, or -1
-// when the variant has none. Ties are broken on the zone name.
+// when the variant has none.
 func (this *GladiatorArenaProvider) findRichestNeutralZoneIndex(zones []template_model.Zone) int {
 	bestIndex, bestQuality := -1, neutral_zone.QualityUnknown
 	for index, zone := range zones {
@@ -125,8 +115,6 @@ func findHubZoneIndex(zones []template_model.Zone) int {
 	return -1
 }
 
-// addArenaMainObject appends the arena object using the same placement Blitz
-// ships with, so the in-game generator treats it identically.
 func addArenaMainObject(zone *template_model.Zone) {
 	zone.MainObjects = append(zone.MainObjects,
 		variant_content.NewObjectBuilder().

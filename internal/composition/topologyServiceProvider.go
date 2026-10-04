@@ -9,9 +9,6 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
 )
 
-// provideTopologyServices builds every topology service exactly once. All of
-// them are stateless, so the lookup they are registered in is shared and the
-// auto-regeneration loop resolves instead of allocating.
 func provideTopologyServices(
 	zoneFactory zone_interfaces.IZoneFactory,
 	roadFactory zone_interfaces.IRoadFactory,
@@ -19,23 +16,10 @@ func provideTopologyServices(
 	connectionService base.ITopologyConnectionService) provider_interfaces.ITopologyServiceLookup {
 	return providers.NewTopologyServiceLookup(
 		topology.NewTournamentTopologyService(
-			zoneFactory,
-			roadFactory,
-			zoneLabelProvider,
-			connectionService,
-			tournament_variant.NewHubClusterService(zoneFactory, roadFactory, zoneLabelProvider, connectionService),
+			zoneFactory, roadFactory, zoneLabelProvider, connectionService,
 			tournament_variant.NewBalancedClusterService(
-				zoneFactory,
-				roadFactory,
-				zoneLabelProvider,
-				connectionService),
-			tournament_variant.NewRingClusterService(zoneFactory, roadFactory, zoneLabelProvider, connectionService),
-			tournament_variant.NewChainClusterService(zoneFactory, roadFactory, zoneLabelProvider, connectionService)),
-		topology.NewRingTopologyService(zoneFactory, roadFactory, zoneLabelProvider, connectionService),
-		topology.NewHubTopologyService(zoneFactory, roadFactory, zoneLabelProvider, connectionService),
+				zoneFactory, roadFactory, zoneLabelProvider, connectionService)),
 		topology.NewGeometricHubTopologyService(zoneFactory, roadFactory, zoneLabelProvider, connectionService),
-		topology.NewChainTopologyService(zoneFactory, roadFactory, zoneLabelProvider, connectionService),
-		topology.NewSharedWebTopologyService(zoneFactory, roadFactory, zoneLabelProvider, connectionService),
 		topology.NewRandomTopologyService(zoneFactory, roadFactory, zoneLabelProvider, connectionService),
 		topology.NewCirclesTopologyService(zoneFactory, roadFactory, zoneLabelProvider, connectionService),
 		topology.NewSquareTopologyService(zoneFactory, roadFactory, zoneLabelProvider, connectionService),

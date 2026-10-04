@@ -1,19 +1,19 @@
-# Carry-forward: Batch K (topology retirement) Phases 0–1 complete, Phase 2 next
+# Carry-forward: Batch K (topology retirement) implemented, awaiting owner review and commit
 
 Date: 2026-10-04.
 
-**Batch K (review §2.3 / O08) is IN PROGRESS. Its plan is the source of truth:
-[batch-k-topology-retirement.md](plans/batch-k-topology-retirement.md).** It holds the
-binding owner decisions K1–K16 and F1–F6, the design details D1–D4, the inventory, both plan
-reviews (GPT-6.1 Sol: REJECT, then APPROVE WITH CHANGES; all findings applied), owner plan
-approval, and the Phase 0 and Phase 1 summaries. The owner committed the plan as **`d50f34d`**.
-Phases 0 and 1 are complete and **uncommitted** in the working tree. Every suite is green at
-this boundary. **Phases 2, 3 and 4 have not started.**
+**Batch K (review §2.3 / O08) is IMPLEMENTED AND VERIFIED; all four phases are complete. Its
+plan is the source of truth: [batch-k-topology-retirement.md](plans/batch-k-topology-retirement.md)**
+(decisions K1–K16, F1–F6, D1–D4, every phase summary, Final Recap, Deployment Plan).
+- **Commits:** the owner committed the plan as `d50f34d` and Phase 1 as **`1ee746b`**.
+  **Phases 2–4 are uncommitted** and await the owner's review.
+- **Review document:** marks §2.3 FIXED pending owner commit (24 fixed, 8 remaining).
+- **Open owner decision:** coverage is **73.2% (6441 / 8781)**, below the 74.4% line (K16).
+  The drop comes purely from deleting fully-covered code; no surviving file lost coverage.
 
 **Batches H and I are CLOSED** (owner commits `a140e0a`, released as `v0.3.9-alpha.3`, and
 `dd2b8bf`). Both are on `AD/pbi_resolution`, pushed, not yet merged to `master` (`ec42217`, which
-has G and J). The review reads 23 fixed, 9 remaining. §3 restates I1–I10, H1–H12, J1–J9 and
-G1–G9a. Never revisit Batches A–J.
+has G and J). §3 restates I1–I10, H1–H12, J1–J9 and G1–G9a. Never revisit Batches A–J.
 
 **Section 8 is preserved verbatim**, contradictions and all. Its Batch C phase/engine
 wording, its "pending decisions" wording for §1.5, §1.11, §1.12 and §2.1, its §2.2
@@ -22,10 +22,13 @@ else §8 retains as later scope remains **binding**. Do not edit §8.
 
 ## 1. Session goal
 
-Start Batch K: read, inventory (cheap subagent), ask the owner every open decision (two rounds
-plus a follow-up), confirm the scope, write the plan, get two independent reviews, get approval,
-capture the Phase 0 baseline, and implement Phase 1 (catalogue, validation and load rejection).
-The session stopped at the clean Phase 1 boundary because of context size (AGENTS.md §5).
+Plan and implement Batch K end to end:
+- read the sources, inventory with a cheap subagent, and ask the owner every open decision;
+- write the plan, get two independent reviews, and get the owner's approval;
+- capture the baseline and implement Phase 1;
+- after the owner reviewed and committed Phase 1 ("continue till the last phase, I will
+  review everything afterwards"), implement Phases 2–4, including an independent
+  implementation review.
 
 ### Previous session goal (Batches H and I, closed)
 
@@ -34,7 +37,28 @@ released and confirmed both.
 
 ## 2. Fixes applied
 
-### Batch K Phase 1, uncommitted (details in the plan's Phase 1 summary)
+### Batch K Phases 2–4, uncommitted (details in the plan's phase summaries)
+
+- **Generator contract:**
+  - `Resolve` → `(creator, bool)`, with no fallback;
+  - `TopologyProvider` checks validity before the tournament branch and returns
+    `unsupported topology: "<id>"` (wrapping `ErrUnsupportedTopology`);
+  - `Generate` → `(*Template, []string, error)`;
+  - `GenerateTemplate` returns that error.
+- **Tournament:** `TournamentTopologyService` uses only `BalancedClusterService`.
+- **Deleted:**
+  - the Ring/Hub/Chain/Shared Web services and the Ring/Hub/Chain cluster services, with
+    their tests;
+  - 9 connection-name helpers;
+  - `CreateBalancedChainZoneLabels`, `isRing`, `OrderEdgeGap`, `preferInterior`;
+  - the Shared Web plan rule and the Chain/Ring adjacency branches;
+  - the `IsHubCityToHold` Hub case;
+  - the four constants and their aliases.
+- **Wire:** `wire diff` is clean and `wire_gen.go` is untouched.
+- **README:** the table lists the 7 topologies and the text says "Seven topologies".
+- **GUI:** a dropdown test via the new tagged harness method `TopologyOptionLabels`.
+
+### Batch K Phase 1, committed in `1ee746b` (details in the plan's Phase 1 summary)
 
 - **Catalogue** ([topologyDescriptors.go](../internal/common/common_topologies/topologyDescriptors.go)):
   7 survivors in the order Random, Circles, Geometric Hub, Square, Geometric, Cross, Fractal.
@@ -313,7 +337,13 @@ in the tree; the merged code is the reference.
 
 ## 4. File modifications
 
-**Batch K Phase 1, uncommitted.** The full list is in §6's `git status`.
+**Batch K Phases 2–4, uncommitted.** The counts are in §6; the plan's Phase 2 summary lists
+the production and test files. Docs: README, the plan, the review document (§2.3, row K, the
+progress line; §8 untouched), `test_observations.md` (`createTopologyAdjacency` Circles
+branch). Gitignored: `.agent/memories/generator-domain.md`, and the after-coverage and
+after-benchmark files in `.agent/memories/batch-k-baseline/`.
+
+**Batch K Phase 1, committed in `1ee746b`.** The full list is in §6's `git status`.
 - **Production edited:** `handlerErrors.go`, `topologyDescriptors.go` (common and models),
   `editorStateValidationDto.go`, `stateHandler.go`, `templateHandler.go`,
   `topologyLayoutKind.go`, `layoutRingHub.go` (comment), `editorStateValidator.go`,
@@ -446,7 +476,27 @@ batches; the review's §0 is the disposition of record).
 - The balanced-builder probe (0/1/3/5 neutral zones) shows no panic.
 - Artifacts are in `.agent/memories/batch-k-baseline/`.
 
-### Batch K Phase 1 (uncommitted, all green)
+### Batch K Phases 2–4 (uncommitted, all green)
+
+- **Final gate** (Windows/amd64, Go 1.27.0):
+  - build and vet × 3 PASS;
+  - `./test/...` PASS;
+  - tagged integration PASS;
+  - tagged GUI PASS (41.4s), **0 `.failure`, no golden moved**;
+  - both benchmark suites PASS;
+  - testlayoutcheck PASS; gofmt clean; lint 0; `wire diff` clean.
+- **Coverage: 73.2% (6441 / 8781)**, needing owner approval (K16):
+  - no surviving file lost coverage;
+  - the deleted files were 399/400 covered;
+  - uncovered statements fell 2348 → 2340;
+  - every changed function is at 100% except `createTopologyAdjacency` (53.8% → 70.0%;
+    its Circles branch is unreachable and recorded).
+- **New and rewritten tests:** the lookup contract (7 found, 6 unsupported), provider errors in
+  both modes, balanced tournaments for all 7 topologies (provider, tournament service,
+  generator), 0 and odd neutral counts, generator error → nil template, handler error
+  propagation, `isHubCityToHold` with a retired raw ID, and the GUI dropdown list.
+
+### Batch K Phase 1 (committed in `1ee746b`, all green)
 
 - **New unit folders:**
   - `common_topologies/retiredTopologies/`;
@@ -601,20 +651,20 @@ in-game behaviour.
 
 ## 6. Git status snapshot
 
-The branch is **`AD/pbi_resolution`** and HEAD is **`d50f34d` ("plan", the owner's commit of
-the Batch K plan)**. Newest first: `d50f34d`, `61ecb3b` ("Carry forward"), `a648e5a` and
-`55d0200` ("Docs"), then `dd2b8bf` (Batch I) and `a140e0a` (Batch H). `master` is `ec42217`.
+The branch is **`AD/pbi_resolution`** and HEAD is **`1ee746b` ("Batch K part 1", the owner's
+commit of Phase 1)**. Newest first: `1ee746b`, `d50f34d` ("plan"), `61ecb3b` ("Carry forward"),
+then `dd2b8bf` (Batch I) and `a140e0a` (Batch H). `master` is `ec42217`.
 
-`git status --short` shows the **uncommitted Batch K Phase 0/1 work** plus this handoff:
-- **Modified:** the plan; 9 production files; 3 flat fixtures and `allFieldsEditorState.go`;
-  2 integration tests (`gui/zoneEditorGeometry`, `roadPolicyApply`); 14 unit-test files.
-- **Untracked:** `retiredTopologies.go`, `blockingIssueError.go`, 2 integration tests,
-  5 retired fixtures, the unit folders `common_topologies/retiredTopologies/` and
-  `validators/blockingIssueError/`, and `validationIssue/{isBlocking,rejection}_test.go`.
+`git status --short` shows the **uncommitted Batch K Phases 2–4**:
+- **65 modified:** production, tests, test helpers, README, the plan, the review document,
+  `test_observations.md`, this handoff.
+- **36 deleted:** the 7 retired service files plus their 7 test folders, 9
+  connection-name tests, `createBalancedChainZoneLabels_test.go`, `orderEdgeGap_test.go`.
+- **1 untracked:** `test/integration/gui/layoutPanelTopology_integration_test.go`.
 
 `.agent/memories/` and `tmp/` are gitignored. **The assistant performed no staging,
-unstaging, commit, push, stash, branch switch or worktree change.** The owner may commit the
-Phase 1 boundary before Phase 2 starts; the next session must preserve whatever state it finds.
+unstaging, commit, push, stash, branch switch or worktree change.** Deletions used
+`Remove-Item`, never `git rm`.
 
 ## 7. Rejections / things the user declined
 
@@ -634,6 +684,9 @@ Phase 1 boundary before Phase 2 starts; the next session must preserve whatever 
 - **Phase 1 deviations (recorded in the plan):** no `updateCurrentState_test.go` (D1 is proven
   by existing and new tests), and the unchanged-document test moved from Phase 3 GUI to Phase 1
   as GPU-free.
+- **Implementation review (GPT-6.1 Sol, APPROVE WITH CHANGES):** Low #2 declined. It asked to
+  split the `require.NoError` guards from the single assertion in success-path tests; the
+  repository uses the same guard-then-assert form elsewhere. #1 and #3 were applied.
 - **Recorded, not assigned (Batch K):**
   - `SaveState` and `UpdateTemplate` do not validate (programmatic bypass, no GUI path);
   - the pre-existing test folder `common_topologies/topologies/` does not mirror
@@ -766,52 +819,33 @@ Other pending decisions: arena/manual invalidation and effective-mode aliases (�
 
 ## 9. Next recommended actions
 
-**Batch K is in progress. Resume from the plan,
-[batch-k-topology-retirement.md](plans/batch-k-topology-retirement.md), at Phase 2.** Phases
-0 and 1 are complete, every suite is green, and the work is uncommitted (the owner may commit
-it first). No open owner question blocks Phase 2.
+**Batch K is implemented and verified. Nothing is left for an agent until the owner reviews it.**
+Ordered:
+1. **Owner:** review the uncommitted Phases 2–4 (`git diff 1ee746b`, plus the one untracked GUI
+   test), then commit. The plan's Phase 2–4 summaries explain every change.
+2. **Owner decision:** approve or reject coverage **73.2% (6441 / 8781)** against the 74.4%
+   line (K16). The evidence is in the plan's Phase 4 summary:
+   - the drop is denominator only, with no surviving file losing coverage;
+   - uncovered statements fell 2348 → 2340.
 
-Ordered to-do:
-1. Read AGENTS.md, this handoff, then the plan in full: its decision table, D1–D4, the
-   inventory, and the Phase 0 and Phase 1 summaries. Check `git status` and preserve whatever
-   the owner did. The baseline to compare against is in gitignored
-   `.agent/memories/batch-k-baseline/` (coverage 74.5%, 6915 / 9263).
-2. **Phase 2** (the largest phase):
-   - **Signatures:** `Resolve` → `(creator, bool)`; the provider → `(Variant, error)` with D3,
-     checking validity before the tournament branch; `ITemplateGenerator`/`Generate` →
-     `(*Template, []string, error)`, plus the mock and every caller.
-   - **Tournament:** a single balanced `IClusterService`; update
-     `test_helpers/tournamentTopologyDependencies.go`.
-   - **Delete:** the four services, the three cluster services, their wiring and
-     assertions, the K11 zone-label helpers, `OrderEdgeGap`/`preferInterior`, the nine
-     retirement-only connection-name helpers, the `IsHubCityToHold` Hub case, and the four
-     constants and their aliases.
-   - **Benchmarks:** rewrite the sources (K13).
-   - **Wire:** check with `wire diff ./internal/composition/...`; `wire gen` prints its
-     success banner to stderr.
-   - **Tests:** move the 37 test files still naming retired constants (listed in the plan's
-     Phase 1 summary); fix the stale gladiator-provider comment "(Hub & Spoke, Geometric
-     Hub)".
-3. **Phase 3:**
-   - a GUI dropdown test with exactly the 7 labels;
-   - a plain GUI run, accepting only explained `.failure` goldens and listing them for the
-     owner (tournament output for non-Circles topologies changes in Phase 2);
-   - benchmarks after;
-   - README table → 7 rows;
-   - `.agent/memories/generator-domain.md`.
-4. **Phase 4:**
-   - the full gate (quote PowerShell flags: `'-bench=.'`, `'-tags=integration_test,gui'`);
-   - a per-file coverage comparison (K16);
-   - an implementation review by GPT-6.1 Sol;
-   - marking review §2.3 FIXED pending commit, plus row K and the progress line (never §8);
-   - this handoff.
+   If rejected, a follow-up adds coverage elsewhere; deleted code does not return.
+3. **Owner:** push; PR CI covers Linux. Then decide whether to delete the Batch K plan, mark
+   the review row closed, and merge `AD/pbi_resolution` to `master`.
+4. **Optional in-game check:** a two-player tournament on a former chain-fallback topology
+   (e.g. Random) now uses balanced clusters.
+5. **Next batch:** the owner's choice of L (§2.4), M (§2.5/§2.6), N (§2.7/§2.9),
+   O (§2.8/§2.10) or P (§4.1). The binding scope is in §8's retained decisions.
 
-After K, the remaining batches are the owner's choice: L (§2.4), M (§2.5/§2.6), N (§2.7/§2.9),
-O (§2.8/§2.10), P (§4.1). The binding scope is in §8's retained decisions.
+**Recorded, not assigned (Batch K):**
+- `SaveState` and `UpdateTemplate` do not validate;
+- `createTopologyAdjacency`'s Circles branch is unreachable (kept by K11);
+- the pre-existing `common_topologies/topologies/` test folder does not mirror
+  `topologyDescriptors.go`.
 
 **Deployment.** Nothing is deployed and nothing is authorized to be. The owner alone stages,
-commits, merges and releases. Batch K changes no schema, no output path and no `wire_gen.go`
-provider set (to be confirmed in Phase 2). Native Linux and Steam Deck remain unmeasured.
+commits, merges and releases. Batch K changes no schema, no output path and no `wire_gen.go`.
+Users holding a `.gen.json` with a retired topology get a refusal naming it.
+Native Linux and Steam Deck remain unmeasured.
 
 ## 10. Carry-forward prompt
 
@@ -819,29 +853,30 @@ provider set (to be confirmed in Phase 2). Native Linux and Steam Deck remain un
 > Batch K plan [batch-k-topology-retirement.md](plans/batch-k-topology-retirement.md). Together
 > they are self-contained.
 >
-> **Batch K (review §2.3 / O08, topology retirement) is IN PROGRESS.** The plan was approved by
-> the owner and committed as `d50f34d`. It holds decisions K1–K16 and F1–F6, design details
-> D1–D4, the inventory, two plan reviews (GPT-6.1 Sol), and the Phase 0 and Phase 1 summaries.
-> **Phases 0–1 are complete and uncommitted**, with build, vet × 3, all suites (untagged,
-> `integration_test`, `integration_test,gui`), testlayoutcheck and lint green. **Resume at
-> Phase 2.** Never revisit Batches A–J; H and I are closed (`a140e0a`, `dd2b8bf`).
+> **Batch K (review §2.3 / O08, topology retirement) is IMPLEMENTED AND VERIFIED; all four
+> phases are complete.**
+> - **Commits:** the plan is `d50f34d` and Phase 1 is `1ee746b`. Phases 2–4 are uncommitted,
+>   awaiting the owner's review and commit.
+> - **Review document:** §2.3 is FIXED pending commit (24 fixed, 8 remaining).
+> - **Open owner decision:** approve coverage 73.2% (6441 / 8781) vs the 74.4% line. The drop
+>   comes only from deleting fully-covered code, and no surviving file lost coverage.
+> - Never revisit Batches A–J; H and I are closed (`a140e0a`, `dd2b8bf`).
 >
-> **State:** branch `AD/pbi_resolution`, HEAD `d50f34d` plus the uncommitted Phase 0/1 work
-> listed in §6 of the handoff. The assistant performed no Git mutation; preserve the owner's
-> state exactly.
+> **State:** branch `AD/pbi_resolution`, HEAD `1ee746b` plus the uncommitted work in §6 of the
+> handoff. The assistant performed no Git mutation; preserve the owner's state exactly. Do not
+> redo Batch K. Only act on owner review feedback, or start the next batch the owner selects.
 >
-> **Baseline** (Phase 0, Windows/amd64, Go 1.27.0, empty `GOFLAGS`): coverage 74.5%
-> (6915 / 9263); artifacts in gitignored `.agent/memories/batch-k-baseline/`.
 > **Native Linux, Steam Deck and the race detector are UNAVAILABLE.** No in-game result is
 > claimed.
 >
 > **Traps:**
 > - PowerShell 5.1 splits an unquoted `-bench=.`, so quote flags.
 > - Clear the lint cache before believing an unexpected baseline finding.
-> - `create_file` writes CRLF, so `gofmt -w` new files by explicit list.
-> - `wire gen` prints its success banner to stderr.
-> - Never keep a blanket GUI `-update`; accept only explained `.failure` files.
-> - Go 1.27 promoted-field literals stay flat (`modernize/embedlit`).
+> - Run `gofmt -l` on new files.
+> - `gofmt -r` cannot rewrite statements; use UTF-8-safe .NET file APIs for literal swaps.
+> - `wire diff` is the reliable Wire check.
+> - Never keep a blanket GUI `-update`.
+> - Go 1.27 promoted-field literals stay flat.
 >
 > **Hard rules:**
 > - Never modify `data/`, the template schema or the registry.
@@ -854,10 +889,10 @@ provider set (to be confirmed in Phase 2). Native Linux and Steam Deck remain un
 >   fake unit seams.
 > - Keep plans durable and resumable.
 >
-> **Out of scope:** §1.12 (the Batch E tournament lock stays untouched), new tournament designs,
-> direct `GeneratorConfig` rejection, DTO/schema/package work beyond K's approved scope
-> (the D1 `Rejection` field is approved), allocation tuning, and every settled alternative in §7.
-> §8 stays verbatim; its superseded wording is listed at the top of the handoff.
+> **Out of scope** unless the owner selects it: §1.12 (the Batch E tournament lock stays
+> untouched), new tournament designs, direct `GeneratorConfig` rejection, further
+> DTO/schema/package work, allocation tuning, and every settled alternative in §7. §8 stays
+> verbatim; its superseded wording is listed at the top of the handoff.
 >
 > **Preserve:**
 > - explicit Portal Road `false`/`nil` and valid approaches;
@@ -869,4 +904,5 @@ provider set (to be confirmed in Phase 2). Native Linux and Steam Deck remain un
 > - the graph cache's own dirty flag and the full-state status key;
 > - `zone_content` naming no DTO;
 > - `tools/go.mod` as the single linter source, LF module files, and the env-only release tag;
-> - Geometric Hub and the shared hub-zone concepts.
+> - Geometric Hub and the shared hub-zone concepts;
+> - Batch K's no-fallback lookup and its load rejection.

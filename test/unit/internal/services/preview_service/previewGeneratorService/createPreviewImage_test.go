@@ -49,7 +49,7 @@ func TestWhenTemplateIsRendered_ReturnsFullSizeCanvas(t *testing.T) {
 	generator := mustNewGenerator(t)
 
 	// Act
-	canvas := generator.CreatePreviewImage(ringTemplate(), config.TopologyRing)
+	canvas := generator.CreatePreviewImage(ringTemplate(), config.TopologyRandom)
 
 	// Assert
 	assert.Equal(t, image.Rect(0, 0, 700, 700), canvas.Bounds())
@@ -59,10 +59,10 @@ func TestWhenTemplateIsNil_ReturnsBackgroundOnlyCanvas(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	generator := mustNewGenerator(t)
-	backgroundOnly := generator.CreatePreviewImage(&template_model.Template{}, config.TopologyRing)
+	backgroundOnly := generator.CreatePreviewImage(&template_model.Template{}, config.TopologyRandom)
 
 	// Act
-	canvas := generator.CreatePreviewImage(nil, config.TopologyRing)
+	canvas := generator.CreatePreviewImage(nil, config.TopologyRandom)
 
 	// Assert
 	assert.Equal(t, backgroundOnly.Pix, canvas.Pix)
@@ -72,10 +72,10 @@ func TestWhenTemplateHasZones_DrawsThemOverTheBackground(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	generator := mustNewGenerator(t)
-	backgroundOnly := generator.CreatePreviewImage(&template_model.Template{}, config.TopologyRing)
+	backgroundOnly := generator.CreatePreviewImage(&template_model.Template{}, config.TopologyRandom)
 
 	// Act
-	canvas := generator.CreatePreviewImage(ringTemplate(), config.TopologyRing)
+	canvas := generator.CreatePreviewImage(ringTemplate(), config.TopologyRandom)
 
 	// Assert
 	assert.NotEqual(t, backgroundOnly.Pix, canvas.Pix)
@@ -87,10 +87,10 @@ func TestWhenTemplateHasConnections_DrawsLinesBetweenZones(t *testing.T) {
 	generator := mustNewGenerator(t)
 	disconnectedTemplate := ringTemplate()
 	disconnectedTemplate.Variants[0].Connections = nil
-	withoutConnections := generator.CreatePreviewImage(disconnectedTemplate, config.TopologyRing)
+	withoutConnections := generator.CreatePreviewImage(disconnectedTemplate, config.TopologyRandom)
 
 	// Act
-	canvas := generator.CreatePreviewImage(ringTemplate(), config.TopologyRing)
+	canvas := generator.CreatePreviewImage(ringTemplate(), config.TopologyRandom)
 
 	// Assert
 	assert.NotEqual(t, withoutConnections.Pix, canvas.Pix)
@@ -101,14 +101,14 @@ func TestWhenConnectionIsPortal_DrawsDashedLineDifferentFromSolid(t *testing.T) 
 	// Arrange
 	generator := mustNewGenerator(t)
 	solidTemplate := ringTemplate()
-	solidRender := generator.CreatePreviewImage(solidTemplate, config.TopologyRing)
+	solidRender := generator.CreatePreviewImage(solidTemplate, config.TopologyRandom)
 	portalTemplate := ringTemplate()
 	for index := range portalTemplate.Variants[0].Connections {
 		portalTemplate.Variants[0].Connections[index].ConnectionType = "Portal"
 	}
 
 	// Act
-	canvas := generator.CreatePreviewImage(portalTemplate, config.TopologyRing)
+	canvas := generator.CreatePreviewImage(portalTemplate, config.TopologyRandom)
 
 	// Assert
 	assert.NotEqual(t, solidRender.Pix, canvas.Pix)
@@ -118,12 +118,12 @@ func TestWhenConnectionIsGladiatorArena_DrawsArenaMarkerOverTheSolidLine(t *test
 	t.Parallel()
 	// Arrange
 	generator := mustNewGenerator(t)
-	solidRender := generator.CreatePreviewImage(ringTemplate(), config.TopologyRing)
+	solidRender := generator.CreatePreviewImage(ringTemplate(), config.TopologyRandom)
 	arenaTemplate := ringTemplate()
 	arenaTemplate.Variants[0].Connections[0].ConnectionType = "GladiatorArena"
 
 	// Act
-	canvas := generator.CreatePreviewImage(arenaTemplate, config.TopologyRing)
+	canvas := generator.CreatePreviewImage(arenaTemplate, config.TopologyRandom)
 
 	// Assert
 	assert.NotEqual(t, solidRender.Pix, canvas.Pix)
@@ -133,14 +133,14 @@ func TestWhenZoneHostsTheArena_DrawsArenaBubbleInsteadOfThePlainOne(t *testing.T
 	t.Parallel()
 	// Arrange
 	generator := mustNewGenerator(t)
-	plainRender := generator.CreatePreviewImage(ringTemplate(), config.TopologyRing)
+	plainRender := generator.CreatePreviewImage(ringTemplate(), config.TopologyRandom)
 	arenaTemplate := ringTemplate()
 	arenaTemplate.Variants[0].Zones[1].MainObjects = append(
 		arenaTemplate.Variants[0].Zones[1].MainObjects,
 		template_model.MainObject{Type: "GladiatorArena"})
 
 	// Act
-	canvas := generator.CreatePreviewImage(arenaTemplate, config.TopologyRing)
+	canvas := generator.CreatePreviewImage(arenaTemplate, config.TopologyRandom)
 
 	// Assert
 	assert.NotEqual(t, plainRender.Pix, canvas.Pix)
@@ -150,10 +150,10 @@ func TestWhenSameTemplateIsRenderedTwice_ProducesIdenticalImages(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	generator := mustNewGenerator(t)
-	firstRender := generator.CreatePreviewImage(ringTemplate(), config.TopologyRing)
+	firstRender := generator.CreatePreviewImage(ringTemplate(), config.TopologyRandom)
 
 	// Act
-	secondRender := generator.CreatePreviewImage(ringTemplate(), config.TopologyRing)
+	secondRender := generator.CreatePreviewImage(ringTemplate(), config.TopologyRandom)
 
 	// Assert
 	assert.Equal(t, firstRender.Pix, secondRender.Pix)
@@ -621,7 +621,7 @@ func renderFixture(t *testing.T, fixture test_helpers.PreviewRasterFixture) *ima
 	t.Helper()
 	generator, err := preview_service.NewPreviewGenerator(fixture)
 	require.NoError(t, err)
-	return generator.CreatePreviewImage(nil, config.TopologyRing)
+	return generator.CreatePreviewImage(nil, config.TopologyRandom)
 }
 
 // countVisibleConnectorPixels counts the pixels the connector changed and still

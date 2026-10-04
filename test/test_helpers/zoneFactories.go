@@ -10,7 +10,7 @@ import (
 // constructor takes. The results match those parameter lists exactly, so it can
 // be spread directly into a constructor call:
 //
-//	topology.NewRingTopologyService(test_helpers.NewZoneFactories())
+//	topology.NewGeometricHubTopologyService(test_helpers.NewZoneFactories())
 func NewZoneFactories() (
 	zone_interfaces.IZoneFactory,
 	zone_interfaces.IRoadFactory,

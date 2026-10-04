@@ -17,9 +17,14 @@ func (this *TemplateGeneratorMock) SetConfiguration(configuration *config.Genera
 	this.Called(configuration)
 }
 
-func (this *TemplateGeneratorMock) Generate() (*template_model.Template, []string) {
+// Generate returns the configured template and warnings, plus an error when a
+// third return value was configured.
+func (this *TemplateGeneratorMock) Generate() (*template_model.Template, []string, error) {
 	arguments := this.Called()
 	generated, _ := arguments.Get(0).(*template_model.Template)
 	warnings, _ := arguments.Get(1).([]string)
-	return generated, warnings
+	if len(arguments) < 3 {
+		return generated, warnings, nil
+	}
+	return generated, warnings, arguments.Error(2)
 }

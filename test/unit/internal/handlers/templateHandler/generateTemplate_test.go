@@ -79,6 +79,25 @@ func TestWhenValidationRejectsTheState_NeverMapsIt(t *testing.T) {
 	fixture.mapper.AssertNotCalled(t, "FromEditorState", mock.Anything)
 }
 
+func TestWhenGenerationFails_ReturnsTheGenerationError(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	fixture := newTemplateHandlerFixture()
+	state := editor_state_model.NewDefaultEditorStateModel()
+	generationError := errors.New(gofakeit.Sentence(3))
+	fixture.stateHandler.On("ValidateEditorState", state, true).
+		Return(editor_state_dto.EditorStateValidationDto{State: state})
+	fixture.mapper.On("FromEditorState", state).Return(namedConfiguration())
+	fixture.templateGenerator.On("SetConfiguration", mock.Anything).Return()
+	fixture.templateGenerator.On("Generate").Return(nil, nil, generationError)
+
+	// Act
+	_, err := fixture.handler.GenerateTemplate(toDto(state))
+
+	// Assert
+	assert.ErrorIs(t, err, generationError)
+}
+
 func TestWhenGenerationYieldsNoTemplate_ReturnsGeneratedTemplateInvalidError(t *testing.T) {
 	t.Parallel()
 	// Arrange

@@ -33,10 +33,6 @@ const (
 )
 
 const (
-	TopologyRing         MapTopology = topology.TopologyRing
-	TopologyHubAndSpoke  MapTopology = topology.TopologyHubAndSpoke
-	TopologyChain        MapTopology = topology.TopologyChain
-	TopologySharedWeb    MapTopology = topology.TopologySharedWeb
 	TopologyRandom       MapTopology = topology.TopologyRandom
 	TopologyCircles      MapTopology = topology.TopologyCircles
 	TopologySquare       MapTopology = topology.TopologySquare

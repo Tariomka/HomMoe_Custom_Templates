@@ -26,7 +26,7 @@ type documentSnapshot struct {
 	state    editor_state_model.EditorState
 	path     string
 	unsaved  bool
-	template *template_model.Template
+	template template_model.Template
 }
 
 func TestWhenARetiredStateIsLoaded_TheStatusReportsTheRefusal(t *testing.T) {
@@ -104,7 +104,7 @@ func snapshotDocument(state *drivers.State) documentSnapshot {
 		state:    state.GetStateData(),
 		path:     state.GetCurrentPath(),
 		unsaved:  state.IsUnsaved(),
-		template: state.GetLastTemplate(),
+		template: state.GetLastTemplate().Clone(),
 	}
 }
 

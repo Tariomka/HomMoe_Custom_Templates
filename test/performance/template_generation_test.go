@@ -19,11 +19,11 @@ func BenchmarkTemplateGenerator_Generate(b *testing.B) {
 		playerCount    int
 		tournamentMode bool
 	}{
-		{name: "Ring", topology: config.TopologyRing, playerCount: 8},
-		{name: "HubAndSpoke", topology: config.TopologyHubAndSpoke, playerCount: 8},
+		{name: "Circles", topology: config.TopologyCircles, playerCount: 8},
+		{name: "Square", topology: config.TopologySquare, playerCount: 8},
 		{name: "GeometricHub", topology: config.TopologyGeometricHub, playerCount: 8},
 		{name: "Fractal", topology: config.TopologyFractal, playerCount: 8},
-		{name: "Tournament", topology: config.TopologyChain, playerCount: 2, tournamentMode: true},
+		{name: "Tournament", topology: config.TopologyRandom, playerCount: 2, tournamentMode: true},
 	}
 
 	for _, benchmarkCase := range benchmarkCases {
@@ -40,7 +40,7 @@ func BenchmarkTemplateGenerator_Generate(b *testing.B) {
 
 			b.ReportAllocs()
 			for b.Loop() {
-				generated, _ = generator.Generate()
+				generated, _, _ = generator.Generate()
 			}
 
 			require.NotEmpty(b, generated.Variants)

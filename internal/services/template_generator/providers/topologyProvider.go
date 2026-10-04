@@ -1,6 +1,9 @@
 package providers
 
 import (
+	"fmt"
+
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
@@ -22,12 +25,15 @@ func (this *TopologyProvider) CreateTopologyVariant(
 	playerLabels []string,
 	neutralZones neutral_zone.Plans,
 	tuning models.GenerationTuning,
-	holdCityNeutralLabel string) template_model.Variant {
-	if configuration.IsTournamentMode() && len(playerLabels) == 2 {
-		return this.services.Tournament()(
-			configuration, playerLabels, neutralZones, tuning, holdCityNeutralLabel)
+	holdCityNeutralLabel string) (template_model.Variant, error) {
+	creator, supported := this.services.Resolve(configuration.Topology)
+	if !supported {
+		return template_model.Variant{},
+			fmt.Errorf("%w: %q", common_errors.ErrUnsupportedTopology, configuration.Topology)
 	}
 
-	return this.services.Resolve(configuration.Topology)(
-		configuration, playerLabels, neutralZones, tuning, holdCityNeutralLabel)
+	if configuration.IsTournamentMode() && len(playerLabels) == 2 {
+		creator = this.services.Tournament()
+	}
+	return creator(configuration, playerLabels, neutralZones, tuning, holdCityNeutralLabel), nil
 }

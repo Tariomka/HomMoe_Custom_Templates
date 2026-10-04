@@ -125,11 +125,7 @@ func TestWhenAnyTopologySelected_EveryConnectionReferencesExistingZones(t *testi
 // cross-topology contract tests exercise each layout implementation.
 func allGeneratorTopologies() []config.MapTopology {
 	return []config.MapTopology{
-		config.TopologyRing,
-		config.TopologyChain,
-		config.TopologyHubAndSpoke,
 		config.TopologyGeometricHub,
-		config.TopologySharedWeb,
 		config.TopologyRandom,
 		config.TopologyCircles,
 		config.TopologySquare,

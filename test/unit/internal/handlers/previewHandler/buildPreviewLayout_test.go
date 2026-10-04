@@ -50,12 +50,12 @@ func TestWhenTopologyAndCanvasSideAreProvided_ForwardsThemToTheLayoutService(t *
 
 	// Act
 	handler.BuildPreviewLayout(dtos.PreviewLayoutRequestDto{
-		Topology:   config.TopologyChain,
+		Topology:   config.TopologySquare,
 		CanvasSide: canvasSide,
 	})
 
 	// Assert
-	layoutService.AssertCalled(t, "BuildPreviewLayout", mock.Anything, config.TopologyChain, canvasSide)
+	layoutService.AssertCalled(t, "BuildPreviewLayout", mock.Anything, config.TopologySquare, canvasSide)
 }
 
 func TestWhenLayoutIsComputed_ReturnsIt(t *testing.T) {

@@ -16,17 +16,11 @@ func NewTournamentTopologyDependencies() (
 	zone_interfaces.IRoadFactory,
 	zone_interfaces.IZoneLabelProvider,
 	base.ITopologyConnectionService,
-	tournament_variant.IClusterService,
-	tournament_variant.IClusterService,
-	tournament_variant.IClusterService,
 	tournament_variant.IClusterService) {
 	zoneFactory, roadFactory, zoneLabelProvider, connectionService := NewZoneFactories()
 	return zoneFactory,
 		roadFactory,
 		zoneLabelProvider,
 		connectionService,
-		tournament_variant.NewHubClusterService(zoneFactory, roadFactory, zoneLabelProvider, connectionService),
-		tournament_variant.NewBalancedClusterService(zoneFactory, roadFactory, zoneLabelProvider, connectionService),
-		tournament_variant.NewRingClusterService(zoneFactory, roadFactory, zoneLabelProvider, connectionService),
-		tournament_variant.NewChainClusterService(zoneFactory, roadFactory, zoneLabelProvider, connectionService)
+		tournament_variant.NewBalancedClusterService(zoneFactory, roadFactory, zoneLabelProvider, connectionService)
 }

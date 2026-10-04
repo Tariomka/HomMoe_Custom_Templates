@@ -56,9 +56,9 @@ func TestWhenScalarOptionsProvided_CopiesEachToConfig(t *testing.T) {
 		},
 		{
 			"WhenTopologyProvided_CopiesTopology",
-			func(state *editor_state_model.EditorState) { state.Topology = config.TopologyChain },
+			func(state *editor_state_model.EditorState) { state.Topology = config.TopologySquare },
 			func(configuration *config.GeneratorConfig) any { return configuration.Topology },
-			config.TopologyChain,
+			config.TopologySquare,
 		},
 		{
 			"WhenGenerateRoadsEnabled_CopiesFlag",

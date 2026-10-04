@@ -3,36 +3,48 @@ package topologyServiceLookup_test
 import (
 	"testing"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_topologies"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 )
 
-func TestWhenTopologyIsMapped_ReturnsCreator(t *testing.T) {
-	t.Parallel()
-	mappedTopologies := []config.MapTopology{
-		config.TopologyHubAndSpoke,
-		config.TopologyGeometricHub,
-		config.TopologyChain,
-		config.TopologySharedWeb,
-		config.TopologyRandom,
-		config.TopologyCircles,
-		config.TopologySquare,
-		config.TopologyGeometric,
-		config.TopologyCross,
-		config.TopologyFractal,
-	}
+// unsupportedTopologies are IDs no service exists for: the four retired ones,
+// an unknown one and the empty one.
+var unsupportedTopologies = []config.MapTopology{ //nolint:gochecknoglobals // Read-only test table.
+	"Default", "HubAndSpoke", "Chain", "SharedWeb", "NotARealTopology", "",
+}
 
-	for _, mapTopology := range mappedTopologies {
-		t.Run(string(mapTopology), func(t *testing.T) {
+func TestWhenTopologyIsSupported_ReportsFound(t *testing.T) {
+	t.Parallel()
+	for descriptor := range common_topologies.GetTopologyDescriptorSeq() {
+		t.Run(string(descriptor.Type)+"_ReportsFound", func(t *testing.T) {
 			t.Parallel()
 			// Arrange
 			lookup := test_helpers.NewTopologyServiceLookup(test_helpers.NewZoneFactories())
 
 			// Act
-			creator := lookup.Resolve(mapTopology)
+			_, found := lookup.Resolve(descriptor.Type)
+
+			// Assert
+			assert.True(t, found)
+		})
+	}
+}
+
+func TestWhenTopologyIsSupported_ReturnsCreator(t *testing.T) {
+	t.Parallel()
+	for descriptor := range common_topologies.GetTopologyDescriptorSeq() {
+		t.Run(string(descriptor.Type)+"_ReturnsCreator", func(t *testing.T) {
+			t.Parallel()
+			// Arrange
+			lookup := test_helpers.NewTopologyServiceLookup(test_helpers.NewZoneFactories())
+
+			// Act
+			creator, _ := lookup.Resolve(descriptor.Type)
 
 			// Assert
 			assert.NotNil(t, creator)
@@ -40,69 +52,71 @@ func TestWhenTopologyIsMapped_ReturnsCreator(t *testing.T) {
 	}
 }
 
-func TestWhenTopologyIsHubAndSpoke_ResolvesHubTopology(t *testing.T) {
+func TestWhenTopologyIsNotSupported_ReportsNotFound(t *testing.T) {
+	t.Parallel()
+	for _, mapTopology := range unsupportedTopologies {
+		t.Run("Topology"+string(mapTopology)+"_ReportsNotFound", func(t *testing.T) {
+			t.Parallel()
+			// Arrange
+			lookup := test_helpers.NewTopologyServiceLookup(test_helpers.NewZoneFactories())
+
+			// Act
+			_, found := lookup.Resolve(mapTopology)
+
+			// Assert
+			assert.False(t, found)
+		})
+	}
+}
+
+func TestWhenTopologyIsNotSupported_ReturnsNoCreator(t *testing.T) {
+	t.Parallel()
+	for _, mapTopology := range unsupportedTopologies {
+		t.Run("Topology"+string(mapTopology)+"_ReturnsNoCreator", func(t *testing.T) {
+			t.Parallel()
+			// Arrange
+			lookup := test_helpers.NewTopologyServiceLookup(test_helpers.NewZoneFactories())
+
+			// Act
+			creator, _ := lookup.Resolve(mapTopology)
+
+			// Assert
+			assert.Nil(t, creator)
+		})
+	}
+}
+
+func TestWhenTopologyIsGeometricHub_ResolvesHubTopology(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
-	configuration.Topology = config.TopologyHubAndSpoke
+	configuration.Topology = config.TopologyGeometricHub
 	playerLabels := []string{"A", "B", "C"}
 	lookup := test_helpers.NewTopologyServiceLookup(test_helpers.NewZoneFactories())
+	creator, found := lookup.Resolve(configuration.Topology)
+	require.True(t, found)
 
 	// Act
-	variant := lookup.Resolve(configuration.Topology)(
-		*configuration, playerLabels, neutral_zone.Plans{},
+	variant := creator(*configuration, playerLabels, neutral_zone.Plans{},
 		test_helpers.NewGenerationTuning(configuration, len(playerLabels)), "")
 
 	// Assert
 	assert.True(t, hasZoneNamed(variant, "Hub"))
 }
 
-func TestWhenTopologyIsUnmapped_ResolvesRingTopology(t *testing.T) {
+func TestWhenCityHoldIsEnabledForGeometricHub_PassesHoldCityFlagToService(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
-	configuration.Topology = config.MapTopology("Unknown")
-	playerLabels := []string{"A", "B"}
-	lookup := test_helpers.NewTopologyServiceLookup(test_helpers.NewZoneFactories())
-
-	// Act
-	variant := lookup.Resolve(configuration.Topology)(
-		*configuration, playerLabels, neutral_zone.Plans{},
-		test_helpers.NewGenerationTuning(configuration, len(playerLabels)), "")
-
-	// Assert: the ring closes back on itself, so two labels yield two connections.
-	assert.Len(t, variant.Connections, 2)
-}
-
-func TestWhenTopologyIsRing_ResolvesRingTopology(t *testing.T) {
-	t.Parallel()
-	// Arrange
-	configuration := config.NewGeneratorConfig()
-	configuration.Topology = config.TopologyRing
-	playerLabels := []string{"A", "B"}
-	lookup := test_helpers.NewTopologyServiceLookup(test_helpers.NewZoneFactories())
-
-	// Act
-	variant := lookup.Resolve(configuration.Topology)(
-		*configuration, playerLabels, neutral_zone.Plans{},
-		test_helpers.NewGenerationTuning(configuration, len(playerLabels)), "")
-
-	// Assert
-	assert.Len(t, variant.Connections, 2)
-}
-
-func TestWhenCityHoldIsEnabledForHubTopology_PassesHoldCityFlagToService(t *testing.T) {
-	t.Parallel()
-	// Arrange
-	configuration := config.NewGeneratorConfig()
-	configuration.Topology = config.TopologyHubAndSpoke
+	configuration.Topology = config.TopologyGeometricHub
 	configuration.GameEndConditions = &config.GameEndConditions{CityHold: true}
 	playerLabels := []string{"A", "B", "C"}
 	lookup := test_helpers.NewTopologyServiceLookup(test_helpers.NewZoneFactories())
+	creator, found := lookup.Resolve(configuration.Topology)
+	require.True(t, found)
 
 	// Act
-	variant := lookup.Resolve(configuration.Topology)(
-		*configuration, playerLabels, neutral_zone.Plans{},
+	variant := creator(*configuration, playerLabels, neutral_zone.Plans{},
 		test_helpers.NewGenerationTuning(configuration, len(playerLabels)), "")
 
 	// Assert

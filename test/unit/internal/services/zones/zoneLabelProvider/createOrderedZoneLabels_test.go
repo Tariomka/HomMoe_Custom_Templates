@@ -13,10 +13,10 @@ func TestWhenTopologyIsNotCircles_AppendsNeutralsAfterPlayers(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	provider := zones.NewZoneLabelProvider()
-	configuration := orderingConfig(config.TopologyRing, 2, 2)
+	configuration := orderingConfig(config.TopologySquare, 2, 2)
 
 	// Act
-	ordered := provider.CreateOrderedZoneLabels(configuration, []string{"A", "B"}, mediumPlans("C", "D"), true)
+	ordered := provider.CreateOrderedZoneLabels(configuration, []string{"A", "B"}, mediumPlans("C", "D"))
 
 	// Assert
 	assert.Equal(t, []string{"A", "B", "C", "D"}, ordered)
@@ -26,39 +26,26 @@ func TestWhenNoLabelsProvided_ReturnsEmptySlice(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	provider := zones.NewZoneLabelProvider()
-	configuration := orderingConfig(config.TopologyRing, 0, 0)
+	configuration := orderingConfig(config.TopologySquare, 0, 0)
 
 	// Act
-	ordered := provider.CreateOrderedZoneLabels(configuration, nil, nil, true)
+	ordered := provider.CreateOrderedZoneLabels(configuration, nil, nil)
 
 	// Assert
 	assert.Empty(t, ordered)
 }
 
-func TestWhenCirclesTopologyIsRing_DelegatesToBalancedRingOrdering(t *testing.T) {
+func TestWhenTopologyIsCircles_DelegatesToBalancedRingOrdering(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	provider := zones.NewZoneLabelProvider()
 	configuration := orderingConfig(config.TopologyCircles, 2, 2)
 
 	// Act
-	ordered := provider.CreateOrderedZoneLabels(configuration, []string{"A", "B"}, mediumPlans("C", "D"), true)
+	ordered := provider.CreateOrderedZoneLabels(configuration, []string{"A", "B"}, mediumPlans("C", "D"))
 
 	// Assert
 	assert.Equal(t, []string{"A", "C", "B", "D"}, ordered)
-}
-
-func TestWhenCirclesTopologyIsChain_DelegatesToBalancedChainOrdering(t *testing.T) {
-	t.Parallel()
-	// Arrange
-	provider := zones.NewZoneLabelProvider()
-	configuration := orderingConfig(config.TopologyCircles, 1, 1)
-
-	// Act
-	ordered := provider.CreateOrderedZoneLabels(configuration, []string{"A"}, mediumPlans("C"), false)
-
-	// Assert
-	assert.Equal(t, []string{"A", "C"}, ordered)
 }
 
 func mediumPlans(labels ...string) []neutral_zone.Plan {

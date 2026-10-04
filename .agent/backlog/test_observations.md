@@ -192,6 +192,12 @@ Still unit-untestable (dialog-callback or Gio territory):
 
 ## Unreachable defensive branches (unit-test coverage gaps by design)
 
+- internal/services/zones/zoneLabelProvider.go - `createTopologyAdjacency`'s Circles
+  branch: its only caller, `GetHoldCityLabel`, gates on `IsHubCityToHold`, which since
+  Batch K (topology retirement) is true only for Geometric Hub, so only the default
+  branch runs. The owner kept the branch (decision K11) for future hub-capable
+  topologies. Unit coverage of the function: 53.8% before Batch K, 70.0% after.
+
 - internal/services/template_generator/providers/topology/geometricHubLayout.go -
   `connectInteriorStables` early-return for `len(stables) == 0`: the growth
   ladder in `distributeGeometricHubSlots` only assigns interiors after every

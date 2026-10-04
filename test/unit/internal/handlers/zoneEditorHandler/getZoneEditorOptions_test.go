@@ -16,7 +16,7 @@ func TestWhenEditorOptionsAreRequested_ReturnsTheStatesTopology(t *testing.T) {
 	// Arrange
 	fixture := newZoneEditorHandlerFixture()
 	state := editor_state_model.NewDefaultEditorStateModel()
-	state.Topology = config.TopologyChain
+	state.Topology = config.TopologySquare
 	fixture.mapper.On("FromEditorState", state).Return(config.NewGeneratorConfig())
 	fixture.tuningFactory.On("Create", mock.Anything, mock.Anything).Return(models.GenerationTuning{})
 
@@ -24,7 +24,7 @@ func TestWhenEditorOptionsAreRequested_ReturnsTheStatesTopology(t *testing.T) {
 	options := fixture.handler.GetZoneEditorOptions(toDto(state), gofakeit.IntRange(1, 20))
 
 	// Assert
-	assert.Equal(t, config.TopologyChain, options.Topology)
+	assert.Equal(t, config.TopologySquare, options.Topology)
 }
 
 func TestWhenEditorOptionsAreRequested_ReturnsTheStatesRoadFlag(t *testing.T) {

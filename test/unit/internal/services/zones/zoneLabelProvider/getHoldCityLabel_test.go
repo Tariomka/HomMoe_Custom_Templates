@@ -23,12 +23,12 @@ func TestWhenNoNeutralPlansExist_ReturnsEmptyLabel(t *testing.T) {
 	assert.Empty(t, label)
 }
 
-func TestWhenTopologyIsNotHubAndSpoke_ReturnsEmptyLabel(t *testing.T) {
+func TestWhenTopologyHasNoHub_ReturnsEmptyLabel(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	provider := zones.NewZoneLabelProvider()
 	configuration := hubCityHoldConfig(gofakeit.Number(2, 8))
-	configuration.Topology = config.TopologyRing
+	configuration.Topology = config.TopologyCircles
 	plans := neutral_zone.Plans{{Label: "C", Quality: neutral_zone.QualityMedium, CastleCount: 1}}
 
 	// Act
@@ -89,7 +89,7 @@ func TestWhenQualityAlsoTies_PicksNeutralWithCastle(t *testing.T) {
 
 func hubCityHoldConfig(playerCount int) config.GeneratorConfig {
 	configuration := config.NewGeneratorConfig()
-	configuration.Topology = config.TopologyHubAndSpoke
+	configuration.Topology = config.TopologyGeometricHub
 	configuration.PlayerCount = playerCount
 	configuration.GameEndConditions.CityHold = true
 	return *configuration

@@ -4,10 +4,6 @@ package topology
 type MapTopology string
 
 const (
-	TopologyRing         MapTopology = "Default"
-	TopologyHubAndSpoke  MapTopology = "HubAndSpoke"
-	TopologyChain        MapTopology = "Chain"
-	TopologySharedWeb    MapTopology = "SharedWeb"
 	TopologyRandom       MapTopology = "Random"
 	TopologyCircles      MapTopology = "Circles"
 	TopologySquare       MapTopology = "Square"

@@ -6,5 +6,5 @@ import (
 
 type ITopologyServiceLookup interface {
 	Tournament() TopologyVariantCreator
-	Resolve(mapTopology config.MapTopology) TopologyVariantCreator
+	Resolve(mapTopology config.MapTopology) (TopologyVariantCreator, bool)
 }

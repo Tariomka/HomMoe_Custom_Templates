@@ -20,11 +20,11 @@ func TestWhenTopologyWasUpdated_GetTopologyReturnsIt(t *testing.T) {
 
 		false)
 
-	state.UpdateState(func(dto *editor_state_model.EditorState) { dto.Topology = config.TopologyHubAndSpoke })
+	state.UpdateState(func(dto *editor_state_model.EditorState) { dto.Topology = config.TopologyGeometricHub })
 
 	// Act
 	actual := state.GetTopology()
 
 	// Assert
-	assert.Equal(t, config.TopologyHubAndSpoke, actual)
+	assert.Equal(t, config.TopologyGeometricHub, actual)
 }

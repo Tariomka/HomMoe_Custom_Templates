@@ -21,7 +21,7 @@ func TestWhenLayoutDefiningOptionChanges_ReportsChanged(t *testing.T) {
 		},
 		{
 			"WhenTopologyChanges_ReportsChanged",
-			func(state *editor_state_model.EditorState) { state.Topology = config.TopologyChain },
+			func(state *editor_state_model.EditorState) { state.Topology = config.TopologySquare },
 		},
 		{
 			"WhenGenerateRoadsFlips_ReportsChanged",

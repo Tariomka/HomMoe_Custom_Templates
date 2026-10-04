@@ -14,7 +14,7 @@ import (
 func TestWhenFourNeutralPlansAreSplitAcrossTwoPlayers_CreatesZonePerPlayerAndNeutralLabel(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	configuration := newChainTournamentConfig()
+	configuration := newRandomTournamentConfig()
 	neutralZones := newFourNeutralPlans()
 	tuning := test_helpers.NewGenerationTuning(configuration, 6)
 	service := topology.NewTournamentTopologyService(test_helpers.NewTournamentTopologyDependencies())
@@ -29,7 +29,7 @@ func TestWhenFourNeutralPlansAreSplitAcrossTwoPlayers_CreatesZonePerPlayerAndNeu
 func TestWhenTournamentIsBuilt_EveryConnectionReferencesExistingZones(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	configuration := newChainTournamentConfig()
+	configuration := newRandomTournamentConfig()
 	neutralZones := newFourNeutralPlans()
 	tuning := test_helpers.NewGenerationTuning(configuration, 6)
 	service := topology.NewTournamentTopologyService(test_helpers.NewTournamentTopologyDependencies())
@@ -44,7 +44,7 @@ func TestWhenTournamentIsBuilt_EveryConnectionReferencesExistingZones(t *testing
 func TestWhenPortalsAreDisabled_PlayerClustersStayIsolatedAsTwoComponents(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	configuration := newChainTournamentConfig()
+	configuration := newRandomTournamentConfig()
 	configuration.RandomPortals = false
 	neutralZones := newFourNeutralPlans()
 	tuning := test_helpers.NewGenerationTuning(configuration, 6)
@@ -60,7 +60,7 @@ func TestWhenPortalsAreDisabled_PlayerClustersStayIsolatedAsTwoComponents(t *tes
 func TestWhenTwoPlayersAreProvided_EachPlayerGetsOwnSpawnZone(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	configuration := newChainTournamentConfig()
+	configuration := newRandomTournamentConfig()
 	neutralZones := newFourNeutralPlans()
 	tuning := test_helpers.NewGenerationTuning(configuration, 6)
 	service := topology.NewTournamentTopologyService(test_helpers.NewTournamentTopologyDependencies())
@@ -74,29 +74,35 @@ func TestWhenTwoPlayersAreProvided_EachPlayerGetsOwnSpawnZone(t *testing.T) {
 		"expected both Spawn-A and Spawn-B in %v", names)
 }
 
-func TestWhenTopologyIsHubAndSpoke_CreatesHubZonePerPlayer(t *testing.T) {
+func TestWhenTopologyIsAnySupportedOne_CreatesBalancedClusterConnections(t *testing.T) {
 	t.Parallel()
-	// Arrange
-	configuration := config.NewGeneratorConfig()
-	configuration.Topology = config.TopologyHubAndSpoke
-	neutralZones := newFourNeutralPlans()
-	tuning := test_helpers.NewGenerationTuning(configuration, 8)
-	service := topology.NewTournamentTopologyService(test_helpers.NewTournamentTopologyDependencies())
+	for _, mapTopology := range []config.MapTopology{
+		config.TopologyRandom, config.TopologyCircles, config.TopologyGeometricHub, config.TopologySquare,
+		config.TopologyGeometric, config.TopologyCross, config.TopologyFractal,
+	} {
+		t.Run(string(mapTopology)+"_CreatesBalancedClusterConnections", func(t *testing.T) {
+			t.Parallel()
+			// Arrange
+			configuration := config.NewGeneratorConfig()
+			configuration.Topology = mapTopology
+			neutralZones := newFourNeutralPlans()
+			tuning := test_helpers.NewGenerationTuning(configuration, 6)
+			service := topology.NewTournamentTopologyService(test_helpers.NewTournamentTopologyDependencies())
 
-	// Act
-	variant := service.CreateTopologyVariant(*configuration, []string{"A", "B"}, neutralZones, tuning, "")
+			// Act
+			variant := service.CreateTopologyVariant(*configuration, []string{"A", "B"}, neutralZones, tuning, "")
 
-	// Assert
-	names := zoneNameSet(variant)
-	assert.True(t, names["Hub-A"] && names["Hub-B"],
-		"expected both Hub-A and Hub-B in %v", names)
+			// Assert
+			assert.NotZero(t, countConnectionsWithPrefix(variant, "TBal-"))
+		})
+	}
 }
 
-func TestWhenTopologyIsRing_CreatesRingClusterConnections(t *testing.T) {
+func TestWhenTopologyIsGeometricHub_CreatesNoSharedHubZone(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
-	configuration.Topology = config.TopologyRing
+	configuration.Topology = config.TopologyGeometricHub
 	neutralZones := newFourNeutralPlans()
 	tuning := test_helpers.NewGenerationTuning(configuration, 6)
 	service := topology.NewTournamentTopologyService(test_helpers.NewTournamentTopologyDependencies())
@@ -105,45 +111,43 @@ func TestWhenTopologyIsRing_CreatesRingClusterConnections(t *testing.T) {
 	variant := service.CreateTopologyVariant(*configuration, []string{"A", "B"}, neutralZones, tuning, "")
 
 	// Assert
-	assert.NotZero(t, countConnectionsWithPrefix(variant, "TRing-"))
+	assert.False(t, zoneNameSet(variant)["Hub"])
 }
 
-func TestWhenTopologyIsCircles_CreatesBalancedClusterConnections(t *testing.T) {
+func TestWhenPlayersHaveNoNeutralPlans_CreatesOnlyTheTwoSpawnZones(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	configuration := config.NewGeneratorConfig()
-	configuration.Topology = config.TopologyCircles
+	configuration := newRandomTournamentConfig()
+	tuning := test_helpers.NewGenerationTuning(configuration, 2)
+	service := topology.NewTournamentTopologyService(test_helpers.NewTournamentTopologyDependencies())
+
+	// Act
+	variant := service.CreateTopologyVariant(*configuration, []string{"A", "B"}, neutral_zone.Plans{}, tuning, "")
+
+	// Assert
+	assert.Len(t, variant.Zones, 2)
+}
+
+func TestWhenNeutralPlanCountIsOdd_CreatesZonePerPlayerAndNeutralLabel(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	configuration := newRandomTournamentConfig()
 	neutralZones := newFourNeutralPlans()
-	tuning := test_helpers.NewGenerationTuning(configuration, 6)
+	neutralZones.AddPlan("G", neutral_zone.QualityLow, 0)
+	tuning := test_helpers.NewGenerationTuning(configuration, 7)
 	service := topology.NewTournamentTopologyService(test_helpers.NewTournamentTopologyDependencies())
 
 	// Act
 	variant := service.CreateTopologyVariant(*configuration, []string{"A", "B"}, neutralZones, tuning, "")
 
 	// Assert
-	assert.NotZero(t, countConnectionsWithPrefix(variant, "TBal-"))
-}
-
-func TestWhenTopologyIsUnhandled_FallsBackToChainClusterConnections(t *testing.T) {
-	t.Parallel()
-	// Arrange
-	configuration := config.NewGeneratorConfig()
-	configuration.Topology = config.TopologySharedWeb
-	neutralZones := newFourNeutralPlans()
-	tuning := test_helpers.NewGenerationTuning(configuration, 6)
-	service := topology.NewTournamentTopologyService(test_helpers.NewTournamentTopologyDependencies())
-
-	// Act
-	variant := service.CreateTopologyVariant(*configuration, []string{"A", "B"}, neutralZones, tuning, "")
-
-	// Assert
-	assert.NotZero(t, countConnectionsWithPrefix(variant, "Tourney-"))
+	assert.Len(t, variant.Zones, 7)
 }
 
 func TestWhenRandomPortalsAreEnabled_AddsPortalConnections(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	configuration := newChainTournamentConfig()
+	configuration := newRandomTournamentConfig()
 	configuration.RandomPortals = true
 	neutralZones := newFourNeutralPlans()
 	tuning := test_helpers.NewGenerationTuning(configuration, 6)
@@ -159,7 +163,7 @@ func TestWhenRandomPortalsAreEnabled_AddsPortalConnections(t *testing.T) {
 func TestWhenNeutralPlansAreSplit_EachClusterGetsHalfOfNeutralZones(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	configuration := newChainTournamentConfig()
+	configuration := newRandomTournamentConfig()
 	configuration.RandomPortals = false
 	neutralZones := newFourNeutralPlans()
 	tuning := test_helpers.NewGenerationTuning(configuration, 6)
@@ -172,7 +176,7 @@ func TestWhenNeutralPlansAreSplit_EachClusterGetsHalfOfNeutralZones(t *testing.T
 	neutralPerCluster := map[string]int{}
 	for index, zone := range variant.Zones {
 		if strings.HasPrefix(zone.Name, "Neutral-") {
-			// Chain clusters are emitted player-by-player: zones 0..2 belong to
+			// Clusters are emitted player-by-player: zones 0..2 belong to
 			// player A, zones 3..5 to player B.
 			clusterKey := "A"
 			if index >= len(variant.Zones)/2 {
@@ -184,9 +188,9 @@ func TestWhenNeutralPlansAreSplit_EachClusterGetsHalfOfNeutralZones(t *testing.T
 	assert.Equal(t, map[string]int{"A": 2, "B": 2}, neutralPerCluster)
 }
 
-func newChainTournamentConfig() *config.GeneratorConfig {
+func newRandomTournamentConfig() *config.GeneratorConfig {
 	configuration := config.NewGeneratorConfig()
-	configuration.Topology = config.TopologyChain
+	configuration.Topology = config.TopologyRandom
 	return configuration
 }
 

@@ -280,29 +280,29 @@ Deviations:
   and `previewGeneratorService/createPreviewImage_test.go` (16).
 
 ## Phase 2: Generator contract, tournament rewiring and code deletion
-Status: Not started
+Status: Complete
 
-- [ ] `ITopologyServiceLookup.Resolve` → `(TopologyVariantCreator, bool)`; delete the `ring` field and fallback. `NewTopologyServiceLookup` drops the ring/hub/chain/sharedWeb parameters.
-- [ ] `ITopologyProvider.CreateTopologyVariant` → `(template_model.Variant, error)`. `TopologyProvider` resolves first; on `!ok` it returns D3's error. Only then is the tournament branch taken.
-- [ ] `ITemplateGenerator.Generate` and `TemplateGenerator.Generate` → `(*template_model.Template, []string, error)`; return `nil, nil, err` on a provider error, before the description and content work. `templateHandler.GenerateTemplate` returns that error; the nil-template check stays. Update `TemplateGeneratorMock` and every `Generate` return setup and two-result caller.
-- [ ] `TournamentTopologyService`: one `clusterService tournament_variant.IClusterService`; delete `selectClusterService`; the constructor takes one cluster service. Update `internal/composition/topologyServiceProvider.go` and `test/test_helpers/tournamentTopologyDependencies.go` (it builds real services; no mocks assumed) and every consumer of that helper.
-- [ ] Delete `ringTopology.go`, `hubTopology.go`, `chainTopology.go`, `webTopology.go`, `tournament_variant/{ring,hub,chain}ClusterService.go`, their assertions and their wiring (composition and `test/test_helpers/topologyServiceLookup.go`).
-- [ ] `zoneLabelProvider` (K11): delete the Shared Web plan rule; `createTopologyAdjacency` keeps the Circles branch (and its comment) and the default; delete `CreateBalancedChainZoneLabels` and the `isRing` parameter (interface, implementation, any test double). Then `OrderEdgeGap` and `preferInterior` (inventory).
-- [ ] Delete the retirement-only connection-name helpers and prefixes (inventory), each after confirming no remaining caller.
-- [ ] `GeneratorConfig.IsHubCityToHold`: drop `TopologyHubAndSpoke`.
-- [ ] Delete the four constants (K1) and their aliases.
-- [ ] Rewrite benchmark sources per K13/F5 in `test/performance/template_generation_test.go` and `preview_layout_test.go` (they are untagged and stop compiling here).
-- [ ] Run `wire gen ./internal/composition/...`; `wire_gen.go` is expected byte-identical (the provider set is unchanged). If it changes, record the diff and keep the regenerated file.
+- [x] `ITopologyServiceLookup.Resolve` → `(TopologyVariantCreator, bool)`; delete the `ring` field and fallback. `NewTopologyServiceLookup` drops the ring/hub/chain/sharedWeb parameters.
+- [x] `ITopologyProvider.CreateTopologyVariant` → `(template_model.Variant, error)`. `TopologyProvider` resolves first; on `!ok` it returns D3's error. Only then is the tournament branch taken.
+- [x] `ITemplateGenerator.Generate` and `TemplateGenerator.Generate` → `(*template_model.Template, []string, error)`; return `nil, nil, err` on a provider error, before the description and content work. `templateHandler.GenerateTemplate` returns that error; the nil-template check stays. Update `TemplateGeneratorMock` and every `Generate` return setup and two-result caller.
+- [x] `TournamentTopologyService`: one `clusterService tournament_variant.IClusterService`; delete `selectClusterService`; the constructor takes one cluster service. Update `internal/composition/topologyServiceProvider.go` and `test/test_helpers/tournamentTopologyDependencies.go` (it builds real services; no mocks assumed) and every consumer of that helper.
+- [x] Delete `ringTopology.go`, `hubTopology.go`, `chainTopology.go`, `webTopology.go`, `tournament_variant/{ring,hub,chain}ClusterService.go`, their assertions and their wiring (composition and `test/test_helpers/topologyServiceLookup.go`).
+- [x] `zoneLabelProvider` (K11): delete the Shared Web plan rule; `createTopologyAdjacency` keeps the Circles branch (and its comment) and the default; delete `CreateBalancedChainZoneLabels` and the `isRing` parameter (interface, implementation, any test double). Then `OrderEdgeGap` and `preferInterior` (inventory).
+- [x] Delete the retirement-only connection-name helpers and prefixes (inventory), each after confirming no remaining caller.
+- [x] `GeneratorConfig.IsHubCityToHold`: drop `TopologyHubAndSpoke`.
+- [x] Delete the four constants (K1) and their aliases.
+- [x] Rewrite benchmark sources per K13/F5 in `test/performance/template_generation_test.go` and `preview_layout_test.go` (they are untagged and stop compiling here).
+- [x] Run `wire gen ./internal/composition/...`; `wire_gen.go` is expected byte-identical (the provider set is unchanged). If it changes, record the diff and keep the regenerated file.
 
 Tests:
-- [ ] Delete the dedicated retired test folders (four ordinary services, three cluster services), `createBalancedChainZoneLabels_test.go`, `orderEdgeGap_test.go`, the deleted connection-name tests, and the `preferInterior` cases in `assignNeutralZonesToGaps_test.go`.
-- [ ] `topologyServiceLookup/resolve_test.go`: each of the 7 survivors → its creator and true; each retired raw ID, an unknown and `""` → nil and false (named subtests). `tournament_test.go` uses a survivor.
-- [ ] `topologyProvider/createTopologyVariant_test.go`: an unknown ID returns the wrapped error in ordinary **and** tournament mode, with neither creator called; a valid tournament calls only the tournament creator; each survivor dispatches to its creator (Random, Circles, Geometric Hub explicitly).
-- [ ] `tournamentTopology/createTopologyVariant_test.go`: Random, Square, Geometric, Cross, Fractal, Geometric Hub and Circles all produce balanced output (`TBal-` prefix, left/right halves); 0 neutral zones and an odd neutral count do not panic; random portals unchanged.
-- [ ] `templateGenerator`: remaining tests move to survivors; an unknown topology returns the wrapped error and a nil template; `generateTournament_test.go` covers a Random tournament → balanced.
-- [ ] `templateHandler`/`guiHandler` generate: a generator error propagates through the mock.
-- [ ] Zone labels: `getHoldCityLabel` with Geometric Hub; `createOrderedZoneLabels` without `isRing`; zone plans without the Shared Web rule; `isHubCityToHold` (Geometric Hub only); `assignNeutralZonesToGaps` without `preferInterior`.
-- [ ] Every remaining service-level reference recorded in Phase 1 moves to a survivor that keeps the test's intent.
+- [x] Delete the dedicated retired test folders (four ordinary services, three cluster services), `createBalancedChainZoneLabels_test.go`, `orderEdgeGap_test.go`, the deleted connection-name tests, and the `preferInterior` cases in `assignNeutralZonesToGaps_test.go`.
+- [x] `topologyServiceLookup/resolve_test.go`: each of the 7 survivors → its creator and true; each retired raw ID, an unknown and `""` → nil and false (named subtests). `tournament_test.go` uses a survivor.
+- [x] `topologyProvider/createTopologyVariant_test.go`: an unknown ID returns the wrapped error in ordinary **and** tournament mode, with neither creator called; a valid tournament calls only the tournament creator; each survivor dispatches to its creator (Random, Circles, Geometric Hub explicitly).
+- [x] `tournamentTopology/createTopologyVariant_test.go`: Random, Square, Geometric, Cross, Fractal, Geometric Hub and Circles all produce balanced output (`TBal-` prefix, left/right halves); 0 neutral zones and an odd neutral count do not panic; random portals unchanged.
+- [x] `templateGenerator`: remaining tests move to survivors; an unknown topology returns the wrapped error and a nil template; `generateTournament_test.go` covers a Random tournament → balanced.
+- [x] `templateHandler`/`guiHandler` generate: a generator error propagates through the mock.
+- [x] Zone labels: `getHoldCityLabel` with Geometric Hub; `createOrderedZoneLabels` without `isRing`; zone plans without the Shared Web rule; `isHubCityToHold` (Geometric Hub only); `assignNeutralZonesToGaps` without `preferInterior`.
+- [x] Every remaining service-level reference recorded in Phase 1 moves to a survivor that keeps the test's intent.
 
 ### Verification Plan
 - `go build ./...`; `go vet` under no tag, `integration_test`, `integration_test,gui` (proves no retired symbol hides behind a tag).
@@ -312,17 +312,67 @@ Tests:
 - `git diff --stat -- internal/composition/wire_gen.go` recorded.
 
 ### Phase Summary
-_(write when phase completes)_
+Complete, 2026-10-04 (on top of owner commit `1ee746b`, uncommitted).
+- **Production:**
+  - `Resolve` → `(creator, bool)`, with no fallback;
+  - `TopologyProvider` resolves before the tournament branch and returns
+    `fmt.Errorf("%w: %q", ErrUnsupportedTopology, id)`;
+  - `ITemplateGenerator.Generate` → `(*Template, []string, error)`, returning before
+    the description/content work. `CreateValueOverrides` now runs after the provider; it is
+    order-independent (it only parses the configuration).
+  - `GenerateTemplate` returns the generator error.
+- **Tournament:** `TournamentTopologyService` takes one `IClusterService` (balanced).
+- **Deleted:**
+  - 7 service files (4 ordinary, 3 cluster) and 7 dedicated test folders;
+  - the 9 retirement-only connection-name helpers and their prefixes, with their tests;
+  - `CreateBalancedChainZoneLabels`, the `isRing` parameter, `OrderEdgeGap`,
+    `preferInterior` (and the tests of the deleted behaviour);
+  - the Shared Web plan rule and the Chain/Ring adjacency branches (Circles kept, K11);
+  - the `IsHubCityToHold` Hub case;
+  - the four constants and their aliases.
+- **Stale comments fixed:** `gladiatorArenaProvider.go`, `previewLayoutService.go`.
+- **Wire:** `wire diff ./internal/composition/...` exits 0 and `wire_gen.go` is untouched; the
+  hand-written `topologyServiceProvider.go` changed.
+- **Test helpers:** `TemplateGeneratorMock.Generate` returns a third value only when one is
+  configured (the review judged this acceptable); `tournamentTopologyDependencies.go`
+  returns 5 values.
+- **Tests moved by AST rewrite** (`gofmt -r` on explicit file lists; every diff had
+  insertions equal to deletions):
+  - preview tests: Ring/Hub → Random, behaviour-identical since Phase 1;
+  - Hub → Geometric Hub where a hub is needed;
+  - Chain/Ring → Square/Circles where only a non-default topology is needed.
+- **Tests rewritten:**
+  - `topologyServiceLookup/resolve_test.go` (7 survivors found; 6 unsupported IDs not found
+    and nil);
+  - `topologyProvider/createTopologyVariant_test.go` (an unsupported ID errors in both modes
+    with an empty variant and the exact text `unsupported topology: "NotARealTopology"`;
+    every survivor builds balanced tournament clusters);
+  - `tournamentTopology` (balanced output for all 7; 0 and odd neutral counts);
+  - generator tests (an unsupported ID errors with no template; a tournament table over all
+    7; Hub tests → Geometric Hub; the Ring-only connection-count test and the Shared Web
+    tests deleted);
+  - `isHubCityToHold` (plus a retired `HubAndSpoke` raw ID → false);
+  - zone-label tests;
+  - a `templateHandler` test showing the generator error propagates.
+- **Benchmarks:** sources rewritten per K13 here, because they are untagged.
+- **Verification:**
+  - build and vet × 3 PASS;
+  - `./test/...` PASS (the generator package 3× for its random inputs);
+  - tagged integration PASS;
+  - tagged GUI PASS (29.1s), **0 `.failure`, no golden moved**;
+  - the forbidden-symbol search has only false positives (`GeometricHubTopologyService`
+    contains `HubTopologyService`);
+  - lint 0 after fixing 2 `golines` and 1 `unused` (`firstZoneNames`).
 
 ## Phase 3: GUI coverage, benchmarks and documentation
-Status: Not started
+Status: Complete
 
-- [ ] GUI test (`integration_test && gui`, `test/integration/gui/`): the topology dropdown lists exactly the 7 K14 labels in order.
+- [x] GUI test (`integration_test && gui`, `test/integration/gui/`): the topology dropdown lists exactly the 7 K14 labels in order.
 - [x] GUI test: with a modified current document, loading the v2 retired fixture and then the v0 retired fixture each show the exact K4 status `Load failed: topology "…" (saved as "…") has been retired and is no longer supported; re-create the template with a supported topology.`; the state, current path, unsaved flag and generated template are unchanged. **Delivered in Phase 1** as the GPU-free `topologyLoadRejection_integration_test.go`.
-- [ ] Plain GUI run; for each `.failure`, confirm the batch explains it (tournament output for non-Circles topologies, moved fixtures or selections), accept only those files, and list each with its reason in the Phase Summary for owner approval (K15). Never a blanket `-update`.
-- [ ] Benchmarks after: both commands from Phase 0 to `tmp/batch-k-bench-after.txt` (recorded, no gate).
-- [ ] README topology table → 7 rows (Random, Circles, Square, Geometric, Geometric Hub, Cross, Fractal). Search README/QUICKSTART/docs for the retired names and any Ring fallback.
-- [ ] `.agent/memories/generator-domain.md`: replace the retirement notes with the new contract.
+- [x] Plain GUI run; for each `.failure`, confirm the batch explains it (tournament output for non-Circles topologies, moved fixtures or selections), accept only those files, and list each with its reason in the Phase Summary for owner approval (K15). Never a blanket `-update`.
+- [x] Benchmarks after: both commands from Phase 0 to `tmp/batch-k-bench-after.txt` (recorded, no gate).
+- [x] README topology table → 7 rows (Random, Circles, Square, Geometric, Geometric Hub, Cross, Fractal). Search README/QUICKSTART/docs for the retired names and any Ring fallback.
+- [x] `.agent/memories/generator-domain.md`: replace the retirement notes with the new contract.
 
 ### Verification Plan
 - `go test -tags=integration_test,gui ./test/integration/gui/... -count=1` passes; no leftover `.failure` files.
@@ -330,26 +380,90 @@ Status: Not started
 - The touched README section's links resolve.
 
 ### Phase Summary
-_(write when phase completes)_
+Complete, 2026-10-04.
+- **GUI dropdown test:** new `test/integration/gui/layoutPanelTopology_integration_test.go`
+  (exact 7 labels in K14 order), through a new tagged harness method
+  `LayoutAndZonesTabHandler.TopologyOptionLabels()` that reuses `ButtonLabelsIn`. No test
+  export was added.
+- **Goldens (K15): none moved,** so there was nothing to accept or list for approval.
+- **README:** the table is down to 7 rows and "Eleven topologies" now reads "Seven".
+  QUICKSTART and docs/ had no retired references.
+- **`generator-domain.md`:** rewritten for the new contract.
+- **Benchmarks after** (in `.agent/memories/batch-k-baseline/*-after*`): Generate Circles
+  72240, Square 47160, GeometricHub 65260, Fractal 47470, Tournament(Random, balanced) 14635
+  ns/op (Chain 13890 before); SquareLarge 37750 ns/op; TabCycling 2955355 ns/op. Unchanged
+  cases (e.g. RandomMedium 616490 → 1253660) show `-benchtime=20x` machine noise of up to
+  ~2×. No gate was applied.
 
 ## Phase 4: Final verification, review and close-out
-Status: Not started
+Status: Complete
 
-- [ ] Full gate: build; vet × 3 tag sets; `go test ./test/... -count=1`; tagged integration; tagged GUI; both benchmark commands; testlayoutcheck; `gofmt -l` on an explicit list; lint report-only (0 issues; `--fix` only for formatter findings in this batch's files).
-- [ ] Coverage after; compare per file with `tmp/batch-k-coverage-before.txt`: no surviving file drops; every new or changed function at 100%; total ≥ 74.4%, or the denominator change is explained for owner approval (K16).
-- [ ] Independent implementation review (GPT-6.1 Sol); apply or justify every finding.
-- [ ] Review document: §2.3 marked FIXED **pending owner commit**, the §9 row K and the progress line. Do not touch §8 or renumber.
-- [ ] `.agent/backlog/test_observations.md`: record any new GUI-only statement uncovered by unit tests.
-- [ ] Rewrite the handoff per AGENTS.md §5.2.
+- [x] Full gate: build; vet × 3 tag sets; `go test ./test/... -count=1`; tagged integration; tagged GUI; both benchmark commands; testlayoutcheck; `gofmt -l` on an explicit list; lint report-only (0 issues; `--fix` only for formatter findings in this batch's files).
+- [x] Coverage after; compare per file with `tmp/batch-k-coverage-before.txt`: no surviving file drops; every new or changed function at 100%; total ≥ 74.4%, or the denominator change is explained for owner approval (K16).
+- [x] Independent implementation review (GPT-6.1 Sol); apply or justify every finding.
+- [x] Review document: §2.3 marked FIXED **pending owner commit**, the §9 row K and the progress line. Do not touch §8 or renumber.
+- [x] `.agent/backlog/test_observations.md`: record any new GUI-only statement uncovered by unit tests.
+- [x] Rewrite the handoff per AGENTS.md §5.2.
 
 ### Verification Plan
 - Every command exits 0; the coverage comparison is recorded in the Phase Summary.
 
 ### Phase Summary
-_(write when phase completes)_
+Complete, 2026-10-04 (Windows/amd64, Go 1.27.0, empty `GOFLAGS`).
+- **Gate:**
+  - build and vet × 3 PASS;
+  - `./test/...` PASS;
+  - tagged integration PASS (4.5s);
+  - tagged GUI PASS (41.4s), 0 `.failure`;
+  - both benchmark suites PASS;
+  - testlayoutcheck PASS;
+  - gofmt clean (1 new file normalized by explicit name);
+  - lint 0 issues.
+- **Coverage (K16): 73.2% (6441 / 8781)**, from 74.5% (6915 / 9263), **below 74.4%, so it
+  needs owner approval.**
+  - The drop is denominator only: the 7 deleted files were 399/400 covered, and the other
+    removed statements were mostly covered too.
+  - Uncovered statements fell from 2348 to 2340.
+  - A per-file comparison against the Phase 0 profile found **no surviving file that lost
+    coverage**. The new `retiredTopologies.go` (2/2) and `blockingIssueError.go` (3/3) are
+    full.
+  - Every changed function is at 100% except `createTopologyAdjacency`, which went from
+    53.8% to 70.0%; its kept Circles branch is unreachable and recorded in
+    `test_observations.md`.
+- **Implementation review (GPT-6.1 Sol): APPROVE WITH CHANGES.**
+  - Low #1 applied: the refused-load snapshot now stores a template clone.
+  - Nit #3 applied: the `zoneFactories.go` doc example uses Geometric Hub.
+  - Low #2 declined: `require.NoError` guards before the single `assert` in success-path
+    tests. Existing tests use the same guard-then-assert form (e.g.
+    `stateHandler/loadState_test.go`); the guard is a precondition, not the unit under test.
+  - No production correctness, panic or survivor-regression finding.
+- **Review document:** §2.3 is marked FIXED pending owner commit, row K is updated and the
+  progress line reads 24 fixed, 8 remaining. §8 is untouched and nothing was renumbered.
 
 ## Final Recap
-_(write when all phases complete: summary of the entire piece of work)_
+Batch K retires the Ring (`Default`), Hub (`HubAndSpoke`), Chain and Shared Web
+topologies:
+- **Catalogue:** the 7 survivors in K14 order; an unknown type falls back to Random.
+- **Saved states:** retired or unknown topologies are refused at load with exact messages
+  (the retired one names the former topology). The open document is unchanged. A missing
+  key loads as Random; `""` is fixed to Random with a warning.
+- **Generation:** the lookup has an explicit no-fallback `(creator, bool)` contract, and the
+  provider and generator return `ErrUnsupportedTopology` instead of building anything.
+- **Tournaments:** they always use the balanced builder.
+- **Deleted:** every retirement-only service, helper, constant and test.
+- **Preserved:** Geometric Hub and the shared hub-zone concepts; Wire is unchanged; no golden
+  moved.
+- **Coverage:** 74.5% → 73.2%, purely from deleting fully-covered code, pending owner
+  approval.
 
 ## Deployment Plan
-_(write when all phases complete: step-by-step deployment instructions)_
+1. The owner reviews and commits the uncommitted Phases 2–4 (Phase 1 is `1ee746b`),
+   including this plan, the review document, `test_observations.md` and the handoff.
+2. The owner approves or rejects the 73.2% coverage total (K16). If rejected, the next
+   session adds coverage elsewhere; no deleted code returns.
+3. Push `AD/pbi_resolution`; PR CI runs on Linux. Native Linux was not run locally.
+4. Merge to `master` when ready. A release only needs the normal tag flow (no schema
+   migration, no output-path change).
+5. In-game: optionally check a tournament on a former chain-fallback topology (e.g. Random),
+   since that output changed. Users holding a `.gen.json` with a retired topology get the
+   refusal message and must re-create the template.

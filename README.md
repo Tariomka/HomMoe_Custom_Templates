@@ -128,7 +128,7 @@ Generated template preview:
   sprites and writes a `<Name>.png` next to the template on save.
 - **Settings persistence** — load/save editor state as `.gen.json`; emit
   `.rmg.json` templates compatible with the in-game RMG.
-- **Eleven topologies**, map sizes 64–240 (experimental up to 512), 2–8 players,
+- **Seven topologies**, map sizes 64–240 (experimental up to 512), 2–8 players,
   quality-tiered neutral zones, and content-count limits.
 
 ## Building & Running
@@ -182,10 +182,6 @@ Never pass `-tags=wireinject` to `go build` or `go test`; that tag is for the ge
 |---------------|--------------------------------|--------------------------------------------------------------|
 | Random        | `config.TopologyRandom`        | Default. Random placement / Delaunay-style connections.      |
 | Circles       | `config.TopologyCircles`       | Concentric rings sorted by zone tier.                        |
-| Ring          | `config.TopologyRing`          | Players in a circle, each connected to neighbors.            |
-| Hub-and-Spoke | `config.TopologyHubAndSpoke`   | All players connect through a central hub neutral zone.      |
-| Chain         | `config.TopologyChain`         | Linear arrangement of zones.                                 |
-| Shared Web    | `config.TopologySharedWeb`     | Players connected through shared neutral zones.              |
 | Square        | `config.TopologySquare`        | Players line the edges of a square; neutrals on edges and inside. |
 | Geometric     | `config.TopologyGeometric`     | Symmetric geometric shapes built around a central zone.      |
 | Geometric Hub | `config.TopologyGeometricHub`  | Symmetric player branches joined through a shared central hub. |
