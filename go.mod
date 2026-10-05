@@ -3,7 +3,7 @@ module github.com/Tariomka/hommoe_custom_templates
 go 1.27.0
 
 require (
-	gioui.org v0.10.2
+	gioui.org v0.10.3
 	github.com/andygrunwald/vdf v1.1.0
 	github.com/brianvoe/gofakeit/v7 v7.17.1
 	github.com/goforj/wire v1.2.0
@@ -13,7 +13,8 @@ require (
 
 require (
 	gioui.org/shader v1.0.9 // indirect
-	github.com/go-text/typesetting v0.3.4 // indirect
+	github.com/go-text/typesetting v0.3.5 // indirect
+	github.com/godbus/dbus/v5 v5.2.2 // indirect
 	github.com/stretchr/objx v0.5.3 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	golang.org/x/exp v0.0.0-20260820142414-ca536658362e // indirect
