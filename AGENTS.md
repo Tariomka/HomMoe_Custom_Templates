@@ -777,8 +777,8 @@ irrelevant memories.
 | Run with race detector     | `go test -race ./test/...`                             |
 | Check test build-tag layout | `go run ./cmd/testlayoutcheck .` (VS Code task *"Go: Check test build-tag layout"*; see §4.6.1) |
 | Unit test coverage report  | `go test -count=1 '-coverpkg=./internal/...,./app/...' '-coverprofile=coverage.txt' ./test/unit/...` then `go tool cover '-func=coverage.txt'` (see §2.3; VS Code task *"Go: Generate code coverage report"*) |
-| Lint (report only)         | `golangci-lint-v2 run ./... --issues-exit-code=0` (VS Code task *"Go: Get Linter Results"*) |
-| Lint (auto-fix)            | `golangci-lint-v2 run ./... --issues-exit-code=0 --fix` (VS Code task *"Go: Run Linter"*; clears gci/gofmt/golines formatting findings — re-run to verify) |
+| Lint (report only)         | `golangci-lint run ./... --issues-exit-code=0` (VS Code task *"Go: Get Linter Results"*) |
+| Lint (auto-fix)            | `golangci-lint run ./... --issues-exit-code=0 --fix` (VS Code task *"Go: Run Linter"*; clears gci/gofmt/golines formatting findings — re-run to verify) |
 | Format Go code             | `gofmt -w .` (never run on `data/`)                    |
 | Regenerate DI injectors    | `wire gen ./internal/composition/...` (VS Code task *"Go: Generate wire injectors"*; see §4.6.3) |
 | Tidy modules               | `go mod tidy`                                          |

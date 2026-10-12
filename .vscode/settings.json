@@ -124,6 +124,7 @@
     },
     "chat.tools.terminal.autoApprove": {
         "golangci-lint-v2": true,
+        "golangci-lint": true,
         "gofmt": true,
         "git rev-parse": true,
         "wire": true,
