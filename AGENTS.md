@@ -211,8 +211,8 @@ Application directives:
 - Review of plans/implementations must be done by gpt-6.1-sol preferably
   (use fable-5.1/fable-5 sparingly as it is much more costly).
 - **Never use Haiku models.**
-- Match model to task shape: use cheap, high-cost-rating models (gpt-6-luna, claude-sonnet-5.5,
-  kimi-k3, grok-4.7) for read-only exploration, searching, summarizing, and mechanical/repetitive edits;
+- Match model to task shape: use cheap, high-cost-rating models (gpt-6-luna, kimi-k3, grok-4.7)
+  for read-only exploration, searching, summarizing, and mechanical/repetitive edits;
   reserve opus-5.5/fable-5.1 for design decisions, tricky debugging, and final review.
 - Parallelize independent exploration and/or action execution
   (like running tests) across cheap subagents rather than serializing
