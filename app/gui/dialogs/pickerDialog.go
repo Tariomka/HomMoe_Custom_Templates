@@ -19,6 +19,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/models"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 )
 
 // MultiSelectPicker is a generic searchable, optionally-grouped, multi-select
@@ -91,7 +92,9 @@ func NewSpellPickerDialog(
 	return picker
 }
 
-func NewValueOverridePickerDialog(excluded []string, onApply func(lines []string)) *MultiSelectPicker {
+func NewValueOverridePickerDialog(
+	excluded []string,
+	onApply func(entries []config.ValueOverrideEntry)) *MultiSelectPicker {
 	sids := constants.GetValueOverrideSidsWithExclusions(excluded)
 
 	guardEdit := &widget.Editor{SingleLine: true}
@@ -114,11 +117,11 @@ func NewValueOverridePickerDialog(excluded []string, onApply func(lines []string
 		if parsed, err := strconv.Atoi(strings.TrimSpace(guardEdit.Text())); err == nil {
 			guard = parsed
 		}
-		lines := make([]string, 0, len(ids))
+		entries := make([]config.ValueOverrideEntry, 0, len(ids))
 		for _, sid := range ids {
-			lines = append(lines, fmt.Sprintf("%s=%d", sid, guard))
+			entries = append(entries, config.ValueOverrideEntry{Sid: sid, GuardValue: guard})
 		}
-		onApply(lines)
+		onApply(entries)
 	}
 	return picker
 }

@@ -5,7 +5,6 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template_entity"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/file_service/editor_state_migrator"
 	"github.com/stretchr/testify/assert"
@@ -19,13 +18,13 @@ func TestWhenTheFileIsMissing_ReturnsError(t *testing.T) {
 	target := editor_state.EditorState{}
 
 	// Act
-	err := newMigrator().Load(missingPath, &target)
+	_, err := newMigrator().Load(missingPath, &target)
 
 	// Assert
 	assert.Error(t, err)
 }
 
-// The probe fails before either repository is picked, so a malformed file never
+// The probe fails before any repository is picked, so a malformed file never
 // reaches a decode.
 func TestWhenTheFileIsNotJson_ReturnsError(t *testing.T) {
 	t.Parallel()
@@ -34,7 +33,7 @@ func TestWhenTheFileIsNotJson_ReturnsError(t *testing.T) {
 	target := editor_state.EditorState{}
 
 	// Act
-	err := newMigrator().Load(statePath, &target)
+	_, err := newMigrator().Load(statePath, &target)
 
 	// Assert
 	assert.Error(t, err)
@@ -43,21 +42,36 @@ func TestWhenTheFileIsNotJson_ReturnsError(t *testing.T) {
 func TestWhenTheFileIsCurrentVersion_TheDecodedKeysReachTheTarget(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	statePath := writeStateFile(t, `{"schemaVersion":2,"templateName":"X","playerCount":4,"mapSize":192}`)
+	statePath := writeStateFile(t,
+		`{"schemaVersion":3,"generatorVersion":1,"templateName":"X","mapSize":192,"players":{"playerCount":4}}`)
 	expected := editor_state.EditorState{
-		TemplateName:  "X",
-		PlayerCount:   4,
-		MapSize:       192,
-		SchemaVersion: editor_state.CurrentEditorStateSchemaVersion,
+		SchemaVersion: 3, GeneratorVersion: 1,
+		TemplateName: "X",
+		MapSize:      192,
+		Players:      editor_state.PlayerSettings{PlayerCount: 4},
 	}
 	target := editor_state.EditorState{}
 
 	// Act
-	err := newMigrator().Load(statePath, &target)
+	_, err := newMigrator().Load(statePath, &target)
 
 	// Assert
 	require.NoError(t, err)
 	assert.Equal(t, expected, target)
+}
+
+func TestWhenTheFileIsCurrentVersion_ReturnsNoWarnings(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	statePath := writeStateFile(t, `{"schemaVersion":3,"templateName":"X"}`)
+	target := editor_state.EditorState{}
+
+	// Act
+	warnings, err := newMigrator().Load(statePath, &target)
+
+	// Assert
+	require.NoError(t, err)
+	assert.Empty(t, warnings)
 }
 
 // The load writes into whatever it is handed, so a key the file omits keeps
@@ -65,19 +79,218 @@ func TestWhenTheFileIsCurrentVersion_TheDecodedKeysReachTheTarget(t *testing.T) 
 func TestWhenACurrentFileOmitsAKey_TheValueSeededByTheCallerSurvives(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	statePath := writeStateFile(t, `{"schemaVersion":2,"playerCount":4}`)
-	target := editor_state.EditorState{TemplateName: "Seeded"}
+	statePath := writeStateFile(t, `{"schemaVersion":3,"players":{"playerCount":4}}`)
+	target := editor_state.EditorState{Players: editor_state.PlayerSettings{HeroCountMax: 8}}
 
 	// Act
-	err := newMigrator().Load(statePath, &target)
+	_, err := newMigrator().Load(statePath, &target)
 
 	// Assert
 	require.NoError(t, err)
-	assert.Equal(t, "Seeded", target.TemplateName)
+	assert.Equal(t, 8, target.Players.HeroCountMax)
 }
 
-// The same contract has to hold on the legacy path, which decodes into a
-// different struct entirely before migrating.
+func TestWhenTheContentDefaultsVersionIsNewerThanThisBuild_RefusesToLoadIt(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	statePath := writeStateFile(t, `{"schemaVersion":3,"content":{"contentDefaultsVersion":2}}`)
+	target := editor_state.EditorState{}
+
+	// Act
+	_, err := newMigrator().Load(statePath, &target)
+
+	// Assert
+	assert.ErrorAs(t, err, new(*editor_state_migrator.UnsupportedContentDefaultsVersionError))
+}
+
+func TestWhenTheContentDefaultsVersionIsNewerThanThisBuild_LeavesTheTargetUntouched(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	statePath := writeStateFile(t, `{"schemaVersion":3,"templateName":"X","content":{"contentDefaultsVersion":2}}`)
+	seeded := editor_state.EditorState{TemplateName: "Seeded"}
+	target := seeded
+
+	// Act
+	_, err := newMigrator().Load(statePath, &target)
+
+	// Assert
+	require.Error(t, err)
+	assert.Equal(t, seeded, target)
+}
+
+func TestWhenAVersionTwoFileIsMigrated_TheFlatSettingsMoveIntoTheirSections(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	statePath := writeStateFile(t, `{"schemaVersion":2,"templateName":"X","playerCount":4,"topology":"Square"}`)
+	target := editor_state.EditorState{}
+
+	// Act
+	_, err := newMigrator().Load(statePath, &target)
+
+	// Assert
+	require.NoError(t, err)
+	assert.Equal(t,
+		[]any{"X", 4, "Square"},
+		[]any{target.TemplateName, target.Players.PlayerCount, string(target.Generation.Topology)})
+}
+
+func TestWhenAVersionTwoFileOmitsAKey_TheValueSeededByTheCallerSurvives(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	statePath := writeStateFile(t, `{"schemaVersion":2,"playerCount":4}`)
+	target := editor_state.EditorState{Players: editor_state.PlayerSettings{HeroCountMax: 8}}
+
+	// Act
+	_, err := newMigrator().Load(statePath, &target)
+
+	// Assert
+	require.NoError(t, err)
+	assert.Equal(t, 8, target.Players.HeroCountMax)
+}
+
+func TestWhenAVersionTwoFileCarriesBanText_ItBecomesBanEntries(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	statePath := writeStateFile(t, `{"schemaVersion":2,"bannedItems":"  item_a  \n\n\t\nitem_b\nitem_a"}`)
+	target := editor_state.EditorState{}
+
+	// Act
+	_, err := newMigrator().Load(statePath, &target)
+
+	// Assert
+	require.NoError(t, err)
+	assert.Equal(t,
+		[]editor_state.BanEntry{{Sid: "item_a"}, {Sid: "item_b"}, {Sid: "item_a"}},
+		target.Content.BannedItems)
+}
+
+func TestWhenAVersionTwoFileCarriesOverrideText_TheValidLinesBecomeEntries(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	statePath := writeStateFile(t,
+		`{"schemaVersion":2,"valueOverrides":"watchtower=25000\n\n  =5 \nbad_line\ngold_mine = 12000 \nnonnum=abc"}`)
+	target := editor_state.EditorState{}
+
+	// Act
+	_, err := newMigrator().Load(statePath, &target)
+
+	// Assert
+	require.NoError(t, err)
+	assert.Equal(
+		t,
+		[]editor_state.ValueOverrideEntry{
+			{Sid: "watchtower", GuardValue: 25000},
+			{Sid: "gold_mine", GuardValue: 12000},
+		},
+		target.Content.ValueOverrides,
+	)
+}
+
+func TestWhenAVersionTwoOverrideLineIsMalformed_ReturnsAWarningNamingTheLine(t *testing.T) {
+	t.Parallel()
+	cases := []struct {
+		name            string
+		overridesText   string
+		expectedWarning string
+	}{
+		{"LineHasNoSeparator_ReturnsWarning", `bad_line`,
+			"value override line 1 'bad_line' is not sid=value and was dropped"},
+		{"LineStartsWithSeparator_ReturnsWarning", `=5`,
+			"value override line 1 '=5' is not sid=value and was dropped"},
+		{"SeparatorFollowsOnlyWhitespace_ReturnsWarningForTheTrimmedLine", `  = 5`,
+			"value override line 1 '= 5' is not sid=value and was dropped"},
+		{"ValueIsNotANumber_ReturnsWarning", `nonnum=abc`,
+			"value override line 1 'nonnum=abc' has a non-numeric value and was dropped"},
+		{"RejectedLineFollowsBlankLines_ReturnsWarningWithTheSourceLineNumber", `watchtower=25000\n\nbad_line`,
+			"value override line 3 'bad_line' is not sid=value and was dropped"},
+	}
+	for _, testCase := range cases {
+		t.Run(testCase.name, func(t *testing.T) {
+			t.Parallel()
+			// Arrange
+			statePath := writeStateFile(t, `{"schemaVersion":2,"valueOverrides":"`+testCase.overridesText+`"}`)
+			target := editor_state.EditorState{}
+
+			// Act
+			warnings, err := newMigrator().Load(statePath, &target)
+
+			// Assert
+			require.NoError(t, err)
+			assert.Equal(t, []string{testCase.expectedWarning}, warnings)
+		})
+	}
+}
+
+func TestWhenAVersionTwoOverrideTextIsOnlyBlankLines_ReturnsNoWarnings(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	statePath := writeStateFile(t, `{"schemaVersion":2,"valueOverrides":"\n   \n\t\n"}`)
+	target := editor_state.EditorState{}
+
+	// Act
+	warnings, err := newMigrator().Load(statePath, &target)
+
+	// Assert
+	require.NoError(t, err)
+	assert.Empty(t, warnings)
+}
+
+func TestWhenAVersionTwoFileCarriesGeneratorStamps_TheyReachTheZoneStructure(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	statePath := writeStateFile(t, `{"schemaVersion":2,"manualZones":[{"zone":{"name":"A","size":1.5},`+
+		`"generatorPosition":{"X":0.4,"Y":0.6},"generatorRing":0,"manualPosition":{"X":0.25,"Y":0.75}}]}`)
+	expected := editor_state.ManualZoneEdit{
+		Name:              "A",
+		GeneratorPosition: new(data.NewVec2(0.4, 0.6)),
+		GeneratorRing:     new(0),
+		ManualPosition:    new(data.NewVec2(0.25, 0.75)),
+		FieldOverrides:    editor_state.ZoneFieldOverrides{Size: new(1.5)},
+	}
+	target := editor_state.EditorState{}
+
+	// Act
+	_, err := newMigrator().Load(statePath, &target)
+
+	// Assert
+	require.NoError(t, err)
+	assert.Equal(t, expected, target.ManualEdits.Zones[0])
+}
+
+// A migrated snapshot keeps every field; generator version 0 marks it for
+// conversion at the first regeneration.
+func TestWhenAVersionTwoFileIsMigrated_ItLandsAtTheCurrentVersionWithNoGeneratorVersion(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	statePath := writeStateFile(t, `{"schemaVersion":2,"templateName":"X"}`)
+	target := editor_state.EditorState{}
+
+	// Act
+	_, err := newMigrator().Load(statePath, &target)
+
+	// Assert
+	require.NoError(t, err)
+	assert.Equal(t,
+		editor_state.SchemaOptions{SchemaVersion: editor_state.CurrentEditorStateSchemaVersion, GeneratorVersion: 0},
+		target.SchemaOptions)
+}
+
+func TestWhenAVersionTwoFileIsMigrated_ItUsesTheFirstContentDefaultsVersion(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	statePath := writeStateFile(t, `{"schemaVersion":2,"templateName":"X"}`)
+	target := editor_state.EditorState{}
+
+	// Act
+	_, err := newMigrator().Load(statePath, &target)
+
+	// Assert
+	require.NoError(t, err)
+	assert.Equal(t, 1, target.Content.ContentDefaultsVersion)
+}
+
+// The same seeding contract has to hold on the v1 path, which decodes into a
+// different struct entirely before migrating twice.
 func TestWhenALegacyFileOmitsAKey_TheValueSeededByTheCallerSurvives(t *testing.T) {
 	t.Parallel()
 	// Arrange
@@ -85,7 +298,7 @@ func TestWhenALegacyFileOmitsAKey_TheValueSeededByTheCallerSurvives(t *testing.T
 	target := editor_state.EditorState{TemplateName: "Seeded"}
 
 	// Act
-	err := newMigrator().Load(statePath, &target)
+	_, err := newMigrator().Load(statePath, &target)
 
 	// Assert
 	require.NoError(t, err)
@@ -98,14 +311,14 @@ func TestWhenALegacyFileOmitsTheContentRows_TheRowsSeededByTheCallerSurvive(t *t
 	statePath := writeStateFile(t, `{"schemaVersion":1,"templateName":"X"}`)
 	seededRules := []editor_state.ContentRuleRow{{Name: "Guarded"}}
 	seededRows := []editor_state.ZoneContentRow{{Sid: "seeded", Count: 1, Rules: seededRules}}
-	target := editor_state.EditorState{PlayerZoneContentRows: seededRows}
+	target := editor_state.EditorState{Content: editor_state.ContentSettings{PlayerZoneContentRows: seededRows}}
 
 	// Act
-	err := newMigrator().Load(statePath, &target)
+	_, err := newMigrator().Load(statePath, &target)
 
 	// Assert
 	require.NoError(t, err)
-	assert.Equal(t, seededRows, target.PlayerZoneContentRows)
+	assert.Equal(t, seededRows, target.Content.PlayerZoneContentRows)
 }
 
 func TestWhenALegacyFileOmitsTheBonuses_TheBonusesSeededByTheCallerSurvive(t *testing.T) {
@@ -117,14 +330,44 @@ func TestWhenALegacyFileOmitsTheBonuses_TheBonusesSeededByTheCallerSurvive(t *te
 		ReceiverFilter: "all_heroes",
 		Param:          "9500",
 	}}
-	target := editor_state.EditorState{Bonuses: seededBonuses}
+	target := editor_state.EditorState{Content: editor_state.ContentSettings{Bonuses: seededBonuses}}
 
 	// Act
-	err := newMigrator().Load(statePath, &target)
+	_, err := newMigrator().Load(statePath, &target)
 
 	// Assert
 	require.NoError(t, err)
-	assert.Equal(t, seededBonuses, target.Bonuses)
+	assert.Equal(t, seededBonuses, target.Content.Bonuses)
+}
+
+func TestWhenALegacyFileOmitsTheBans_TheBansSeededByTheCallerSurvive(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	statePath := writeStateFile(t, `{"schemaVersion":1,"templateName":"X"}`)
+	seededBans := []editor_state.BanEntry{{Sid: "seeded_a"}, {Sid: "seeded_b"}}
+	target := editor_state.EditorState{Content: editor_state.ContentSettings{BannedMagics: seededBans}}
+
+	// Act
+	_, err := newMigrator().Load(statePath, &target)
+
+	// Assert
+	require.NoError(t, err)
+	assert.Equal(t, seededBans, target.Content.BannedMagics)
+}
+
+func TestWhenALegacyFileOmitsTheOverrides_TheOverridesSeededByTheCallerSurvive(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	statePath := writeStateFile(t, `{"schemaVersion":1,"templateName":"X"}`)
+	seededOverrides := []editor_state.ValueOverrideEntry{{Sid: "seeded", GuardValue: 700}}
+	target := editor_state.EditorState{Content: editor_state.ContentSettings{ValueOverrides: seededOverrides}}
+
+	// Act
+	_, err := newMigrator().Load(statePath, &target)
+
+	// Assert
+	require.NoError(t, err)
+	assert.Equal(t, seededOverrides, target.Content.ValueOverrides)
 }
 
 // The legacy path decodes into a different struct than the current one, so it
@@ -136,15 +379,40 @@ func TestWhenALegacyFileHasAMistypedValue_ReturnsError(t *testing.T) {
 	target := editor_state.EditorState{}
 
 	// Act
-	err := newMigrator().Load(statePath, &target)
+	_, err := newMigrator().Load(statePath, &target)
+
+	// Assert
+	assert.Error(t, err)
+}
+
+func TestWhenACurrentFileHasAMistypedValue_ReturnsError(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	statePath := writeStateFile(t, `{"schemaVersion":3,"players":{"playerCount":"seven"}}`)
+	target := editor_state.EditorState{}
+
+	// Act
+	_, err := newMigrator().Load(statePath, &target)
+
+	// Assert
+	assert.Error(t, err)
+}
+
+func TestWhenAVersionTwoFileHasAMistypedValue_ReturnsError(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	statePath := writeStateFile(t, `{"schemaVersion":2,"playerCount":"seven"}`)
+	target := editor_state.EditorState{}
+
+	// Act
+	_, err := newMigrator().Load(statePath, &target)
 
 	// Assert
 	assert.Error(t, err)
 }
 
 // v1 wrote the manual position as [x, y]; encoding/json/v2 refuses to read that
-// into the current struct, so without the migration the file simply will not
-// load.
+// into a newer struct, so without the migration the file simply will not load.
 func TestWhenALegacyFileCarriesAnArrayPosition_ItBecomesAVector(t *testing.T) {
 	t.Parallel()
 	// Arrange
@@ -154,11 +422,11 @@ func TestWhenALegacyFileCarriesAnArrayPosition_ItBecomesAVector(t *testing.T) {
 	target := editor_state.EditorState{}
 
 	// Act
-	err := newMigrator().Load(statePath, &target)
+	_, err := newMigrator().Load(statePath, &target)
 
 	// Assert
 	require.NoError(t, err)
-	assert.Equal(t, data.NewVec2(0.25, 0.75), *target.ManualZones[0].ManualPosition)
+	assert.Equal(t, data.NewVec2(0.25, 0.75), *target.ManualEdits.Zones[0].ManualPosition)
 }
 
 // v0 predates the version key entirely and probes as 0, which is why the gate is
@@ -170,11 +438,11 @@ func TestWhenTheFileHasNoVersionKey_ItStillTakesTheLegacyPath(t *testing.T) {
 	target := editor_state.EditorState{}
 
 	// Act
-	err := newMigrator().Load(statePath, &target)
+	_, err := newMigrator().Load(statePath, &target)
 
 	// Assert
 	require.NoError(t, err)
-	assert.Equal(t, data.NewVec2(0.25, 0.75), *target.ManualZones[0].ManualPosition)
+	assert.Equal(t, data.NewVec2(0.25, 0.75), *target.ManualEdits.Zones[0].ManualPosition)
 }
 
 func TestWhenALegacyFileIsMigrated_TheStateLandsAtTheCurrentVersion(t *testing.T) {
@@ -184,7 +452,7 @@ func TestWhenALegacyFileIsMigrated_TheStateLandsAtTheCurrentVersion(t *testing.T
 	target := editor_state.EditorState{}
 
 	// Act
-	err := newMigrator().Load(statePath, &target)
+	_, err := newMigrator().Load(statePath, &target)
 
 	// Assert
 	require.NoError(t, err)
@@ -200,11 +468,11 @@ func TestWhenALegacyFileIsMigrated_TheZoneCarriesNoGeneratorPosition(t *testing.
 	target := editor_state.EditorState{}
 
 	// Act
-	err := newMigrator().Load(statePath, &target)
+	_, err := newMigrator().Load(statePath, &target)
 
 	// Assert
 	require.NoError(t, err)
-	assert.Nil(t, target.ManualZones[0].GeneratorPosition)
+	assert.Nil(t, target.ManualEdits.Zones[0].GeneratorPosition)
 }
 
 func TestWhenTheFileIsNewerThanThisBuild_RefusesToLoadIt(t *testing.T) {
@@ -214,7 +482,7 @@ func TestWhenTheFileIsNewerThanThisBuild_RefusesToLoadIt(t *testing.T) {
 	target := editor_state.EditorState{}
 
 	// Act
-	err := newMigrator().Load(statePath, &target)
+	_, err := newMigrator().Load(statePath, &target)
 
 	// Assert
 	assert.ErrorAs(t, err, new(*editor_state_migrator.UnsupportedSchemaVersionError))
@@ -226,33 +494,13 @@ func TestWhenTheFileIsNewerThanThisBuild_LeavesTheTargetUntouched(t *testing.T) 
 	t.Parallel()
 	// Arrange
 	statePath := writeStateFile(t, `{"schemaVersion":99,"templateName":"X"}`)
-	target := editor_state.EditorState{TemplateName: "Seeded"}
+	seeded := editor_state.EditorState{TemplateName: "Seeded"}
+	target := seeded
 
 	// Act
-	err := newMigrator().Load(statePath, &target)
+	_, err := newMigrator().Load(statePath, &target)
 
 	// Assert
 	require.Error(t, err)
-	assert.Equal(t, editor_state.EditorState{TemplateName: "Seeded"}, target)
-}
-
-func TestWhenACurrentFileCarriesTheGeneratorStamps_TheyReachTheTarget(t *testing.T) {
-	t.Parallel()
-	// Arrange
-	statePath := writeStateFile(t, `{"schemaVersion":2,"manualZones":[{"zone":{"name":"A"},`+
-		`"generatorPosition":{"X":0.4,"Y":0.6},"generatorRing":0,"manualPosition":{"X":0.25,"Y":0.75}}]}`)
-	expected := editor_state.ManualZoneSave{
-		Zone:              template_entity.Zone{Name: "A"},
-		GeneratorPosition: new(data.NewVec2(0.4, 0.6)),
-		GeneratorRing:     new(0),
-		ManualPosition:    new(data.NewVec2(0.25, 0.75)),
-	}
-	target := editor_state.EditorState{}
-
-	// Act
-	err := newMigrator().Load(statePath, &target)
-
-	// Assert
-	require.NoError(t, err)
-	assert.Equal(t, expected, target.ManualZones[0])
+	assert.Equal(t, seeded, target)
 }

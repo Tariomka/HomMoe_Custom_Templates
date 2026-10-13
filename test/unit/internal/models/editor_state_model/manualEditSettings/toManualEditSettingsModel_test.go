@@ -26,7 +26,7 @@ func TestWhenTheGroupIsPersisted_TheZonesAreLifted(t *testing.T) {
 		model.ManualZones)
 }
 
-func TestWhenTheGroupIsPersisted_TheConnectionsAreWrapped(t *testing.T) {
+func TestWhenTheGroupIsPersisted_TheConnectionsAreRebuiltFromTheirOverrides(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	entity := allFieldsManualEditSettings()
@@ -37,8 +37,30 @@ func TestWhenTheGroupIsPersisted_TheConnectionsAreWrapped(t *testing.T) {
 	// Assert
 	assert.Equal(
 		t,
-		[]editor_state_model.ManualConnectionSave{{ManualConnectionSave: entity.ManualConnections[0]}},
+		[]editor_state_model.ManualConnectionSave{{
+			Connection: template_entity.Connection{
+				Name: "Conn A", From: "Zone A", To: "Zone B", ConnectionType: "Direct", GuardValue: 4000,
+			},
+			IsUserAdded: true}},
 		model.ManualConnections)
+}
+
+func TestWhenAZoneFieldIsUnset_ItIsRebuiltAsNil(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	entity := editor_state.ManualEditSettings{Zones: []editor_state.ManualZoneEdit{{
+		Name:           "Zone A",
+		FieldOverrides: editor_state.ZoneFieldOverrides{GuardedContentPool: []string{}},
+		Unset:          []string{"roads"},
+	}}}
+
+	// Act
+	model := editor_state_model.ToManualEditSettingsModel(entity)
+
+	// Assert
+	assert.Equal(t,
+		[]any{[]string{}, true},
+		[]any{model.ManualZones[0].GuardedContentPool, model.ManualZones[0].Roads == nil})
 }
 
 func TestWhenAnEmptyGroupIsPersisted_TheListsStayNil(t *testing.T) {
@@ -55,13 +77,17 @@ func TestWhenAnEmptyGroupIsPersisted_TheListsStayNil(t *testing.T) {
 
 func allFieldsManualEditSettings() editor_state.ManualEditSettings {
 	return editor_state.ManualEditSettings{
-		ManualZones: []editor_state.ManualZoneSave{{
-			Zone:           template_entity.Zone{Name: "Zone A"},
+		Zones: []editor_state.ManualZoneEdit{{
+			Name:           "Zone A",
 			ManualPosition: new(data.NewVec2(0.25, 0.75)),
 		}},
-		ManualConnections: []editor_state.ManualConnectionSave{{
-			Connection:  template_entity.Connection{Name: "Conn A"},
-			IsUserAdded: true,
+		Connections: []editor_state.ManualConnectionEdit{{
+			Name:           "Conn A",
+			From:           "Zone A",
+			To:             "Zone B",
+			ConnectionType: "Direct",
+			IsUserAdded:    true,
+			FieldOverrides: editor_state.ConnectionFieldOverrides{GuardValue: new(4000)},
 		}},
 	}
 }

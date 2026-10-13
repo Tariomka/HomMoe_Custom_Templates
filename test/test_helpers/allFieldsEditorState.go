@@ -95,9 +95,9 @@ func NewAllFieldsEditorStateModel() editor_state_model.EditorState {
 		TournamentPointsToWin:        7,
 		TournamentSaveArmy:           true,
 
-		BannedItems:        "fixture_banned_item_one\nfixture_banned_item_two",
-		BannedMagics:       "fixture_banned_magic",
-		ValueOverridesText: "fixture_override_sid=12345",
+		BannedItems:    []config.BanEntry{{Sid: "fixture_banned_item_one"}, {Sid: "fixture_banned_item_two"}},
+		BannedMagics:   []config.BanEntry{{Sid: "fixture_banned_magic"}},
+		ValueOverrides: []config.ValueOverrideEntry{{Sid: "fixture_override_sid", GuardValue: 12345}},
 		Bonuses: []config.BonusEntry{{
 			PresetType:     config.BonusStartingGold,
 			ReceiverFilter: "all_heroes",

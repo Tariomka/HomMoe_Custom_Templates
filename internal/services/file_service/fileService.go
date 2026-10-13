@@ -39,13 +39,14 @@ func NewFileService(
 	}
 }
 
-func (this *FileService) LoadSettingsFile(filePath string) (*editor_state_model.EditorState, error) {
+func (this *FileService) LoadSettingsFile(filePath string) (*editor_state_model.EditorState, []string, error) {
 	entity := this.editorStateMapper.NewDefaultEntity()
-	if err := this.editorStateMigrator.Load(filePath, &entity); err != nil {
-		return nil, err
+	warnings, err := this.editorStateMigrator.Load(filePath, &entity)
+	if err != nil {
+		return nil, nil, err
 	}
 
-	return new(this.editorStateMapper.ToModel(entity)), nil
+	return new(this.editorStateMapper.ToModel(entity)), warnings, nil
 }
 
 func (this *FileService) SaveSettings(

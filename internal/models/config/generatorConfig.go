@@ -23,9 +23,9 @@ type GeneratorConfig struct {
 	GenerateRoads             bool
 	MatchPlayerCastleFactions bool
 
-	BannedItems        string
-	BannedMagics       string
-	ValueOverridesText string
+	BannedItems    []BanEntry
+	BannedMagics   []BanEntry
+	ValueOverrides []ValueOverrideEntry
 
 	Bonuses []BonusEntry
 

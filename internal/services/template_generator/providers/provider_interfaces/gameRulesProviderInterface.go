@@ -7,6 +7,6 @@ import (
 
 type IGameRulesProvider interface {
 	CreateGameRules(configuration config.GeneratorConfig) template_model.GameRules
-	CreateValueOverrides(configuration config.GeneratorConfig) ([]template_model.ValueOverride, []string)
+	CreateValueOverrides(configuration config.GeneratorConfig) []template_model.ValueOverride
 	CreateGlobalBans(configuration config.GeneratorConfig) *template_model.GlobalBans
 }

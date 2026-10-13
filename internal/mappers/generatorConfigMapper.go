@@ -15,8 +15,7 @@ func NewConfigMapper(contentItemMapper IMandatoryContentItemMapper) IGeneratorCo
 	}
 }
 
-// FromEditorState translates a SettingsFile (UI persistence model)
-// into a GeneratorSettings (generator input model).
+// FromEditorState translates a SettingsFile (UI persistence model) into a GeneratorSettings (generator input model).
 func (this *GeneratorConfigMapper) FromEditorState(
 	editorState editor_state_model.EditorState) *config.GeneratorConfig {
 	generatorSettings := config.NewGeneratorConfig()
@@ -34,7 +33,7 @@ func (this *GeneratorConfigMapper) FromEditorState(
 	generatorSettings.MatchPlayerCastleFactions = editorState.MatchPlayerCastleFactions
 	generatorSettings.BannedItems = editorState.BannedItems
 	generatorSettings.BannedMagics = editorState.BannedMagics
-	generatorSettings.ValueOverridesText = editorState.ValueOverridesText
+	generatorSettings.ValueOverrides = editorState.ValueOverrides
 	generatorSettings.Bonuses = editorState.Bonuses
 	generatorSettings.PlayerZoneMandatoryContent = this.contentItemMapper.FromRows(editorState.PlayerZoneContentRows)
 	generatorSettings.LowestNeutralMandatoryContent = this.contentItemMapper.FromRows(
@@ -92,8 +91,7 @@ func (this *GeneratorConfigMapper) mapZoneConfig(editorState editor_state_model.
 }
 
 func (this *GeneratorConfigMapper) mapHeroSettings(
-	editorState editor_state_model.EditorState,
-) config.HeroSettings {
+	editorState editor_state_model.EditorState) config.HeroSettings {
 	return config.HeroSettings{
 		HeroCountMin:       editorState.HeroCountMin,
 		HeroCountMax:       editorState.HeroCountMax,

@@ -6,15 +6,19 @@ import (
 
 const guardedRuleName = "Guarded"
 
-// GetDefaultPlayerZoneContentRows returns the historical default
-// mandatory-content rows seeded into every player zone: the six basic mines
-// plus an alchemy lab, a couple of guarded treasures, random hires and
-// resource banks.
 func GetDefaultPlayerZoneContentRows() []ZoneContentRow {
 	rows := getPlayerZoneMineRows()
 	rows = append(rows, getPlayerZoneTreasureRows()...)
 	rows = append(rows, getPlayerZoneHireAndBankRows()...)
 	return rows
+}
+
+func GetDefaultPlayerZoneContentRowsForVersion(version int) ([]ZoneContentRow, bool) {
+	if version != 1 {
+		return nil, false
+	}
+
+	return GetDefaultPlayerZoneContentRows(), true
 }
 
 // getPlayerZoneMineRows returns the six basic mines plus an alchemy lab:

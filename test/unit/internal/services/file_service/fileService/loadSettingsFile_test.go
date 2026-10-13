@@ -18,7 +18,7 @@ func TestWhenSettingsFileIsRequested_LoadsItFromTheGivenPath(t *testing.T) {
 	mocks.migrator.On("Load", settingsPath).Return(editor_state.EditorState{}, nil)
 
 	// Act
-	_, err := service.LoadSettingsFile(settingsPath)
+	_, _, err := service.LoadSettingsFile(settingsPath)
 
 	// Assert
 	require.NoError(t, err)
@@ -35,7 +35,7 @@ func TestWhenSettingsFileIsRequested_TheDecodeIsSeededWithTheDefaultEntity(t *te
 	mocks.migrator.On("Load", "state.gen.json").Return(editor_state.EditorState{}, nil)
 
 	// Act
-	_, err := service.LoadSettingsFile("state.gen.json")
+	_, _, err := service.LoadSettingsFile("state.gen.json")
 
 	// Assert
 	require.NoError(t, err)
@@ -51,11 +51,26 @@ func TestWhenSettingsFileIsLoaded_ReturnsTheLoadedStateAsAModel(t *testing.T) {
 	mocks.migrator.On("Load", "state.gen.json").Return(loaded, nil)
 
 	// Act
-	actual, err := service.LoadSettingsFile("state.gen.json")
+	actual, _, err := service.LoadSettingsFile("state.gen.json")
 
 	// Assert
 	require.NoError(t, err)
 	assert.Equal(t, mocks.mapper.ToModel(loaded), *actual)
+}
+
+func TestWhenTheMigrationWarns_ReturnsItsWarnings(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	service, mocks := newServiceWithMocks()
+	warnings := []string{"value override line 2 'bad' is not sid=value and was dropped"}
+	mocks.migrator.On("Load", "state.gen.json").Return(mocks.mapper.NewDefaultEntity(), nil, warnings)
+
+	// Act
+	_, actual, err := service.LoadSettingsFile("state.gen.json")
+
+	// Assert
+	require.NoError(t, err)
+	assert.Equal(t, warnings, actual)
 }
 
 // The migrator is the only thing that can fail a load - a missing file, an
@@ -68,7 +83,7 @@ func TestWhenSettingsFileCannotBeLoaded_ReturnsError(t *testing.T) {
 	mocks.migrator.On("Load", "state.gen.json").Return(editor_state.EditorState{}, expectedError)
 
 	// Act
-	_, err := service.LoadSettingsFile("state.gen.json")
+	_, _, err := service.LoadSettingsFile("state.gen.json")
 
 	// Assert
 	assert.ErrorIs(t, err, expectedError)

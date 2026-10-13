@@ -45,14 +45,20 @@ type mockEditorStateMigrator struct {
 	seed editor_state.EditorState
 }
 
-func (this *mockEditorStateMigrator) Load(filePath string, target *editor_state.EditorState) error {
+// Load returns the configured entity and error, plus warnings when a third
+// return value is configured.
+func (this *mockEditorStateMigrator) Load(filePath string, target *editor_state.EditorState) ([]string, error) {
 	this.seed = *target
 	arguments := this.Called(filePath)
 	if loaded, ok := arguments.Get(0).(editor_state.EditorState); ok {
 		*target = loaded
 	}
 
-	return arguments.Error(1)
+	var warnings []string
+	if len(arguments) > 2 {
+		warnings, _ = arguments.Get(2).([]string)
+	}
+	return warnings, arguments.Error(1)
 }
 
 type serviceMocks struct {

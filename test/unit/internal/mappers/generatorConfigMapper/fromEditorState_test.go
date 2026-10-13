@@ -14,9 +14,9 @@ import (
 func TestWhenScalarOptionsProvided_CopiesEachToConfig(t *testing.T) {
 	t.Parallel()
 	templateName := gofakeit.ProductName()
-	bannedItems := gofakeit.Word()
-	bannedMagics := gofakeit.Word()
-	valueOverrides := gofakeit.Word()
+	bannedItems := []config.BanEntry{{Sid: gofakeit.Word()}}
+	bannedMagics := []config.BanEntry{{Sid: gofakeit.Word()}}
+	valueOverrides := []config.ValueOverrideEntry{{Sid: gofakeit.Word(), GuardValue: gofakeit.Number(1, 9000)}}
 	playerCount := gofakeit.Number(2, 8)
 	mapSize := gofakeit.Number(96, 224)
 	maxPortals := gofakeit.Number(1, 16)
@@ -103,21 +103,21 @@ func TestWhenScalarOptionsProvided_CopiesEachToConfig(t *testing.T) {
 			true,
 		},
 		{
-			"WhenBannedItemsProvided_CopiesText",
+			"WhenBannedItemsProvided_CopiesEntries",
 			func(state *editor_state_model.EditorState) { state.BannedItems = bannedItems },
 			func(configuration *config.GeneratorConfig) any { return configuration.BannedItems },
 			bannedItems,
 		},
 		{
-			"WhenBannedMagicsProvided_CopiesText",
+			"WhenBannedMagicsProvided_CopiesEntries",
 			func(state *editor_state_model.EditorState) { state.BannedMagics = bannedMagics },
 			func(configuration *config.GeneratorConfig) any { return configuration.BannedMagics },
 			bannedMagics,
 		},
 		{
-			"WhenValueOverridesTextProvided_CopiesText",
-			func(state *editor_state_model.EditorState) { state.ValueOverridesText = valueOverrides },
-			func(configuration *config.GeneratorConfig) any { return configuration.ValueOverridesText },
+			"WhenValueOverridesProvided_CopiesEntries",
+			func(state *editor_state_model.EditorState) { state.ValueOverrides = valueOverrides },
+			func(configuration *config.GeneratorConfig) any { return configuration.ValueOverrides },
 			valueOverrides,
 		},
 		{

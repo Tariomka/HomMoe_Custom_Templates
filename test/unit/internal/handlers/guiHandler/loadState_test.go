@@ -6,6 +6,7 @@ import (
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_generator"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/brianvoe/gofakeit/v7"
@@ -83,6 +84,8 @@ func TestWhenStateFileContainsPreviouslySavedState_ReturnsEqualState(t *testing.
 	// Assert
 	require.NoError(t, err)
 	require.NotNil(t, loaded)
+	// A save without pending manual edits stamps the current generator version.
+	savedState.GeneratorVersion = common_generator.GeneratorOutputVersion
 	assert.Equal(t, savedState, loaded.State)
 }
 

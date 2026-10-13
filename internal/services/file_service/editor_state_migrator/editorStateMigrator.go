@@ -6,64 +6,88 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state/editor_state_v1"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state/editor_state_v2"
 	"github.com/Tariomka/hommoe_custom_templates/internal/repositories"
 )
 
-// firstVec2SchemaVersion is the first version whose manualPosition is an object
-// rather than a two-element array. Anything below it needs the legacy
-// repository, including v0, which carries no schemaVersion key and probes as 0.
 const firstVec2SchemaVersion = 2
 
-// EditorStateMigrator picks the repository a .gen.json can actually be read
-// with. The version has to be probed before anything else is decoded:
-// encoding/json/v2 hard-fails an array read into a struct, so a pre-v2 file fed
-// to the current entity does not degrade, it refuses to load.
 type EditorStateMigrator struct {
-	editorStateRepository       repositories.IFileRepository[editor_state.EditorState]
-	legacyEditorStateRepository repositories.IFileRepository[editor_state_v1.EditorState]
+	editorStateRepository   repositories.IFileRepository[editor_state.EditorState]
+	v2EditorStateRepository repositories.IFileRepository[editor_state_v2.EditorState]
+	v1EditorStateRepository repositories.IFileRepository[editor_state_v1.EditorState]
 }
 
 func NewEditorStateMigrator(
 	editorStateRepository repositories.IFileRepository[editor_state.EditorState],
-	legacyEditorStateRepository repositories.IFileRepository[editor_state_v1.EditorState]) IEditorStateMigrator {
+	v2EditorStateRepository repositories.IFileRepository[editor_state_v2.EditorState],
+	v1EditorStateRepository repositories.IFileRepository[editor_state_v1.EditorState]) IEditorStateMigrator {
 	return &EditorStateMigrator{
-		editorStateRepository:       editorStateRepository,
-		legacyEditorStateRepository: legacyEditorStateRepository,
+		editorStateRepository:   editorStateRepository,
+		v2EditorStateRepository: v2EditorStateRepository,
+		v1EditorStateRepository: v1EditorStateRepository,
 	}
 }
 
-// schemaVersionProbe reads the version key and nothing else. It is declared
-// here instead of reusing editor_state.SchemaOptions because the version key is
-// the one part of the format that may never move; sharing the current struct
-// would let a rename of it break every old file at once.
 type schemaVersionProbe struct {
 	SchemaVersion int `json:"schemaVersion"`
 }
 
-// Load fills target from the file. The caller supplies target already seeded
-// with the defaults, so a key the file omits keeps its default instead of
-// collapsing to a zero value.
-func (this *EditorStateMigrator) Load(filePath string, target *editor_state.EditorState) error {
+func (this *EditorStateMigrator) Load(filePath string, target *editor_state.EditorState) ([]string, error) {
 	version, err := probeSchemaVersion(filePath)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	if version > editor_state.CurrentEditorStateSchemaVersion {
-		return newUnsupportedSchemaVersionError(version)
+		return nil, newUnsupportedSchemaVersionError(version)
 	}
 
-	if version >= firstVec2SchemaVersion {
-		return this.editorStateRepository.Load(filePath, target)
+	if version == editor_state.CurrentEditorStateSchemaVersion {
+		return nil, this.loadCurrent(filePath, target)
 	}
 
-	legacy := newV1Seed(*target)
-	if err := this.legacyEditorStateRepository.Load(filePath, &legacy); err != nil {
+	legacy, err := this.loadLegacy(filePath, version, newV2Seed(*target))
+	if err != nil {
+		return nil, err
+	}
+
+	migrated, warnings := MigrateToV3(legacy)
+	*target = migrated
+	return warnings, nil
+}
+
+func (this *EditorStateMigrator) loadCurrent(filePath string, target *editor_state.EditorState) error {
+	loaded := *target
+	if err := this.editorStateRepository.Load(filePath, &loaded); err != nil {
 		return err
 	}
 
-	*target = MigrateToV2(legacy)
+	if loaded.Content.ContentDefaultsVersion > editor_state.CurrentContentDefaultsVersion {
+		return newUnsupportedContentDefaultsVersionError(loaded.Content.ContentDefaultsVersion)
+	}
+
+	*target = loaded
 	return nil
+}
+
+// loadLegacy decodes a pre-v3 file into the frozen v2 shape, going through the
+// frozen v1 shape first for files whose manualPosition is still an array.
+func (this *EditorStateMigrator) loadLegacy(
+	filePath string,
+	version int,
+	seed editor_state_v2.EditorState) (editor_state_v2.EditorState, error) {
+	if version >= firstVec2SchemaVersion {
+		err := this.v2EditorStateRepository.Load(filePath, &seed)
+		return seed, err
+	}
+
+	legacy := newV1Seed(seed)
+	if err := this.v1EditorStateRepository.Load(filePath, &legacy); err != nil {
+		return editor_state_v2.EditorState{}, err
+	}
+
+	return MigrateToV2(legacy), nil
 }
 
 func probeSchemaVersion(filePath string) (int, error) {

@@ -217,7 +217,8 @@ func disableTournamentCheckboxInFile(t *testing.T, path string) {
 	require.NoError(t, err)
 	document := map[string]any{}
 	require.NoError(t, json.Unmarshal(raw, &document))
-	document["tournament"] = false
+	gameRules, _ := document["gameRules"].(map[string]any)
+	gameRules["tournament"] = false
 	patched, err := json.Marshal(document)
 	require.NoError(t, err)
 	require.NoError(t, os.WriteFile(path, patched, 0o600))

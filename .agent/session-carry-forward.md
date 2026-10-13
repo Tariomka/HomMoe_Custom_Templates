@@ -7,7 +7,9 @@ Date: 2026-10-13.
 **The plan is the source of truth:**
 [batch-m-persistence-format.md](plans/batch-m-persistence-format.md). It holds every owner
 decision (M-D1 to M-D9, M1 to M29), the design (D1 to D6), the three-round review log, and
-the phase summaries. **Phases 0, 1 and 2 are Complete and green. Next: Phase 3.**
+the phase summaries. **Phases 0 to 3 are Complete and green. Next: Phase 4** (C3 semantics,
+§1.16, migration modal). Phases 0–2 are owner-committed (`58948f9`); Phase 3 is uncommitted
+in the working tree (owner reviews everything at the end, M1).
 
 - **Owner process (M1):** all phases run end to end; the owner reviews and commits **once at
   the end**. Do not stop for commits between phases. Never stage or commit.
@@ -27,9 +29,14 @@ the phase summaries. **Phases 0, 1 and 2 are Complete and green. Next: Phase 3.*
   **10,482 B / 110 allocs** (same as without edits). New untagged benchmarks
   `BenchmarkAutoRegenerate_IdleFrame` and `BenchmarkEditorStateFile_SaveLoad` (v2 persistence
   baseline 10.28 ms / 818 KB / 4,930 allocs). Coverage 73.22% (5612 / 7665); all gates green.
-- **Phase 3 warning:** typed lists and the v3 entity switch together (no interim text
-  conversion), so the tree may be red between Phase 3 sub-groups; it must be green at the
-  phase end. Start Phase 3 in a fresh session with full context.
+- **Phase 3 (session 2):** schema v3 is live: sections, typed ban/override lists, frozen
+  `editor_state_v2`, `MigrateToV3` with load warnings, `contentDefaultsVersion`,
+  `generatorVersion`, C3-shaped manual section in the all-overridden form. Coverage **73.66%
+  (5751 / 7807)**; every suite green, 0 `.failure`, lint 0, `wire diff` clean. Read the Phase 3
+  "Implementation decisions" list in the plan before Phase 4: overrides are entity-typed with
+  reflection diff/apply helpers, and `generatorVersion: 0` snapshots must decode against an
+  **empty** base.
+- **Phase 4 is next and large.** Start it in a fresh session.
 
 **Batch L is CLOSED** (owner commits `2269e73` and `85752a8` on `AD/compact_state`). Its
 report [batch-l-compact-state.md](investigations/batch-l-compact-state.md) is the design input
@@ -846,38 +853,31 @@ in-game behaviour.
 
 ## 6. Git status snapshot
 
-The branch is **`AD/compact_state`** and HEAD is **`30f6fa3`**. Newest first:
-- `30f6fa3` ("Batch M plan": an early copy of the plan, committed by the owner mid-session)
-- `e47d5d1` ("Docs": this handoff; = `origin/AD/compact_state`)
-- `85752a8` ("Batch L completed": Batch L docs, `.golangci.yml` stops `exhaustive` checking
-  maps, switch cases added in 4 Go files, VS Code formatter renamed to `golangci-lint`)
-- `2269e73` (Batch L docs)
-- `45876cf` ("Update": Batch L plan, linter rename)
-- `a9ae09c` ("Package updates": go 1.27.2, deps)
+The branch is **`AD/compact_state`** and HEAD is **`ce3f173`**. Newest first:
+- `ce3f173` ("removed old plans": owner deleted the Batch L plan)
+- `58948f9` ("Batch M update": Phases 0–2, the plan and this handoff)
+- `30f6fa3` ("Batch M plan": an early copy of the plan)
+- `e47d5d1` ("Docs": this handoff)
+- `85752a8` ("Batch L completed")
 - `8cf9c80` (PR #50, H/I/K; = `master`)
 
 Not yet merged to `master`.
 
-`git status --short` at handoff (Batch M Phases 0–2, uncommitted, for the owner's end review):
-
-```
- M .agent/plans/batch-m-persistence-format.md
- M .agent/session-carry-forward.md
- M app/gui/drivers/state.go
- M app/gui/drivers/stateGeneration.go
- M app/gui/models/editorState.go
- M internal/models/editor_state_model/editorState.go
- M test/unit/app/gui/drivers/stateGeneration/autoRegenerate_test.go
- M tools/go.mod
- M tools/go.sum
-?? test/performance/autoRegenerate_test.go
-?? test/performance/editorStateFile_test.go
-?? test/test_helpers/testdata/editorState_v2_geohub6p_move.gen.json
-?? test/unit/app/gui/models/editorState/getCurrentSettings_test.go
-?? test/unit/app/gui/models/editorState/getNextSettings_test.go
-?? test/unit/app/gui/models/editorState/getPreviousSettings_test.go
-?? test/unit/internal/models/editor_state_model/editorState/cloneWithoutManualEdits_test.go
-```
+`git status --short` at handoff (Batch M Phase 3, uncommitted, for the owner's end review):
+93 entries. Production: the v3 entity files (`editorState.go`, `schemaOptions.go`,
+`contentSettings.go`, `manualEditSettings.go` modified; `banEntry.go`, `valueOverrideEntry.go`,
+`manualZoneEdit.go`, `manualConnectionEdit.go`, `zoneFieldOverrides.go`,
+`connectionFieldOverrides.go`, `zoneOrigin.go` new; the whole `editor_state_v2/` folder new),
+the models (`contentSettings.go`, `editorState.go`, `manualEditSettings.go`,
+`defaultPlayerZoneContentRows.go`; new `banEntry.go`, `valueOverrideEntry.go`,
+`fieldOverrides.go`), config (`types.go`, `generatorConfig.go`), mappers, the migrator
+(`editorStateMigrator.go`, its interface, `v1ToV2.go`; new `v2ToV3.go`,
+`unsupportedContentDefaultsVersionError.go`), `fileService.go` + interface,
+`v2EditorStateRepository.go` (new), `stateHandler.go`, the validation DTO,
+`gameRulesProvider.go` + interface, `templateGenerator.go`, `common_generator/` (new),
+`providerSets.go` + regenerated `wire_gen.go`, `bonusesPanel.go`, `pickerDialog.go`,
+`stateFiles.go`. Tests and fixtures: see the plan's Phase 3 summary; 14 new `.gen.json`
+fixtures under `test/test_helpers/testdata/`.
 
 `.agent/memories/` and `tmp/` are gitignored. **The assistant performed no staging,
 unstaging, commit, push, stash, branch switch or worktree change.**
@@ -1064,22 +1064,22 @@ Other pending decisions: arena/manual invalidation and effective-mode aliases (�
 
 ## 9. Next recommended actions
 
-**Batch M continues at Phase 3** of
+**Batch M continues at Phase 4** of
 [batch-m-persistence-format.md](plans/batch-m-persistence-format.md). Scoping, questions,
 plan, review, approval and the baseline are **done**; do not re-ask M1 to M29.
 
 In order:
 1. Read [AGENTS.md](../AGENTS.md), then the plan in full (decision tables, Design D1 to D6,
-   the review log, the Phase 0 to 2 summaries), then the
-   [Batch L report](investigations/batch-l-compact-state.md) §5 to §11 as needed.
-2. Confirm `git status --short` matches §6 (the owner may have committed Phases 0 to 2;
-   either way, never stage or commit).
-3. **Phase 3**: schema v3 with typed lists, sections, migration and versions. Work through its
-   checklist; regenerate Wire (`wire gen ./internal/composition/...`, then `wire diff`) at each
-   constructor or provider change; finish with the phase's verification plan, including a
-   coverage comparison against the 73.07% floor; write the phase summary.
-4. **Phase 4** (C3 semantics, §1.16, modal), **Phase 5** (GUI flows), **Phase 6** (final gate,
-   GPT-6.1 Sol implementation review, review/report close-out), each per the plan.
+   the review log, the Phase 0 to 3 summaries and Phase 3's implementation decisions), then the
+   [Batch L report](investigations/batch-l-compact-state.md) §5 to §11 and the probe's C3
+   prototype in `.agent/memories/batch-l/probe-src/prototypes.go` as needed.
+2. Confirm `git status --short` (Phase 3 uncommitted unless the owner committed it; never
+   stage or commit).
+3. **Phase 4**: interface move to `connection_editor_interfaces` first (behaviour-neutral,
+   `wire gen` + `wire diff`), then the delta service, handler methods, compact live model,
+   driver flows, modal, guard test, acceptance tests, per its checklist.
+4. **Phase 5** (GUI flows), **Phase 6** (final gate, GPT-6.1 Sol implementation review,
+   review/report close-out), each per the plan.
 5. Carry the session-budget rule: at a green phase boundary, refresh this handoff rather than
    starting a phase that cannot finish.
 
@@ -1119,14 +1119,14 @@ commits, merges and releases. Native Linux and Steam Deck remain unmeasured.
 > **Batches A–L are CLOSED** (H–K merged to `master` by PR #50, `8cf9c80`; L committed as
 > `2269e73`/`85752a8`). Never revisit them.
 >
-> **Batch M is IN PROGRESS. Continue at Phase 3** of
+> **Batch M is IN PROGRESS. Continue at Phase 4** of
 > [batch-m-persistence-format.md](plans/batch-m-persistence-format.md), the source of truth:
 > owner decisions M-D1 to M-D9 and M1 to M29, design D1 to D6, the review log and the phase
 > summaries. Scoping, plan reviews (GPT-6.1 Sol, 3 rounds) and owner approval are **done**; do
-> not re-ask. Phases 0 to 2 are complete and green: the baseline (coverage floor **73.07%,
-> 5589 / 7649**), the linter bump in `tools/go.mod`, and the per-frame cloning fix plus
-> benchmarks (coverage 73.22%). All phases run end to end; the owner reviews and commits once
-> at the end (M1).
+> not re-ask. Phases 0 to 3 are complete and green: the baseline (coverage floor **73.07%,
+> 5589 / 7649**), the linter bump, the per-frame cloning fix plus benchmarks, and schema v3
+> (sections, typed lists, migration, versions; coverage 73.66%). All phases run end to end;
+> the owner reviews and commits once at the end (M1).
 >
 > Scope: review §2.5 (typed ban/override lists), §2.6 (sections `players`, `neutralZones`,
 > `castles`, `generation`, `gameRules`, `content`, `manualEdits`; identity/map/schema fields
@@ -1134,15 +1134,13 @@ commits, merges and releases. Native Linux and Steam Deck remain unmeasured.
 > into M), and one schema-v3 migration that still loads v0/v1/v2. Design input:
 > [batch-l-compact-state.md](investigations/batch-l-compact-state.md).
 >
-> **State:** branch `AD/compact_state`, HEAD `30f6fa3` (the owner committed the handoff and an
-> early plan copy mid-session; Go base unchanged since `85752a8`). Phases 0 to 2 are
-> uncommitted in the working tree (§6 lists them). The root module's `go mod tidy -diff` fails
-> at HEAD (pre-existing, recorded for the owner). The assistant performed no Git mutation;
-> preserve the owner's state exactly.
+> **State:** branch `AD/compact_state`, HEAD `ce3f173` (owner commits `58948f9` = Phases 0–2,
+> `ce3f173` = old plans removed). Phase 3 is uncommitted in the working tree. The root module's
+> `go mod tidy -diff` fails at HEAD (pre-existing, recorded for the owner). The assistant
+> performed no Git mutation; preserve the owner's state exactly.
 >
-> **Phase 3 note:** typed lists and the v3 entity switch together (no interim text
-> conversion), so the tree may be red between its sub-groups and must be green at the phase
-> end. Regenerate Wire at each constructor/provider change.
+> **Phase 4 note:** read Phase 3's implementation decisions first; decode `generatorVersion: 0`
+> snapshots against an empty base; regenerate Wire at each constructor/provider change.
 >
 > **Native Linux, Steam Deck and the race detector are UNAVAILABLE.** No in-game result is
 > claimed.

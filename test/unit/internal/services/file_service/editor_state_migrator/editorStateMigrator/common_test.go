@@ -13,6 +13,7 @@ import (
 func newMigrator() editor_state_migrator.IEditorStateMigrator {
 	return editor_state_migrator.NewEditorStateMigrator(
 		repositories.NewEditorStateRepository(),
+		repositories.NewV2EditorStateRepository(),
 		repositories.NewLegacyEditorStateRepository())
 }
 

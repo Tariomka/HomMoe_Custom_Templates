@@ -8,6 +8,7 @@ import (
 
 type (
 	AdvancedSettings    = config_inner.AdvancedSettings
+	BanEntry            = editor_state_model.BanEntry
 	BonusEntry          = editor_state_model.BonusEntry
 	BonusPresetType     = editor_state_model.BonusPresetType
 	GameEndConditions   = config_inner.GameEndConditions
@@ -15,6 +16,7 @@ type (
 	HeroSettings        = config_inner.HeroSettings
 	MapTopology         = topology.MapTopology
 	TournamentRules     = config_inner.TournamentRules
+	ValueOverrideEntry  = editor_state_model.ValueOverrideEntry
 	ZoneConfig          = config_inner.ZoneConfig
 )
 

@@ -31,7 +31,7 @@ func (this *stateHandler) LoadState(path string, fixIssues bool) (*editor_state_
 		return nil, common_errors.ErrNoOutputPath
 	}
 
-	loaded, err := this.fileService.LoadSettingsFile(path)
+	loaded, loadWarnings, err := this.fileService.LoadSettingsFile(path)
 	if err != nil {
 		return nil, err
 	}
@@ -40,6 +40,7 @@ func (this *stateHandler) LoadState(path string, fixIssues bool) (*editor_state_
 	if validation.Rejection != nil {
 		return nil, validation.Rejection
 	}
+	validation.LoadWarnings = loadWarnings
 	return &validation, nil
 }
 

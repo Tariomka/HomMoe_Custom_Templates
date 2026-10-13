@@ -86,7 +86,7 @@ func TestWhenSavedStateIsLoaded_RoundTripsState(t *testing.T) {
 	state := editor_state.EditorState{
 		SchemaVersion: editor_state.CurrentEditorStateSchemaVersion,
 		TemplateName:  gofakeit.ProductName(),
-		PlayerCount:   gofakeit.Number(2, 8),
+		Players:       editor_state.PlayerSettings{PlayerCount: gofakeit.Number(2, 8)},
 	}
 	writtenPath, err := repository.Save(t.TempDir(), "State", state)
 	require.NoError(t, err)
@@ -157,5 +157,5 @@ func TestWhenStateParentPathIsAFile_ReturnsError(t *testing.T) {
 }
 
 func newStateWithNaN() editor_state.EditorState {
-	return editor_state.EditorState{PlayerZoneSize: math.NaN()}
+	return editor_state.EditorState{Generation: editor_state.GenerationSettings{PlayerZoneSize: math.NaN()}}
 }

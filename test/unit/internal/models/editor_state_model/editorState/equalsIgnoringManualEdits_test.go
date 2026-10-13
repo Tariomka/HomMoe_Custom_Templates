@@ -228,6 +228,7 @@ func TestWhenAnyNonManualFieldIsMutated_ReportsNotEqual(t *testing.T) {
 		// Persistence metadata, not a setting: every in-memory state is at the
 		// current version because the mapper stamps it on the way through.
 		"SchemaOptions.SchemaVersion":          true,
+		"SchemaOptions.GeneratorVersion":       true,
 		"ManualEditSettings.ManualZones":       true,
 		"ManualEditSettings.ManualConnections": true,
 	}
@@ -256,7 +257,7 @@ func TestWhenTheLeafWalkIsBuilt_ReachesEveryFieldOfEveryGroup(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	expectedFieldsPerGroup := map[string]int{
-		"SchemaOptions":       1,
+		"SchemaOptions":       2,
 		"TemplateIdentity":    2,
 		"MapSettings":         2,
 		"PlayerSettings":      4,
@@ -325,7 +326,10 @@ func fuzzedEditorState() editor_state_model.EditorState {
 	state.NeutralZoneCount = gofakeit.Number(0, 16)
 	state.PlayerZoneSize = gofakeit.Float64Range(0.5, 2)
 	state.AdvancedMode = gofakeit.Bool()
-	state.BannedItems = gofakeit.LetterN(20)
+	state.BannedItems = []config.BanEntry{{Sid: gofakeit.LetterN(20)}}
+	state.ValueOverrides = []config.ValueOverrideEntry{
+		{Sid: gofakeit.LetterN(12), GuardValue: gofakeit.Number(1, 9000)},
+	}
 	state.Bonuses = []config.BonusEntry{{
 		PresetType:     config.BonusStartingGold,
 		ReceiverFilter: "start_hero",

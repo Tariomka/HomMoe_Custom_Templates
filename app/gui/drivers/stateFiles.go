@@ -2,6 +2,7 @@ package drivers
 
 import (
 	"fmt"
+	"slices"
 	"strings"
 
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/dialogs"
@@ -110,7 +111,7 @@ func (this *State) handleLoadState(path string) bool {
 		this.flagAsUnsaved()
 	}
 
-	this.SetStatus(this.describeLoadedState(path, validation.Warnings), false)
+	this.SetStatus(this.describeLoadedState(path, slices.Concat(loaded.LoadWarnings, validation.Warnings)), false)
 	return true
 }
 

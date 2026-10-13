@@ -490,7 +490,27 @@ Status: Complete
   driver test.
 
 ## Phase 3: Schema v3 with typed lists, sections, migration and versions (§2.5, §2.6, M-D5 storage, M-D6)
-Status: Not started
+Status: Complete
+
+**Implementation decisions taken in Phase 3** (binding for Phase 4):
+- Override structs are **entity-typed only** (`editor_state.ZoneFieldOverrides` /
+  `ConnectionFieldOverrides`, same JSON names as `template_entity`, `omitzero`; value fields
+  are pointers, slice/pointer fields keep their type). Diff/apply are generic reflection
+  helpers in `editor_state_model/fieldOverrides.go` (`DiffFieldOverrides`,
+  `ApplyFieldOverrides`). No separate model override tree (deviation from D2's "model types
+  over template_model field types"; Phase 4 converts model zones to entity zones to diff).
+- The all-overridden form is "diff against an empty base" (`template_entity.Zone{}`), so
+  zero values are simply omitted and decoding applies onto an empty base. Phase 4 must decode
+  `generatorVersion: 0` snapshots against the empty base, never a real derivation.
+- The live manual model is unchanged in Phase 3; entity `ManualZoneSave` /
+  `ManualConnectionSave` stay in the v3 package only because the live model embeds them
+  (Phase 4 removes them).
+- Migration warnings read `value override line N '…' is not sid=value and was dropped` /
+  `… has a non-numeric value and was dropped` (context prefix added so they read well in the
+  load message).
+- `TemplateGenerator.Generate` keeps its `(*Template, []string, error)` contract; the warning
+  list is now always empty.
+- `contentDefaultsVersion` 0 (hand-edited) falls back to the current defaults.
 
 §2.5 and §2.6 ship together so that no interim text conversion exists: legacy text is parsed
 only by `MigrateToV3`, and its warnings reach the GUI in the same phase. Manual edits are
@@ -500,39 +520,39 @@ behaviour. Wire is regenerated (`wire gen`, then `wire diff`) at every construct
 change, before building.
 
 **§2.5 typed lists**
-- [ ] Entity `BanEntry`, `ValueOverrideEntry`; model wrappers with wrap/unwrap/clone; config
+- [x] Entity `BanEntry`, `ValueOverrideEntry`; model wrappers with wrap/unwrap/clone; config
   aliases. Model `ContentSettings` typed fields; `EqualsIgnoringManualEdits` compares them
   (`slices.Equal`, nil-vs-empty as for bonuses) and the fuzz-parity test covers them; `Clone`
   deep-copies them.
-- [ ] `GeneratorConfig` typed fields; `GeneratorConfigMapper` forwards them.
-- [ ] `GameRulesProvider.CreateValueOverrides(configuration) []template_model.ValueOverride`
+- [x] `GeneratorConfig` typed fields; `GeneratorConfigMapper` forwards them.
+- [x] `GameRulesProvider.CreateValueOverrides(configuration) []template_model.ValueOverride`
   (`Variant: -1`, order and duplicates kept, no warnings) and `CreateGlobalBans` from typed lists
   (nil when both empty); its interface and every caller; the generator's warning list loses only
   the override parse warnings (which now come from the load).
-- [ ] Bonuses panel and `ValueOverridePickerDialog` / item and spell pickers work on typed
+- [x] Bonuses panel and `ValueOverridePickerDialog` / item and spell pickers work on typed
   entries; `splitNonEmptyLines`, `overrideLabel` line parsing and `overrideSids` become typed
   accessors. No text parsing remains outside `MigrateToV3`.
 
 **§2.6 sections, v3 entity, versions**
-- [ ] Freeze `editor_state_v2` (copy of today's flat entity files + `ManualZoneSave`,
+- [x] Freeze `editor_state_v2` (copy of today's flat entity files + `ManualZoneSave`,
   `ManualConnectionSave`); add `LegacyV2EditorStateRepository`; Wire provider; migrator
   constructor.
-- [ ] v3 entity per D1/D2 (tags per D1); `CurrentEditorStateSchemaVersion = 3`;
+- [x] v3 entity per D1/D2 (tags per D1); `CurrentEditorStateSchemaVersion = 3`;
   `SchemaOptions.GeneratorVersion`; `common_generator.GeneratorOutputVersion = 1`; mapper rules
   for both version fields (D2).
-- [ ] `contentDefaultsVersion`: `GetDefaultPlayerZoneContentRowsForVersion(1)` = today's table
+- [x] `contentDefaultsVersion`: `GetDefaultPlayerZoneContentRowsForVersion(1)` = today's table
   (frozen); mapper omits equal player rows, writes cleared lists as `[]`, fills absent player
   rows from the table on load.
-- [ ] Manual section: typed override structs (entity + model) with apply/diff helpers, the
+- [x] Manual section: typed override structs (entity + model) with apply/diff helpers, the
   reflection parity test (every `template_model.Zone`/`Connection` field is structure or
   overridable; the entity override structs mirror `template_entity` field-for-field),
   `ManualEditSettingsFromSnapshot` and its derivation-free inverse; the mapper uses them while
   the live model is still expanded.
-- [ ] Migrator per D5 (`MigrateToV2` → `editor_state_v2`, new `MigrateToV3`, new
+- [x] Migrator per D5 (`MigrateToV2` → `editor_state_v2`, new `MigrateToV3`, new
   `UnsupportedContentDefaultsVersionError`, warnings returned); `FileService.LoadSettingsFile`
   returns warnings; `EditorStateValidationDto.LoadWarnings`; `stateHandler.LoadState`;
   `handleLoadState` message; facade and mocks.
-- [ ] Fixtures (M22) under `test/test_helpers/testdata/`: `editorState_v3_flat.gen.json`
+- [x] Fixtures (M22) under `test/test_helpers/testdata/`: `editorState_v3_flat.gen.json`
   (all-fields), a v2 file with malformed override text, v2 with cleared player rows, a v3 file
   with `contentDefaultsVersion: 2` and one with `schemaVersion: 4`; the curated Batch L subset
   (square2p: move, add-zone, delete-zone, add-connection, delete-connection, edit-connection,
@@ -540,25 +560,25 @@ change, before building.
   delete-zone, plus the move fixture from Phase 2), `.gen.json` only, about 1.2 MB.
 
 **Tests**
-- [ ] Entry JSON; model wrap/unwrap/clone/isolation; generator config mapping;
+- [x] Entry JSON; model wrap/unwrap/clone/isolation; generator config mapping;
   `createValueOverrides_test.go` rewritten (multiple entries, duplicates, order, empty → nil,
   `Variant=-1`); `CreateGlobalBans` (items only, magics only, both empty → nil); exported
   `GlobalBans` / `ValueOverrides` identical to today's output for an equivalent legacy text.
-- [ ] v3 entity JSON: root vs sections asserted key by key (exactly the six root keys, exactly the
+- [x] v3 entity JSON: root vs sections asserted key by key (exactly the six root keys, exactly the
   seven section keys); nil vs `[]` vs `false` vs `0` in overrides and rows through real JSON
   save/load; the frozen v2 decode.
-- [ ] `MigrateToV3`: every group, typed lists (blanks, duplicates, order, each malformed kind with
+- [x] `MigrateToV3`: every group, typed lists (blanks, duplicates, order, each malformed kind with
   raw line numbers), manual snapshot → all-overridden with nil/empty, `generatorVersion` 0.
-- [ ] Migrator dispatch for v0/v1/v2/v3/4 and defaults version 2 (document unchanged); mapper
+- [x] Migrator dispatch for v0/v1/v2/v3/4 and defaults version 2 (document unchanged); mapper
   (defaults omission, cleared `[]`, version rules, absent rows → table); `FileService` /
   `stateHandler` / driver warning propagation.
-- [ ] Rewrite `editorStateWireFormat_integration_test.go` for v3 with v0/v1/v2 as inputs; extend
+- [x] Rewrite `editorStateWireFormat_integration_test.go` for v3 with v0/v1/v2 as inputs; extend
   `editorStateRoundTrip_integration_test.go`: every curated fixture loads → saves → loads to an
   identical model and a byte-stable second save; export and preview identical with the
   **scoped comparator** (deterministic layouts: full export bytes and preview layout; Random:
   raw zones and connections plus preview layout, template-level `orientation` excluded, as
   report §5 records).
-- [ ] Update `allFieldsEditorState.go` for v3.
+- [x] Update `allFieldsEditorState.go` for v3.
 
 ### Verification Plan
 - Build, vet × 3, unit, integration (both), GUI tagged suite PASS with 0 `.failure`;
@@ -567,7 +587,47 @@ change, before building.
 - Coverage run and compare to the Phase 0 floor; list each changed function's coverage.
 
 ### Phase Summary
-_(write when phase completes)_
+**Complete (2026-10-13, session 2).** Windows/amd64, go1.27.2.
+- **Format:** schema 3. Root: `schemaVersion`, `generatorVersion`, `templateName`, `gameMode`,
+  `mapSize`, `experimentalMapSizes`; sections `players`, `neutralZones`, `castles`,
+  `generation`, `gameRules`, `content`, `manualEdits` (omitted without edits). Typed
+  `bannedItems` / `bannedMagics` (`{sid}`) and `valueOverrides` (`{sid, guardValue}`);
+  `content.contentDefaultsVersion` 1; default player rows omitted, cleared lists `[]`. The
+  manual section is the C3 shape in the all-overridden form (see the decisions above).
+- **Migration:** `MigrateToV2` now targets the frozen `editor_state_v2`; `MigrateToV3` parses
+  ban/override text once (line-numbered warnings for malformed override lines) and lifts the
+  snapshot; `generatorVersion` 0. New `V2EditorStateRepository`, `UnsupportedContentDefaultsVersionError`;
+  migrator `Load` returns warnings, refused files leave the target untouched. Warnings reach
+  the GUI through `EditorStateValidationDto.LoadWarnings` and the load status message.
+- **Generator/GUI:** `GameRulesProvider` emits from typed lists (no parsing, no warnings);
+  bonuses panel and value-override picker work on typed entries. Wire regenerated (v2
+  repository provider + migrator constructor only).
+- **Deviations from the checklist wording:** (1) no separate model override types (entity-typed
+  overrides + reflection helpers, see decisions); (2) the curated round trip checks
+  load → save → load model equality and byte-stable second saves for all 14 curated fixtures;
+  the export/preview comparators are not added in Phase 3 because the live model and the
+  reapply path are unchanged (model equality implies identical export), they arrive with the
+  semantic change in Phase 4; (3) no separate malformed-text / cleared-rows / defaults-2 /
+  schema-4 fixture files: those cases are covered by inline-JSON unit tests and by patching the
+  v3 fixture in the wire-format test; (4) the new round-trip tests live in a new file
+  `editorStateCuratedRoundTrip_integration_test.go` (untagged).
+- **Test fallout fixed:** construction-scan rule (no builder-owned entity literals in
+  production: zero-value bases instead), tournament patch helpers now edit the `gameRules`
+  section, guiHandler round trip expects the stamped generator version, migrator/v1ToV2/
+  repository/fileService/stateHandler/mapper/content/manual tests reshaped for v3.
+- **New tests:** `fieldOverrides/` (diff + apply + the two parity guards), `banEntry/`,
+  `valueOverrideEntry/`, `getDefaultPlayerZoneContentRowsForVersion`, `needsDerivation`,
+  mapper version rules and sections, `v2ToV3/migrateToV3`, migrator `load_test` rewritten (34
+  cases), `v2EditorStateRepository/`, `unsupportedContentDefaultsVersionError/`, stateHandler
+  `LoadWarnings`, fileService warnings, wire-format test rewritten for v3, curated round trip.
+  Fixtures: `editorState_v3_flat.gen.json` (written once through the production repository by
+  a throwaway program, deleted) and 13 curated v2 fixtures (about 1.2 MB with the Phase 2 one).
+- **Gates:** build, vet × 3 PASS; unit PASS; coverage **73.66% (5751 / 7807)**, floor 73.07%;
+  every new function 100% except `drivers.handleLoadState` (GUI path, 0% in unit coverage as
+  before; exercised by integration); `./test/...` PASS; tagged integration PASS; tagged GUI
+  PASS, **0 `.failure`, no golden moved**; testlayoutcheck PASS; gofmt clean; lint 0 (after
+  `--fix` for gofmt/gci/golines/embedlit and manual `funcorder`, `gochecknoglobals`,
+  `copyloopvar`); `wire diff` clean.
 
 ## Phase 4: C3 semantics and §1.16 (M-D1 to M-D5)
 Status: Not started

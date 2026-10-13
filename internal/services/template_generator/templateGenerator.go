@@ -58,10 +58,6 @@ func (this *TemplateGenerator) SetConfiguration(configuration *config.GeneratorC
 	}
 }
 
-// Generate builds the template for the current configuration and returns it,
-// with the tier the zone factory planned recorded on every neutral and hub
-// zone, plus the warnings raised while parsing the configuration's free-text
-// fields. It fails when the configured topology has no generator.
 func (this *TemplateGenerator) Generate() (*template_model.Template, []string, error) {
 	this.configuration.EnsureNameExists()
 	playerLabels := this.zoneLabelProvider.CreatePlayerLabels(this.configuration.PlayerCount)
@@ -74,7 +70,7 @@ func (this *TemplateGenerator) Generate() (*template_model.Template, []string, e
 		return nil, nil, err
 	}
 
-	valueOverrides, warnings := this.gameRulesProvider.CreateValueOverrides(*this.configuration)
+	valueOverrides := this.gameRulesProvider.CreateValueOverrides(*this.configuration)
 	generated := template_model.Template{
 		Name:                this.configuration.TemplateName,
 		GameMode:            this.configuration.GameMode,
@@ -102,7 +98,7 @@ func (this *TemplateGenerator) Generate() (*template_model.Template, []string, e
 		RemoteFootholdCount:  this.configuration.RemoteFootholdCount,
 	})
 
-	return &generated, warnings, nil
+	return &generated, nil, nil
 }
 
 func (this *TemplateGenerator) createTemplateDescription(neutralCount int) string {
