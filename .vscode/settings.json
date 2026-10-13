@@ -93,7 +93,7 @@
         "--fix",
     ],
     "go.formatTool": "custom",
-    "go.alternateTools": { "customFormatter": "golangci-lint-v2" },
+    "go.alternateTools": { "customFormatter": "golangci-lint" },
     "go.formatFlags": ["fmt", "--stdin"],
     "go.testFlags": [ "-count=1", "-v", ],
     "go.inlayHints.assignVariableTypes": false,

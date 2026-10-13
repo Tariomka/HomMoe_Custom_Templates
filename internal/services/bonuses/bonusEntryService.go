@@ -50,6 +50,9 @@ func (this *BonusEntryService) BuildBonusEntries(
 		}
 
 		return singleEntry(request, id)
+	case config.BonusStartingGold, config.BonusStartingGems, config.BonusStartingCrystals,
+		config.BonusStartingMercury, config.BonusStartingWood, config.BonusStartingOre:
+		fallthrough
 	default:
 		return numericEntry(request, request.ResourceText, "Enter a numeric amount.")
 	}

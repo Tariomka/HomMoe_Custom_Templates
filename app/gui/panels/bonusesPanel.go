@@ -341,6 +341,9 @@ func bonusDotColor(typ config.BonusPresetType) color.NRGBA {
 		return themes.ColorsDotCategories.Movement
 	case config.BonusStartingItem:
 		return themes.ColorsDotCategories.Set
+	case config.BonusStartingGold, config.BonusStartingGems, config.BonusStartingCrystals,
+		config.BonusStartingMercury, config.BonusStartingWood, config.BonusStartingOre:
+		fallthrough
 	default:
 		return themes.ColorsDotCategories.Resource
 	}

@@ -183,7 +183,10 @@ func (this *BonusPickerDialog) getEditorWidget(
 				layout.Rigid(widgets.NewButtonWidget(theme, "Pick item", &this.pickItemBtn, this.opener == nil)),
 			)
 		}
-	default: // resources
+	case config.BonusStartingGold, config.BonusStartingGems, config.BonusStartingCrystals,
+		config.BonusStartingMercury, config.BonusStartingWood, config.BonusStartingOre:
+		fallthrough
+	default:
 		return widgets.NewLabeledRowWidget(theme, "Amount", 90,
 			widgets.NewTextboxWidget(theme, &this.resourceEdit, "0", false))
 	}
