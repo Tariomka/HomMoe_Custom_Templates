@@ -195,7 +195,7 @@ When orchestrating subagents, pick the model per task using these ratings
 | kimi-k3           | 7    | 7            | 7     |
 | grok-4.7          | 8    | 6            | 5     |
 | claude-opus-5     | 4    | 6.5          | 7     |
-| claude-sonnet-5.5 | 6    | 7            | 5     |
+| claude-sonnet-5.5 | 6    | 5            | 5     |
 
 
 Application directives:
