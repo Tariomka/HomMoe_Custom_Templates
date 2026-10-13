@@ -1,24 +1,48 @@
-# Carry-forward: Batch L (compact-state investigation) delivered; owner decision gate open
+# Carry-forward: next batch is M (coordinated persistence format, review §2.4 + §2.5 + §2.6 + §1.16)
 
-Date: 2026-10-12.
+Date: 2026-10-13.
 
-**Batch L (review §2.4 / O11) is DELIVERED and awaits the owner's decisions.** It was an
-investigation only: no production Go, schema, fixture, Wire or output-path change.
-- Branch `AD/compact_state`, owner HEAD `45876cf`. Base: `8cf9c80` on `master` = PR #50, which
-  merged H, I and K. On top of it are the owner's commits `a9ae09c` (go 1.27.2, Gio 0.10.3,
-  dependency bumps) and `45876cf` (the Batch L plan, linter renamed to `golangci-lint`).
-- **Deliverable:** [batch-l-compact-state.md](investigations/batch-l-compact-state.md), with
-  measurements, prototypes A/B/C1/C2/C3/D, a lossless-omission table, §2.5/§2.6
-  coordination, acceptance tests, a recommendation (C3) and 7 decisions requested (its §15).
-- **Plan / record:** [batch-l-compact-state-investigation.md](plans/batch-l-compact-state-investigation.md)
-  holds decisions L1–L13 and every phase summary.
-- **New review item §1.16 🔴** (owner-classified bug): manual snapshots silently override
-  later zone-affecting settings. A new §9 row Q covers it. Review totals: 33 actionable
-  (9/17/7); 24 fixed, 9 remaining (1 High, 5 Medium, 3 Low).
-- **Baseline changed by toolchain, owner-adopted:** coverage **73.0% (5587 / 7646)** under
-  go1.27.2 (same code as Batch K's 73.2%). The local `golangci-lint` is **v2.14.0** and gives
-  **8 pre-existing `exhaustive` findings**. `tools/go.mod` still pins v2.13.1 for CI: the
-  owner should reconcile this.
+**Batch L is CLOSED** (owner commits `2269e73` and `85752a8` on `AD/compact_state`). Its
+report [batch-l-compact-state.md](investigations/batch-l-compact-state.md) is the design input
+for M. Read it in full before planning.
+
+**The owner answered the report's §15 decision gate on 2026-10-13.** These are binding inputs
+for Batch M's plan:
+
+| ID | Decision |
+| --- | --- |
+| M-D1 | Representation: **C3**. Store the structure (zone name, tier, generator position and ring, manual position; `origin: added` + castle count for editor-made zones; connection name, endpoints, type, `isUserAdded`). Everything else is derived from the current settings and generator and stored only as `fieldOverrides` / `unset` when it differs. Roads are ordinary overrides (needed for Random). Report §7, §10. |
+| M-D2 | Old full snapshots migrate as **"derived when equal at first save"**: size win at once, converted fields start following settings, with a **one-time notice**. |
+| M-D3 | Override semantics: **value difference** at save time, as prototyped (no explicit editor flags). A user who types the default back gets "derived". |
+| M-D4 | **§1.16 is fixed inside M via C3**: rebuilt fields follow settings, user-set fields persist. Batch Q folds into M; the review's §9 Q row must say so. |
+| M-D5 | In scope: persist **`generatorVersion`** plus a "derived values changed since this file was saved" notice. |
+| M-D6 | In scope: **omit default content rows** (equal to `GetDefaultPlayerZoneContentRows`) behind a **defaults version**. |
+| M-D7 | In scope: the **live per-frame cloning fix** (80 µs / 201 KB per idle frame with a 6-player snapshot; report §4, §12.3). |
+| M-D8 | In scope: **bump `tools/go.mod` golangci-lint v2.13.1 → v2.14.0** (CI's single source, Batch H). |
+| M-D9 | **Out of scope:** compact (unindented) JSON. Writing stays indented. |
+
+**Still unchanged:** the review §8 retained decisions §2.5/O12 and §2.6/O13 (typed ban/override
+entries following `BonusEntry`, `Variant=-1`; sections with `TemplateIdentity`, `MapSettings`
+and `SchemaOptions` flat at the root), and **one** coordinated migration that keeps loading
+every supported older schema.
+
+**Current state (owner HEAD `85752a8`, clean tree, branch `AD/compact_state`):**
+- `85752a8` also changed lint: `.golangci.yml` stops `exhaustive` checking maps, and four Go
+  files gained switch cases (`bonusPickerDialog.go`, `bonusesPanel.go`,
+  `bonusEntryService.go`, `zoneLabelProvider.go`).
+- Verified 2026-10-13: build PASS; `golangci-lint` v2.14.0 **0 issues**.
+- **Coverage was not re-measured after those Go edits.** The last figure is 73.0%
+  (5587 / 7646) at `45876cf` under go1.27.2. Recapture before M's first Go edit.
+- Toolchain go1.27.2. The local linter binary is `golangci-lint` (no `-v2`).
+- Review totals: 33 actionable (9/17/7); 24 fixed, 9 remaining (1 High, 5 Medium, 3 Low).
+- §2.4 stays open until M implements it.
+- The Batch L probe sources and the 44 frozen fixtures are in gitignored
+  `.agent/memories/batch-l/` (`probe-src/`, `fixtures/`). They are reusable for M's
+  comparators and acceptance tests.
+
+**Batch L (review §2.4 / O11), for the record:** investigation only, with no production
+change. Decisions L1–L13 and every phase summary are in
+[batch-l-compact-state-investigation.md](plans/batch-l-compact-state-investigation.md).
 
 **Batch K (review §2.3 / O08) is CLOSED.** It was owner-committed as **`1ee746b`** (Phase 1)
 and **`27b2933`** (Phases 2–4), with the plan in `d50f34d`. The owner reviewed everything and
@@ -44,7 +68,15 @@ else §8 retains as later scope remains **binding**. Do not edit §8.
 
 ## 1. Session goal
 
-**This session (Batch L):** investigate §2.4 end to end:
+**Next session (Batch M):** plan, and only after approval implement, the coordinated
+persistence format:
+- §2.5: typed ban and value-override lists;
+- §2.6: sectioned editor state;
+- the §2.4 C3 manual-edit representation, which also fixes §1.16;
+- schema v3 with one migration;
+- the M-D5 to M-D8 extras.
+
+**Previous session goal (Batch L):** investigate §2.4 end to end:
 - ask the owner (L1–L13);
 - plan, get a GPT-6.1 Sol review, owner approval;
 - baseline;
@@ -747,23 +779,19 @@ in-game behaviour.
 
 ## 6. Git status snapshot
 
-The branch is **`AD/compact_state`** (the owner created it) and HEAD is **`45876cf`**. Newest
-first:
+The branch is **`AD/compact_state`** and HEAD is **`85752a8`**. Newest first:
+- `85752a8` ("Batch L completed": Batch L docs, `.golangci.yml` stops `exhaustive` checking
+  maps, switch cases added in 4 Go files, VS Code formatter renamed to `golangci-lint`)
+- `2269e73` (Batch L docs)
 - `45876cf` ("Update": Batch L plan, linter rename)
 - `a9ae09c` ("Package updates": go 1.27.2, deps)
 - `8cf9c80` (PR #50, H/I/K; = `master`)
 
-`git status --short`:
+Not yet merged to `master`.
 
-```
- M .agent/backlog/review-gpt-6-astra-09-07.md
- M .agent/plans/batch-l-compact-state-investigation.md
-?? .agent/investigations/batch-l-compact-state.md
-```
-
-This handoff is modified too. `.agent/memories/` and `tmp/` are gitignored. **The assistant
-performed no staging, unstaging, commit, push, stash, branch switch or worktree change.** The
-probe was deleted with `Remove-Item`.
+`git status --short` at handoff: only this handoff is modified (the owner commits it).
+`.agent/memories/` and `tmp/` are gitignored. **The assistant performed no staging,
+unstaging, commit, push, stash, branch switch or worktree change.**
 
 ## 7. Rejections / things the user declined
 
@@ -934,39 +962,72 @@ Other pending decisions: arena/manual invalidation and effective-mode aliases (�
 
 ## 9. Next recommended actions
 
-**Batch L is delivered; its decision gate is open.** Owner-only actions:
-- review and commit the report, plan, review and handoff edits;
-- answer the report's §15 decisions:
-  1. representation (C3 recommended / D / A / B);
-  2. migration of old snapshots;
-  3. override semantics;
-  4. the §1.16 route;
-  5. `generatorVersion`;
-  6. the quick wins;
-  7. a live-cloning item;
-- reconcile the local linter v2.14.0 with the `tools/go.mod` pin v2.13.1 (CI);
-- optionally fix the two pre-existing broken review links.
+**Next batch: M.** Its scope is the top of this handoff (M-D1 to M-D9) plus review §2.5,
+§2.6, §2.4 and §1.16. Batches N, O and P remain independent and are not part of M.
 
-**After the decisions:**
-- If the owner approves a §2.4 representation, Batch **M** (§2.5 + §2.6 + the approved §2.4
-  format) becomes **one** coordinated migration (v3, a frozen v2 entity package).
-- Batch **Q** (§1.16) is scheduled with or after it, or as an approved lossy stop-gap.
-- Batches N, O and P remain independent.
+**M is large. Propose phasing in the plan** and let the owner approve it. A candidate split,
+not yet decided:
+1. tooling (M-D8);
+2. live-cloning fix (M-D7; independent of the format);
+3. §2.5 typed lists in the model and config;
+4. C3 model, derivation services and a determinism-contract test;
+5. §2.6 sections + the v3 entity + a frozen v2 package + the migration (M-D2, M-D5, M-D6);
+6. GUI notices and regression flows;
+7. the review/report close-out.
+
+Each phase leaves the tree green.
+
+**Open questions the next session must ask before writing the plan** (do not decide alone):
+- Phasing and commit points (above); whether M spans several sessions.
+- Exact v3 JSON section keys (§2.6 asks for a proposal in lower camel case) and C3 key names
+  (`fieldOverrides`, `unset`, `origin`, `castles`, `generatorVersion`; report §10 is only
+  illustrative).
+- **Live model under C3** (report §7 "Live state under C"): keep expanded zones live and
+  only persist compactly, or hold the compact form live and expand on demand. This interacts
+  with M-D7.
+- **Where derivation runs:** a service that regenerates and matches by name, as prototyped;
+  layering (report §11.6); how the zone editor, regeneration, reapply and preview consume it.
+- **When overrides are computed:** at save, at every apply, or both. How dirty tracking and
+  Revert-to-Base behave (report §9).
+- **The one-time migration notice (M-D2) and the "derived values changed" notice (M-D5):**
+  wording, trigger, where they show, and whether either blocks.
+- **`generatorVersion` source:** the build's `main.version`, or a separate generator-format
+  constant. What counts as a change.
+- **Defaults-version mechanism (M-D6):** where the version lives, and what happens when a
+  saved defaults version is older or unknown.
+- **§1.16 regressions:** one per stale setting in report §6, including advanced-mode guard
+  randomization; the castle and no-op controls.
+- **§2.5 malformed-text handling** at the UI and legacy boundaries (warnings delivery, as
+  §2.5 requires).
+- **Test data:** whether to commit a curated subset of the Batch L fixtures, plus a large
+  hub-layout v2 fixture, under `test/test_helpers/testdata/`.
+- **Coverage expectation** for a batch this size, and whether any GUI goldens may move.
+- **Linter bump:** run tidy in `tools/` only (Batch H rule H3); accept forced indirect bumps.
 
 Routing for the next session, in order:
-1. Read [AGENTS.md](../AGENTS.md), this handoff, the Batch L report and the chosen review item
-   and its §9 row.
-2. Inspect the current code yourself. Delegate the inventory to a cheap read-only subagent.
-3. Ask the owner every open decision, summarize the scope, and get approval.
+1. Read [AGENTS.md](../AGENTS.md), this handoff, the
+   [Batch L report](investigations/batch-l-compact-state.md) (especially §6, §7, §9–§13),
+   and review §1.16, §2.4, §2.5, §2.6 and §9 rows L, M and Q.
+2. Inspect the current code yourself, and delegate the inventory to a cheap read-only
+   subagent:
+   - the editor-state entity/model/mapper/migrator/repository chain;
+   - the content settings strings and `gameRulesProvider` parsing;
+   - the manual-edit flow (`stateManualEdits.go`, `stateGeneration.go`, `UpdateTemplate`,
+     `ManualReapplyService`);
+   - the `AutoRegenerate` clone path;
+   - the wire-format tests and fixtures.
+3. Ask the owner the open questions above, summarize the scope, and get approval.
 4. Write a durable plan under `.agent/plans/`, get an independent review (GPT-6.1 Sol) and
-   explicit approval, and capture a fresh baseline before the first Go edit. The baseline is
-   now **73.0% (5587 / 7646)** under go1.27.2, plus 8 `exhaustive` lint findings with the
-   local v2.14.0.
+   explicit approval, and capture a **fresh** baseline (coverage, build, unit, integration,
+   GUI, testlayoutcheck, lint, `wire diff`) before the first Go edit.
+5. In the first M close-out, update review §2.4 (decision recorded), the §9 Q row (folded
+   into M) and report §15 (answered).
 
 **Reusable Batch L assets** (gitignored `.agent/memories/batch-l/`):
-- the probe sources (`probe-src/`), with comparators, fixture builder and prototypes;
-- the frozen 44-fixture matrix (`fixtures/`), which future acceptance tests can copy into
-  `test/` if the owner wants.
+- `probe-src/`: comparators (raw snapshot, export bytes, preview), the fixture builder on
+  the real driver, the determinism and L6 harnesses, and the C3 prototype;
+- `fixtures/`: 44 frozen `.gen.json` files, each with `.base.rmg.json` and
+  `.final.rmg.json`.
 
 **Recorded, not assigned (Batch K):**
 - `SaveState` and `UpdateTemplate` do not validate;
@@ -975,32 +1036,49 @@ Routing for the next session, in order:
 - the pre-existing `common_topologies/topologies/` test folder does not mirror
   `topologyDescriptors.go`.
 
-**Deployment.** Nothing is deployed and nothing is authorized to be. Batch L changed no code.
-The owner alone stages, commits, merges and releases. Native Linux and Steam Deck remain
-unmeasured.
+**Recorded, not assigned (Batch L):**
+- for the Random topology, reapply takes `orientation` from the fresh generation;
+- two pre-existing broken links in the review, and a placeholder plus the deleted Batch I
+  plan in this handoff.
+
+**Deployment.** Nothing is deployed and nothing is authorized to be. The owner alone stages,
+commits, merges and releases. Native Linux and Steam Deck remain unmeasured.
 
 ## 10. Carry-forward prompt
 
 > Read [AGENTS.md](../AGENTS.md) first, then [this handoff](session-carry-forward.md). It is
 > self-contained.
 >
-> **Batches A–K are CLOSED** (H–K merged to `master` by PR #50, `8cf9c80`). Never revisit them.
-> **Batch L (§2.4) is DELIVERED**: the report
-> [batch-l-compact-state.md](investigations/batch-l-compact-state.md) recommends C3
-> (structure + derived-field overrides) and lists 7 decisions. **No representation, seed,
-> delta or migration work is authorized until the owner decides.** The new review item
-> **§1.16 🔴** (snapshot overrides later zone-affecting settings) is batch Q. The review reads
-> 24 fixed, 9 remaining (1 High, 5 Medium, 3 Low).
+> **Batches A–L are CLOSED** (H–K merged to `master` by PR #50, `8cf9c80`; L committed as
+> `2269e73`/`85752a8`). Never revisit them.
 >
-> **State:** branch `AD/compact_state`, HEAD `45876cf`. The working tree holds only Batch L
-> docs (the review, the plan, the new report, this handoff). The assistant performed no Git
-> mutation; preserve the owner's state exactly.
+> **Next: Batch M.** It is the coordinated persistence format:
+> - review §2.5 (typed ban/override lists);
+> - §2.6 (sections; identity/map/schema fields stay at the root);
+> - the §2.4 **C3** manual-edit representation, which fixes **§1.16**; Q folds into M;
+> - one schema-v3 migration that still loads every supported older schema.
 >
-> **Next work:** the owner's Batch L decisions, then M (§2.5/§2.6 + the approved §2.4 format
-> as one migration) and Q, or N/O/P. Follow the routing in §9: read, inspect, ask, summarize,
-> plan, independent review (GPT-6.1 Sol), plan approval, and a fresh baseline (73.0%,
-> 5587 / 7646 under go1.27.2; lint = 8 pre-existing `exhaustive` findings with local
-> `golangci-lint` v2.14.0) before the first Go edit.
+> The owner's binding decisions **M-D1 to M-D9** are at the top of this handoff:
+> - C3 itself;
+> - "derived when equal" migration with a one-time notice;
+> - value-difference overrides;
+> - `generatorVersion` with a changed-values notice;
+> - default-row omission behind a defaults version;
+> - the live per-frame cloning fix;
+> - a linter bump to v2.14.0 in `tools/go.mod`;
+> - compact JSON out of scope.
+>
+> The design input is [batch-l-compact-state.md](investigations/batch-l-compact-state.md).
+> **Ask the §9 open questions before planning**; propose phasing.
+>
+> **State:** branch `AD/compact_state`, HEAD `85752a8`, clean except this handoff. Build PASS;
+> `golangci-lint` v2.14.0 reports 0 issues (`85752a8` stopped `exhaustive` checking maps).
+> Coverage was last 73.0% (5587 / 7646) at `45876cf`, go1.27.2; **recapture it**, because
+> `85752a8` touched 4 Go files. The assistant performed no Git mutation; preserve the owner's
+> state exactly.
+>
+> Follow the routing in §9: read, inspect, ask, summarize, plan, independent review (GPT-6.1
+> Sol), plan approval, and a fresh full baseline before the first Go edit.
 >
 > **Native Linux, Steam Deck and the race detector are UNAVAILABLE.** No in-game result is
 > claimed.
@@ -1032,12 +1110,12 @@ unmeasured.
 >   fake unit seams.
 > - Keep plans durable and resumable.
 >
-> **Out of scope** unless the owner selects that batch: direct `GeneratorConfig` rejection, DTO
-> cleanup, schema and package work beyond the selected batch, allocation tuning, and every
-> settled alternative in §7. §8 stays verbatim. Its Batch C wording, its pending-decision
+> **Out of scope** for M: compact JSON (M-D9), Batches N/O/P, direct `GeneratorConfig`
+> rejection, unrelated DTO cleanup, the RMG output schema, the output path, and every settled
+> alternative in §7. §8 stays verbatim. Its Batch C wording, its pending-decision
 > wording for §1.5, §1.11, §1.12, §2.1 and §6.2/§6.3/§6.5, its §2.2 bullet and its §2.3/O08
-> retained decision are now delivered or superseded; its other retained later-scope decisions
-> remain binding.
+> retained decision are delivered or superseded. Its §2.4/O11 bullet is now answered by
+> M-D1 to M-D7. Its other retained later-scope decisions remain binding.
 >
 > **Preserve:**
 > - explicit Portal Road `false`/`nil` and valid approaches;
