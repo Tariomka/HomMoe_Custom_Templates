@@ -163,13 +163,26 @@ func (this *State) getPreviousStateDto() *editor_state_dto.EditorStateDto {
 	return &editor_state_dto.EditorStateDto{EditorState: *state}
 }
 
-func (this *State) getNextStateDto() *editor_state_dto.EditorStateDto {
-	state := this.innerState.GetNextState()
-	if state == nil {
+func (this *State) getPreviousSettingsDto() *editor_state_dto.EditorStateDto {
+	settings := this.innerState.GetPreviousSettings()
+	if settings == nil {
 		return nil
 	}
 
-	return &editor_state_dto.EditorStateDto{EditorState: *state}
+	return &editor_state_dto.EditorStateDto{EditorState: *settings}
+}
+
+func (this *State) getCurrentSettingsDto() *editor_state_dto.EditorStateDto {
+	return &editor_state_dto.EditorStateDto{EditorState: this.innerState.GetCurrentSettings()}
+}
+
+func (this *State) getNextSettingsDto() *editor_state_dto.EditorStateDto {
+	settings := this.innerState.GetNextSettings()
+	if settings == nil {
+		return nil
+	}
+
+	return &editor_state_dto.EditorStateDto{EditorState: *settings}
 }
 
 func (this *State) flagAsUnsaved() {

@@ -27,9 +27,9 @@ func (this *State) SaveTemplate() { this.handleSaveTemplate() }
 // input.
 func (this *State) AutoRegenerate(now time.Time) (redrawAt time.Time, scheduleRedraw bool) {
 	decision := this.regeneration.DecideRegeneration(dtos.RegenerationDecisionRequestDto{
-		Previous:      this.getPreviousStateDto(),
-		Current:       new(this.GetStateDto()),
-		Next:          this.getNextStateDto(),
+		Previous:      this.getPreviousSettingsDto(),
+		Current:       this.getCurrentSettingsDto(),
+		Next:          this.getNextSettingsDto(),
 		Now:           now,
 		DebounceDueAt: this.applyNextStateAt,
 	})
@@ -122,10 +122,6 @@ func (this *State) applyGeneratedTemplate(template *template_model.Template) {
 	this.innerState.SnapshotCurrentState()
 }
 
-// clearGeneratedState forgets the last generated template, used when a
-// brand-new or loaded settings file replaces the current one. Manual edits
-// need no separate handling: they live inside the editor state itself, which
-// the caller is replacing.
 func (this *State) clearGeneratedState() {
 	this.setLastTemplate(nil)
 }

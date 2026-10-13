@@ -73,7 +73,15 @@ func NewDefaultEditorStateModel() EditorState {
 }
 
 func (this *EditorState) Clone() EditorState {
+	clone := this.CloneWithoutManualEdits()
+	clone.ManualZones = linq.SelectSlice(this.ManualZones, template_model.Zone.Clone)
+	clone.ManualConnections = linq.SelectSlice(this.ManualConnections, ManualConnectionSave.Clone)
+	return clone
+}
+
+func (this *EditorState) CloneWithoutManualEdits() EditorState {
 	clone := *this
+	clone.ManualEditSettings = ManualEditSettings{}
 
 	clone.Bonuses = slices.Clone(this.Bonuses)
 	clone.PlayerZoneContentRows = CloneZoneContentRows(this.PlayerZoneContentRows)
@@ -82,9 +90,6 @@ func (this *EditorState) Clone() EditorState {
 	clone.MediumNeutralContentRows = CloneZoneContentRows(this.MediumNeutralContentRows)
 	clone.HighNeutralContentRows = CloneZoneContentRows(this.HighNeutralContentRows)
 	clone.HubZoneContentRows = CloneZoneContentRows(this.HubZoneContentRows)
-
-	clone.ManualZones = linq.SelectSlice(this.ManualZones, template_model.Zone.Clone)
-	clone.ManualConnections = linq.SelectSlice(this.ManualConnections, ManualConnectionSave.Clone)
 
 	return clone
 }

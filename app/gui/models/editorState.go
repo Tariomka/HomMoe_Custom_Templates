@@ -36,6 +36,11 @@ func (this *EditorState) GetCurrentState() editor_state_model.EditorState {
 	return this.current.Clone()
 }
 
+// GetCurrentSettings returns the current state without any manual changes.
+func (this *EditorState) GetCurrentSettings() editor_state_model.EditorState {
+	return this.current.CloneWithoutManualEdits()
+}
+
 func (this *EditorState) GetTemplateName() string { return this.current.TemplateName }
 
 func (this *EditorState) GetMapSize() int { return this.current.MapSize }
@@ -79,6 +84,15 @@ func (this *EditorState) GetPreviousState() *editor_state_model.EditorState {
 	return &previousState
 }
 
+func (this *EditorState) GetPreviousSettings() *editor_state_model.EditorState {
+	if this.previous == nil {
+		return nil
+	}
+
+	previousSettings := this.previous.CloneWithoutManualEdits()
+	return &previousSettings
+}
+
 func (this *EditorState) GetNextState() *editor_state_model.EditorState {
 	if this.next == nil {
 		return nil
@@ -86,6 +100,15 @@ func (this *EditorState) GetNextState() *editor_state_model.EditorState {
 
 	nextState := this.next.Clone()
 	return &nextState
+}
+
+func (this *EditorState) GetNextSettings() *editor_state_model.EditorState {
+	if this.next == nil {
+		return nil
+	}
+
+	nextSettings := this.next.CloneWithoutManualEdits()
+	return &nextSettings
 }
 
 func (this *EditorState) ResetNextState() { this.next = nil }

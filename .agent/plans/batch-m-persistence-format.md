@@ -68,6 +68,9 @@ stash or switch branches.
 | M23 | Coverage total ≥ the Phase 0 baseline; every new or changed function covered on every reachable branch (GUI-only code recorded in `test_observations.md`). Bonuses-panel and zone-editor goldens unchanged; the modal adds goldens; any other moved golden is explained and approved at the end. |
 | M24 | Plan and implementation reviews by GPT-6.1 Sol. |
 | M25 | Scope confirmed complete. |
+| M27 | **Plan approved** by the owner (2026-10-13) after the round-3 review; Phase 0 authorized. |
+| M28 | The conservative pending-baseline rule (D4) is accepted; no baseline is persisted. |
+| M29 | The dialog's Undo baseline keeps `IsUserAdded` (two clearing lines removed, D3b). |
 
 ### Out of scope
 Compact JSON (M-D9); Batches N, O, P; direct `GeneratorConfig` rejection; unrelated DTO
@@ -358,67 +361,90 @@ Driver (`app/gui/drivers/`):
   version M and may differ."
 
 ## Phase 0: Baseline
-Status: Not started
+Status: Complete
 
-- [ ] Confirm branch `AD/compact_state`, HEAD `85752a8`, `git status --short` (only the handoff
+- [x] Confirm branch `AD/compact_state`, HEAD `85752a8`, `git status --short` (only the handoff
   and this plan expected).
-- [ ] `golangci-lint cache clean`.
-- [ ] `go build ./...`; `go vet ./...` with no tag, `-tags=integration_test`,
+- [x] `golangci-lint cache clean`.
+- [x] `go build ./...`; `go vet ./...` with no tag, `-tags=integration_test`,
   `-tags='integration_test,gui'`.
-- [ ] Coverage: `go test -count=1 '-coverpkg=./internal/...,./app/...' '-coverprofile=.agent/memories/batch-m/baseline/coverage.txt' ./test/unit/...`
+- [x] Coverage: `go test -count=1 '-coverpkg=./internal/...,./app/...' '-coverprofile=.agent/memories/batch-m/baseline/coverage.txt' ./test/unit/...`
   then `go tool cover '-func=…'` (recapture; the last figure 73.0% predates `85752a8`).
-- [ ] `go test ./test/... -count=1`; `go test -tags=integration_test ./test/integration/... -count=1`;
+- [x] `go test ./test/... -count=1`; `go test -tags=integration_test ./test/integration/... -count=1`;
   `go test -tags='integration_test,gui' ./test/integration/gui/... -count=1` (record `.failure`
   count, must be 0).
-- [ ] GPU-free benchmarks: `go test '-bench=.' '-run=xxx' ./test/performance/... '-benchtime=20x' '-timeout=120s'`.
-- [ ] `go run ./cmd/testlayoutcheck .`; `gofmt -l .` (excluding `data/`); `wire diff ./internal/composition/...`.
-- [ ] `golangci-lint run ./... --issues-exit-code=0`, check `$LASTEXITCODE`.
-- [ ] Save all outputs under `.agent/memories/batch-m/baseline/`.
+- [x] GPU-free benchmarks: `go test '-bench=.' '-run=xxx' ./test/performance/... '-benchtime=20x' '-timeout=120s'`.
+- [x] `go run ./cmd/testlayoutcheck .`; `gofmt -l .` (excluding `data/`); `wire diff ./internal/composition/...`.
+- [x] `golangci-lint run ./... --issues-exit-code=0`, check `$LASTEXITCODE`.
+- [x] Save all outputs under `.agent/memories/batch-m/baseline/`.
 
 ### Verification Plan
 - Every command exits 0; lint 0 issues; 0 `.failure` files; `wire diff` empty. Record the
   coverage total as M23's floor. Any red result stops the batch and is reported.
 
 ### Phase Summary
-_(write when phase completes)_
+**Complete (2026-10-13), Windows/amd64, go1.27.2.**
+- HEAD moved during planning: the owner committed `e47d5d1` (handoff) and `30f6fa3` (an earlier
+  copy of this plan). Both are docs-only; `git diff 85752a8 e47d5d1 -- '*.go'` is empty, so the
+  Go base is still `85752a8`. Working tree: only this plan modified.
+- Build and vet × 3 (no tag, `integration_test`, `integration_test,gui`) exit 0.
+- **Coverage floor (M23): 73.0%, deduplicated 5589 / 7649 (73.07%).** The `85752a8` switch
+  cases added 3 statements and 2 covered ones versus Batch L's 5587 / 7646.
+- `./test/...` PASS; tagged integration PASS; tagged GUI PASS (38 s wall, package 32.9 s),
+  **0 `.failure`**.
+- GPU-free benchmarks PASS; testlayoutcheck PASS; `gofmt -l` clean; `wire diff` clean.
+- Lint: `golangci-lint` v2.14.0 (go1.27.2) after a cache clean: **0 issues**, exit 0.
+- Artifacts: `.agent/memories/batch-m/baseline/` (coverage profile and function report, test
+  logs, bench log, lint log).
 
 ## Phase 1: Linter bump (M-D8)
-Status: Not started
+Status: Complete
 
-- [ ] In `tools/` only: `go get github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.14.0`
+- [x] In `tools/` only: `go get github.com/golangci/golangci-lint/v2/cmd/golangci-lint@v2.14.0`
   then `go mod tidy`; accept MVS-forced indirect changes (H3). `wire`, `gcov2lcov`, `go` line and
   the `tool` block unchanged.
-- [ ] `git ls-files --eol tools/go.mod tools/go.sum` stays `i/lf w/lf`.
-- [ ] `go list -m` in `tools/` reports v2.14.0 (the CI step reads this).
+- [x] `git ls-files --eol tools/go.mod tools/go.sum` stays `i/lf w/lf`.
+- [x] `go list -m` in `tools/` reports v2.14.0 (the CI step reads this).
 
 ### Verification Plan
 - `go mod tidy -diff` exits 0 in root and `tools/`; lint 0 issues; `go build ./...` PASS.
 - No Go source changes in this phase, so no coverage run (the only phase without one).
 
 ### Phase Summary
-_(write when phase completes)_
+**Complete (2026-10-13).**
+- `tools/go.mod`: golangci-lint v2.13.1 → **v2.14.0**, plus MVS-forced indirect bumps only (33
+  lines changed in `go.mod`, `go.sum` accordingly; `golangci/canonicalheader` replaces
+  `lasiar/canonicalheader`). `wire` v1.2.0, `gcov2lcov` v1.1.1, `go 1.27.2` and the `tool` block
+  unchanged. Originals saved in `.agent/memories/batch-m/baseline/tools.go.*.before`.
+- `git ls-files --eol`: both files `i/lf w/lf attr/text eol=lf`. `go list -m` reports v2.14.0.
+- `tools/` `go mod tidy -diff` exit 0; build PASS; lint 0 issues.
+- **Recorded, not fixed (outside H3's tools-only scope):** the **root** `go mod tidy -diff` exits 1
+  at HEAD with the root module untouched: it wants `github.com/godbus/dbus/v5 v5.2.2 // indirect`
+  and drops stale `go.sum` lines left by the owner's `a9ae09c` package update. Pre-existing; for
+  the owner to decide. Phase 6's "`go mod tidy -diff` in both modules" gate therefore applies to
+  `tools/` only unless the owner tidies the root.
 
 ## Phase 2: Per-frame cloning (M-D7) and persistence baselines
-Status: Not started
+Status: Complete
 
-- [ ] `editor_state_model.EditorState.CloneWithoutManualEdits()` (settings deep copy; manual
+- [x] `editor_state_model.EditorState.CloneWithoutManualEdits()` (settings deep copy; manual
   section zeroed).
-- [ ] `app/gui/models.EditorState`: `GetCurrentSettings()`, `GetPreviousSettings()`,
+- [x] `app/gui/models.EditorState`: `GetCurrentSettings()`, `GetPreviousSettings()`,
   `GetNextSettings()` built on it; `AutoRegenerate` feeds only these to `DecideRegeneration`.
   `NextStateSetFromCurrent` keeps the full current state.
-- [ ] Unit tests: the new model method (manual section empty, settings equal, mutation
+- [x] Unit tests: the new model method (manual section empty, settings equal, mutation
   isolation for every cloned slice); the three GUI-model getters (nil previous/next, isolation).
-- [ ] Driver test in `test/unit/app/gui/drivers/stateGeneration/autoRegenerate_test.go` (with a
+- [x] Driver test in `test/unit/app/gui/drivers/stateGeneration/autoRegenerate_test.go` (with a
   recording regeneration handler): with manual edits stored, every DTO handed to
   `DecideRegeneration` has no manual section; `HasManualEdits` still true afterwards.
-- [ ] Commit the geohub6p move fixture now (M22) as
+- [x] Commit the geohub6p move fixture now (M22) as
   `test/test_helpers/testdata/editorState_v2_geohub6p_move.gen.json`.
-- [ ] Ungated GPU-free benchmarks in `test/performance/`:
+- [x] Ungated GPU-free benchmarks in `test/performance/`:
   - `BenchmarkAutoRegenerate_IdleFrame` on that fixture and on a no-edit state;
   - `BenchmarkEditorStateFile_SaveLoad`: setup loads the fixture into a model (and, from
     Phase 4 on, lets the first regeneration convert it); the measured op is
     `FileService.SaveSettings` + `LoadSettingsFile` in `b.TempDir()`.
-- [ ] **Measurement protocol** (used again in Phase 4 and Phase 6): `go test '-bench=…'
+- [x] **Measurement protocol** (used again in Phase 4 and Phase 6): `go test '-bench=…'
   '-run=xxx' '-benchmem' '-benchtime=1s' '-count=5' ./test/performance/...`, median of the five
   ns/op, B/op, allocs/op, saved to `.agent/memories/batch-m/bench/`. Add the fixture and both
   benchmarks **first**, record them on the unchanged code (before the clone fix and before any
@@ -430,7 +456,38 @@ Status: Not started
   coverage).
 
 ### Phase Summary
-_(write when phase completes)_
+**Complete (2026-10-13).**
+- **Production:** `editor_state_model.EditorState.CloneWithoutManualEdits()` now holds the
+  settings deep copy, and `Clone()` builds on it and adds the manual slices (an earlier variant
+  copying the struct twice cost +896 B and +1 alloc per frame, measured and replaced).
+  `app/gui/models.EditorState` gained `GetCurrentSettings`, `GetPreviousSettings`,
+  `GetNextSettings`. `drivers.State` gained `getPreviousSettingsDto` / `getNextSettingsDto`
+  (replacing the now-unused `getNextStateDto`); `AutoRegenerate` feeds only settings clones.
+  `handleGenerateTemplate` still passes the full current state to
+  `DecideManualEditReapplication`, which reads `HasManualEdits`.
+- **Test data:** `editorState_v2_geohub6p_move.gen.json` (Batch L geohub6p move, schema 2,
+  GeometricHub, 6 players, 31 manual zones, 48 connections, 202,434 B, LF).
+- **Benchmarks** (`test/performance/autoRegenerate_test.go`, `editorStateFile_test.go`,
+  untagged): medians of 5 runs (`.agent/memories/batch-m/bench/phase2-{before,after}.txt`):
+
+  | Benchmark | Before | After |
+  | --- | --- | --- |
+  | IdleFrame, with manual edits | 136,120 ns / 200,944 B / 1,960 allocs | 9,758 ns / **10,482 B / 110 allocs** |
+  | IdleFrame, without manual edits | 7,997 ns / 10,482 B / 110 allocs | 10,050 ns / 10,482 B / 110 allocs |
+  | SaveLoad (v2 persistence baseline) | 10,277,678 ns / 818,139 B / 4,930 allocs | (format unchanged; rerun in Phase 4) |
+
+  With edits, an idle frame now allocates exactly what a no-edit frame does. The no-edit ns/op
+  difference is machine noise (identical B/op and allocs/op).
+- **Tests:** `cloneWithoutManualEdits_test.go` (4, incl. a reflection no-shared-storage guard),
+  `getCurrentSettings_test.go` (4), `getPreviousSettings_test.go` (3), `getNextSettings_test.go`
+  (3), and 2 driver tests in `autoRegenerate_test.go` with a recording regeneration handler.
+  **Negative control:** feeding the full current state back in made the driver test fail
+  (`SawManualEdits: true`); reverted.
+- **Gates:** build PASS; unit PASS; coverage **73.22% (5612 / 7665)**, above the 73.07% floor,
+  every touched function at 100%; `./test/...` PASS; tagged integration PASS; tagged GUI PASS
+  (30.2 s, 0 `.failure`); testlayoutcheck PASS; `gofmt -l` clean after `gofmt -w` on the six new
+  files gofmt listed; lint 0 after fixing `funcorder` and `embeddedstructfieldcheck` in the
+  driver test.
 
 ## Phase 3: Schema v3 with typed lists, sections, migration and versions (§2.5, §2.6, M-D5 storage, M-D6)
 Status: Not started

@@ -1,6 +1,35 @@
-# Carry-forward: next batch is M (coordinated persistence format, review §2.4 + §2.5 + §2.6 + §1.16)
+# Carry-forward: Batch M IN PROGRESS (coordinated persistence format, review §2.4 + §2.5 + §2.6 + §1.16)
 
 Date: 2026-10-13.
+
+## Batch M status (read this first)
+
+**The plan is the source of truth:**
+[batch-m-persistence-format.md](plans/batch-m-persistence-format.md). It holds every owner
+decision (M-D1 to M-D9, M1 to M29), the design (D1 to D6), the three-round review log, and
+the phase summaries. **Phases 0, 1 and 2 are Complete and green. Next: Phase 3.**
+
+- **Owner process (M1):** all phases run end to end; the owner reviews and commits **once at
+  the end**. Do not stop for commits between phases. Never stage or commit.
+- **Plan approval (M27, 2026-10-13):** approved after GPT-6.1 Sol reviews (round 1 REJECT,
+  14 findings; round 2 REJECT, 5; round 3 APPROVE; all applied). M28 accepts the conservative
+  pending-baseline rule; M29 removes the `IsUserAdded` clearing in the zone-editor Undo
+  baseline.
+- **Phase 0 baseline** (Go base `85752a8`): coverage floor **73.07% (5589 / 7649)**; build, vet × 3,
+  `./test/...`, tagged integration, tagged GUI (0 `.failure`), benchmarks, testlayoutcheck,
+  gofmt, `wire diff`, lint v2.14.0 all clean. Artifacts in `.agent/memories/batch-m/baseline/`.
+- **Phase 1:** `tools/go.mod` golangci-lint → v2.14.0 (forced indirect bumps only), LF kept,
+  lint 0. **Recorded for the owner:** the root `go mod tidy -diff` already fails at HEAD
+  (missing `github.com/godbus/dbus/v5 v5.2.2 // indirect`, stale `go.sum` lines from `a9ae09c`);
+  the root module was not touched.
+- **Phase 2 (M-D7):** the per-frame regeneration decision now gets settings-only clones. An idle
+  frame with the 6-player manual-edit fixture fell from 200,944 B / 1,960 allocs to
+  **10,482 B / 110 allocs** (same as without edits). New untagged benchmarks
+  `BenchmarkAutoRegenerate_IdleFrame` and `BenchmarkEditorStateFile_SaveLoad` (v2 persistence
+  baseline 10.28 ms / 818 KB / 4,930 allocs). Coverage 73.22% (5612 / 7665); all gates green.
+- **Phase 3 warning:** typed lists and the v3 entity switch together (no interim text
+  conversion), so the tree may be red between Phase 3 sub-groups; it must be green at the
+  phase end. Start Phase 3 in a fresh session with full context.
 
 **Batch L is CLOSED** (owner commits `2269e73` and `85752a8` on `AD/compact_state`). Its
 report [batch-l-compact-state.md](investigations/batch-l-compact-state.md) is the design input
@@ -26,7 +55,8 @@ entries following `BonusEntry`, `Variant=-1`; sections with `TemplateIdentity`, 
 and `SchemaOptions` flat at the root), and **one** coordinated migration that keeps loading
 every supported older schema.
 
-**Current state (owner HEAD `85752a8`, clean tree, branch `AD/compact_state`):**
+**Current state (Batch M in progress; see the status block above).** Before Batch M started
+(owner HEAD `85752a8`):
 - `85752a8` also changed lint: `.golangci.yml` stops `exhaustive` checking maps, and four Go
   files gained switch cases (`bonusPickerDialog.go`, `bonusesPanel.go`,
   `bonusEntryService.go`, `zoneLabelProvider.go`).
@@ -68,7 +98,14 @@ else §8 retains as later scope remains **binding**. Do not edit §8.
 
 ## 1. Session goal
 
-**Next session (Batch M):** plan, and only after approval implement, the coordinated
+**This session (Batch M, part 1):** ask the owner every open question (29 decisions, M1 to
+M29), write the plan, run three GPT-6.1 Sol plan reviews, get approval, capture the baseline,
+and implement Phases 1 (linter bump) and 2 (per-frame cloning fix + benchmarks). Stopped at a
+green phase boundary before the large Phase 3.
+
+**Next session (Batch M, part 2):** Phases 3 to 6 of the plan.
+
+**Original Batch M goal:** plan, and only after approval implement, the coordinated
 persistence format:
 - §2.5: typed ban and value-override lists;
 - §2.6: sectioned editor state;
@@ -102,6 +139,14 @@ Planned, implemented and verified Batch H (CI/tooling) and Batch I (docs); the o
 released and confirmed both.
 
 ## 2. Fixes applied
+
+### Batch M Phases 1–2 (this session, uncommitted)
+
+- **M-D7, per-frame cloning:** `AutoRegenerate` hands the regeneration decision settings-only
+  clones (`EditorState.CloneWithoutManualEdits`, GUI-model `Get{Current,Previous,Next}Settings`,
+  driver `get{Previous,Next}SettingsDto`). Idle frame with the 6-player manual-edit fixture:
+  200,944 B / 1,960 allocs → 10,482 B / 110 allocs. Details: plan Phase 2 summary.
+- **M-D8:** [tools/go.mod](../tools/go.mod) golangci-lint v2.14.0.
 
 ### Batch L (this session): none in code
 
@@ -442,6 +487,13 @@ in the tree; the merged code is the reference.
 
 ## 4. File modifications
 
+**Batch M Phases 0–2 (uncommitted):** exactly the list in §6. Production: `state.go`,
+`stateGeneration.go` (drivers), `app/gui/models/editorState.go`,
+`internal/models/editor_state_model/editorState.go`; tooling: `tools/go.mod`, `tools/go.sum`;
+tests and test data: see §5; docs: the plan and this handoff. Gitignored artifacts:
+`.agent/memories/batch-m/` (baseline, bench, phase2). **Not touched:** `data/`, the RMG
+schema, the registry, Wire, the output path, the root module files, review §8.
+
 **Batch L (uncommitted, docs only):**
 - `M .agent/backlog/review-gpt-6-astra-09-07.md`
 - `M .agent/plans/batch-l-compact-state-investigation.md`
@@ -582,6 +634,21 @@ batches; the review's §0 is the disposition of record).
 (reverted byte-identical), dependencies and `.agent/backlog/owner_findings.md`.
 
 ## 5. Tests added or updated
+
+### Batch M Phases 0–2 (this session)
+
+- **New:** `test/unit/internal/models/editor_state_model/editorState/cloneWithoutManualEdits_test.go`
+  (4, incl. a reflection no-shared-storage guard); `test/unit/app/gui/models/editorState/`
+  `getCurrentSettings_test.go` (4), `getPreviousSettings_test.go` (3), `getNextSettings_test.go`
+  (3); untagged benchmarks `test/performance/autoRegenerate_test.go`,
+  `test/performance/editorStateFile_test.go`; fixture
+  `test/test_helpers/testdata/editorState_v2_geohub6p_move.gen.json`.
+- **Extended:** `test/unit/app/gui/drivers/stateGeneration/autoRegenerate_test.go` (2 driver
+  tests with a recording regeneration handler; negative control proved the gate fails on the
+  old code path).
+- **Last run (Windows/amd64, go1.27.2):** build PASS; unit PASS; coverage **73.22%
+  (5612 / 7665)** vs floor 73.07%; `go test ./test/...` PASS; tagged integration PASS; tagged
+  GUI PASS (0 `.failure`); testlayoutcheck PASS; gofmt clean; lint 0.
 
 ### Batch L: no tests added (investigation)
 
@@ -779,7 +846,9 @@ in-game behaviour.
 
 ## 6. Git status snapshot
 
-The branch is **`AD/compact_state`** and HEAD is **`85752a8`**. Newest first:
+The branch is **`AD/compact_state`** and HEAD is **`30f6fa3`**. Newest first:
+- `30f6fa3` ("Batch M plan": an early copy of the plan, committed by the owner mid-session)
+- `e47d5d1` ("Docs": this handoff; = `origin/AD/compact_state`)
 - `85752a8` ("Batch L completed": Batch L docs, `.golangci.yml` stops `exhaustive` checking
   maps, switch cases added in 4 Go files, VS Code formatter renamed to `golangci-lint`)
 - `2269e73` (Batch L docs)
@@ -789,11 +858,44 @@ The branch is **`AD/compact_state`** and HEAD is **`85752a8`**. Newest first:
 
 Not yet merged to `master`.
 
-`git status --short` at handoff: only this handoff is modified (the owner commits it).
+`git status --short` at handoff (Batch M Phases 0–2, uncommitted, for the owner's end review):
+
+```
+ M .agent/plans/batch-m-persistence-format.md
+ M .agent/session-carry-forward.md
+ M app/gui/drivers/state.go
+ M app/gui/drivers/stateGeneration.go
+ M app/gui/models/editorState.go
+ M internal/models/editor_state_model/editorState.go
+ M test/unit/app/gui/drivers/stateGeneration/autoRegenerate_test.go
+ M tools/go.mod
+ M tools/go.sum
+?? test/performance/autoRegenerate_test.go
+?? test/performance/editorStateFile_test.go
+?? test/test_helpers/testdata/editorState_v2_geohub6p_move.gen.json
+?? test/unit/app/gui/models/editorState/getCurrentSettings_test.go
+?? test/unit/app/gui/models/editorState/getNextSettings_test.go
+?? test/unit/app/gui/models/editorState/getPreviousSettings_test.go
+?? test/unit/internal/models/editor_state_model/editorState/cloneWithoutManualEdits_test.go
+```
+
 `.agent/memories/` and `tmp/` are gitignored. **The assistant performed no staging,
 unstaging, commit, push, stash, branch switch or worktree change.**
 
 ## 7. Rejections / things the user declined
+
+- **Batch M planning (owner choices; the alternatives were declined):**
+  - owner review per phase (chose one end review); expanded live model; overrides against a
+    retained base (chose a fresh generation per Apply); factory-only connection derivation;
+    tier-only re-profiling; castle reapply on every zone; a separate `manual_edits` package;
+  - long section keys (`playerSettings`, …); a raw-JSON override map; `generatorVersion`
+    inside `manualEdits` or from `main.version`; fingerprint or whole-layout-hash notices;
+    keeping the cleared-rows quirk; a status-line migration notice; a Continue/Cancel modal;
+    keeping malformed legacy lines in a raw field; not marking a converted document unsaved;
+    `contentDefaultsVersion` at the root; relying on the compact model alone for M-D7;
+    building all test data in code; persisting the pending-conversion baseline; keeping the
+    dialog's Undo `IsUserAdded` clearing.
+  - Plan reviews: all 19 findings across rounds 1 and 2 were applied; none declined.
 
 - **Batch L.**
   - Declined alternatives:
@@ -962,72 +1064,37 @@ Other pending decisions: arena/manual invalidation and effective-mode aliases (�
 
 ## 9. Next recommended actions
 
-**Next batch: M.** Its scope is the top of this handoff (M-D1 to M-D9) plus review §2.5,
-§2.6, §2.4 and §1.16. Batches N, O and P remain independent and are not part of M.
+**Batch M continues at Phase 3** of
+[batch-m-persistence-format.md](plans/batch-m-persistence-format.md). Scoping, questions,
+plan, review, approval and the baseline are **done**; do not re-ask M1 to M29.
 
-**M is large. Propose phasing in the plan** and let the owner approve it. A candidate split,
-not yet decided:
-1. tooling (M-D8);
-2. live-cloning fix (M-D7; independent of the format);
-3. §2.5 typed lists in the model and config;
-4. C3 model, derivation services and a determinism-contract test;
-5. §2.6 sections + the v3 entity + a frozen v2 package + the migration (M-D2, M-D5, M-D6);
-6. GUI notices and regression flows;
-7. the review/report close-out.
+In order:
+1. Read [AGENTS.md](../AGENTS.md), then the plan in full (decision tables, Design D1 to D6,
+   the review log, the Phase 0 to 2 summaries), then the
+   [Batch L report](investigations/batch-l-compact-state.md) §5 to §11 as needed.
+2. Confirm `git status --short` matches §6 (the owner may have committed Phases 0 to 2;
+   either way, never stage or commit).
+3. **Phase 3**: schema v3 with typed lists, sections, migration and versions. Work through its
+   checklist; regenerate Wire (`wire gen ./internal/composition/...`, then `wire diff`) at each
+   constructor or provider change; finish with the phase's verification plan, including a
+   coverage comparison against the 73.07% floor; write the phase summary.
+4. **Phase 4** (C3 semantics, §1.16, modal), **Phase 5** (GUI flows), **Phase 6** (final gate,
+   GPT-6.1 Sol implementation review, review/report close-out), each per the plan.
+5. Carry the session-budget rule: at a green phase boundary, refresh this handoff rather than
+   starting a phase that cannot finish.
 
-Each phase leaves the tree green.
-
-**Open questions the next session must ask before writing the plan** (do not decide alone):
-- Phasing and commit points (above); whether M spans several sessions.
-- Exact v3 JSON section keys (§2.6 asks for a proposal in lower camel case) and C3 key names
-  (`fieldOverrides`, `unset`, `origin`, `castles`, `generatorVersion`; report §10 is only
-  illustrative).
-- **Live model under C3** (report §7 "Live state under C"): keep expanded zones live and
-  only persist compactly, or hold the compact form live and expand on demand. This interacts
-  with M-D7.
-- **Where derivation runs:** a service that regenerates and matches by name, as prototyped;
-  layering (report §11.6); how the zone editor, regeneration, reapply and preview consume it.
-- **When overrides are computed:** at save, at every apply, or both. How dirty tracking and
-  Revert-to-Base behave (report §9).
-- **The one-time migration notice (M-D2) and the "derived values changed" notice (M-D5):**
-  wording, trigger, where they show, and whether either blocks.
-- **`generatorVersion` source:** the build's `main.version`, or a separate generator-format
-  constant. What counts as a change.
-- **Defaults-version mechanism (M-D6):** where the version lives, and what happens when a
-  saved defaults version is older or unknown.
-- **§1.16 regressions:** one per stale setting in report §6, including advanced-mode guard
-  randomization; the castle and no-op controls.
-- **§2.5 malformed-text handling** at the UI and legacy boundaries (warnings delivery, as
-  §2.5 requires).
-- **Test data:** whether to commit a curated subset of the Batch L fixtures, plus a large
-  hub-layout v2 fixture, under `test/test_helpers/testdata/`.
-- **Coverage expectation** for a batch this size, and whether any GUI goldens may move.
-- **Linter bump:** run tidy in `tools/` only (Batch H rule H3); accept forced indirect bumps.
-
-Routing for the next session, in order:
-1. Read [AGENTS.md](../AGENTS.md), this handoff, the
-   [Batch L report](investigations/batch-l-compact-state.md) (especially §6, §7, §9–§13),
-   and review §1.16, §2.4, §2.5, §2.6 and §9 rows L, M and Q.
-2. Inspect the current code yourself, and delegate the inventory to a cheap read-only
-   subagent:
-   - the editor-state entity/model/mapper/migrator/repository chain;
-   - the content settings strings and `gameRulesProvider` parsing;
-   - the manual-edit flow (`stateManualEdits.go`, `stateGeneration.go`, `UpdateTemplate`,
-     `ManualReapplyService`);
-   - the `AutoRegenerate` clone path;
-   - the wire-format tests and fixtures.
-3. Ask the owner the open questions above, summarize the scope, and get approval.
-4. Write a durable plan under `.agent/plans/`, get an independent review (GPT-6.1 Sol) and
-   explicit approval, and capture a **fresh** baseline (coverage, build, unit, integration,
-   GUI, testlayoutcheck, lint, `wire diff`) before the first Go edit.
-5. In the first M close-out, update review §2.4 (decision recorded), the §9 Q row (folded
-   into M) and report §15 (answered).
+**For the owner (recorded, not assigned):**
+- the root module's `go mod tidy -diff` fails at HEAD (pre-existing, see the status block);
+- the two GUI-model getters `GetPreviousState`/`GetNextState` remain public; only tests and
+  `handleGenerateTemplate` (previous) use them now.
 
 **Reusable Batch L assets** (gitignored `.agent/memories/batch-l/`):
 - `probe-src/`: comparators (raw snapshot, export bytes, preview), the fixture builder on
-  the real driver, the determinism and L6 harnesses, and the C3 prototype;
+  the real driver, the determinism and L6 harnesses, and the C3 prototype
+  (`prototypes.go`: `structuralRoundTrip`, `deriveZone`, `deriveConnection`, `splitEntry`,
+  `mergeEntry`);
 - `fixtures/`: 44 frozen `.gen.json` files, each with `.base.rmg.json` and
-  `.final.rmg.json`.
+  `.final.rmg.json`. Phase 3 copies the curated subset listed in the plan.
 
 **Recorded, not assigned (Batch K):**
 - `SaveState` and `UpdateTemplate` do not validate;
@@ -1052,33 +1119,30 @@ commits, merges and releases. Native Linux and Steam Deck remain unmeasured.
 > **Batches A–L are CLOSED** (H–K merged to `master` by PR #50, `8cf9c80`; L committed as
 > `2269e73`/`85752a8`). Never revisit them.
 >
-> **Next: Batch M.** It is the coordinated persistence format:
-> - review §2.5 (typed ban/override lists);
-> - §2.6 (sections; identity/map/schema fields stay at the root);
-> - the §2.4 **C3** manual-edit representation, which fixes **§1.16**; Q folds into M;
-> - one schema-v3 migration that still loads every supported older schema.
+> **Batch M is IN PROGRESS. Continue at Phase 3** of
+> [batch-m-persistence-format.md](plans/batch-m-persistence-format.md), the source of truth:
+> owner decisions M-D1 to M-D9 and M1 to M29, design D1 to D6, the review log and the phase
+> summaries. Scoping, plan reviews (GPT-6.1 Sol, 3 rounds) and owner approval are **done**; do
+> not re-ask. Phases 0 to 2 are complete and green: the baseline (coverage floor **73.07%,
+> 5589 / 7649**), the linter bump in `tools/go.mod`, and the per-frame cloning fix plus
+> benchmarks (coverage 73.22%). All phases run end to end; the owner reviews and commits once
+> at the end (M1).
 >
-> The owner's binding decisions **M-D1 to M-D9** are at the top of this handoff:
-> - C3 itself;
-> - "derived when equal" migration with a one-time notice;
-> - value-difference overrides;
-> - `generatorVersion` with a changed-values notice;
-> - default-row omission behind a defaults version;
-> - the live per-frame cloning fix;
-> - a linter bump to v2.14.0 in `tools/go.mod`;
-> - compact JSON out of scope.
+> Scope: review §2.5 (typed ban/override lists), §2.6 (sections `players`, `neutralZones`,
+> `castles`, `generation`, `gameRules`, `content`, `manualEdits`; identity/map/schema fields
+> and `generatorVersion` at the root), the §2.4 **C3** representation (fixes **§1.16**; Q folds
+> into M), and one schema-v3 migration that still loads v0/v1/v2. Design input:
+> [batch-l-compact-state.md](investigations/batch-l-compact-state.md).
 >
-> The design input is [batch-l-compact-state.md](investigations/batch-l-compact-state.md).
-> **Ask the §9 open questions before planning**; propose phasing.
+> **State:** branch `AD/compact_state`, HEAD `30f6fa3` (the owner committed the handoff and an
+> early plan copy mid-session; Go base unchanged since `85752a8`). Phases 0 to 2 are
+> uncommitted in the working tree (§6 lists them). The root module's `go mod tidy -diff` fails
+> at HEAD (pre-existing, recorded for the owner). The assistant performed no Git mutation;
+> preserve the owner's state exactly.
 >
-> **State:** branch `AD/compact_state`, HEAD `85752a8`, clean except this handoff. Build PASS;
-> `golangci-lint` v2.14.0 reports 0 issues (`85752a8` stopped `exhaustive` checking maps).
-> Coverage was last 73.0% (5587 / 7646) at `45876cf`, go1.27.2; **recapture it**, because
-> `85752a8` touched 4 Go files. The assistant performed no Git mutation; preserve the owner's
-> state exactly.
->
-> Follow the routing in §9: read, inspect, ask, summarize, plan, independent review (GPT-6.1
-> Sol), plan approval, and a fresh full baseline before the first Go edit.
+> **Phase 3 note:** typed lists and the v3 entity switch together (no interim text
+> conversion), so the tree may be red between its sub-groups and must be green at the phase
+> end. Regenerate Wire at each constructor/provider change.
 >
 > **Native Linux, Steam Deck and the race detector are UNAVAILABLE.** No in-game result is
 > claimed.
