@@ -1,13 +1,31 @@
-# Carry-forward: Batch K (topology retirement) CLOSED; the next batch is the owner's choice
+# Carry-forward: Batch L (compact-state investigation) delivered; owner decision gate open
 
-Date: 2026-10-04.
+Date: 2026-10-12.
+
+**Batch L (review §2.4 / O11) is DELIVERED and awaits the owner's decisions.** It was an
+investigation only: no production Go, schema, fixture, Wire or output-path change.
+- Branch `AD/compact_state`, owner HEAD `45876cf`. Base: `8cf9c80` on `master` = PR #50, which
+  merged H, I and K. On top of it are the owner's commits `a9ae09c` (go 1.27.2, Gio 0.10.3,
+  dependency bumps) and `45876cf` (the Batch L plan, linter renamed to `golangci-lint`).
+- **Deliverable:** [batch-l-compact-state.md](investigations/batch-l-compact-state.md), with
+  measurements, prototypes A/B/C1/C2/C3/D, a lossless-omission table, §2.5/§2.6
+  coordination, acceptance tests, a recommendation (C3) and 7 decisions requested (its §15).
+- **Plan / record:** [batch-l-compact-state-investigation.md](plans/batch-l-compact-state-investigation.md)
+  holds decisions L1–L13 and every phase summary.
+- **New review item §1.16 🔴** (owner-classified bug): manual snapshots silently override
+  later zone-affecting settings. A new §9 row Q covers it. Review totals: 33 actionable
+  (9/17/7); 24 fixed, 9 remaining (1 High, 5 Medium, 3 Low).
+- **Baseline changed by toolchain, owner-adopted:** coverage **73.0% (5587 / 7646)** under
+  go1.27.2 (same code as Batch K's 73.2%). The local `golangci-lint` is **v2.14.0** and gives
+  **8 pre-existing `exhaustive` findings**. `tools/go.mod` still pins v2.13.1 for CI: the
+  owner should reconcile this.
 
 **Batch K (review §2.3 / O08) is CLOSED.** It was owner-committed as **`1ee746b`** (Phase 1)
 and **`27b2933`** (Phases 2–4), with the plan in `d50f34d`. The owner reviewed everything and
 approved, including the **73.2% (6441 / 8781)** coverage total (K16). The drop comes purely from
 deleting fully-covered code. The review marks §2.3 FIXED (24 fixed, 8 remaining: 0 High,
-5 Medium, 3 Low). The plan [batch-k-topology-retirement.md](plans/batch-k-topology-retirement.md)
-is the record: decisions K1–K16, F1–F6, D1–D4, every phase summary, Final Recap.
+5 Medium, 3 Low). The Batch K plan has since been deleted by the owner; §3 below restates its
+decisions.
 
 **Owner follow-ups after Batch K** (PR findings, outside the batch):
 - `3e37b9f`: [release.yml](../.github/workflows/release.yml)'s tag regex is now
@@ -16,9 +34,8 @@ is the record: decisions K1–K16, F1–F6, D1–D4, every phase summary, Final 
 - `002df02`: a README comment on `template_model/`.
 
 **Batches H and I are CLOSED** (owner commits `a140e0a`, released as `v0.3.9-alpha.3`, and
-`dd2b8bf`). All of H–K are on `AD/pbi_resolution` and not yet merged to `master` (`ec42217`,
-which has G and J). §3 restates K1–K16 (compact), I1–I10, H1–H12, J1–J9 and G1–G9a.
-**Never revisit Batches A–K.**
+`dd2b8bf`). H–K were merged to `master` by PR #50 (`8cf9c80`). §3 restates K1–K16 (compact),
+I1–I10, H1–H12, J1–J9 and G1–G9a. **Never revisit Batches A–K.**
 
 **Section 8 is preserved verbatim**, contradictions and all. Its Batch C phase/engine
 wording, its "pending decisions" wording for §1.5, §1.11, §1.12 and §2.1, its §2.2
@@ -26,6 +43,18 @@ bullet, and its tooling pending-decision wording (§6.2/§6.3/§6.5) are **super
 else §8 retains as later scope remains **binding**. Do not edit §8.
 
 ## 1. Session goal
+
+**This session (Batch L):** investigate §2.4 end to end:
+- ask the owner (L1–L13);
+- plan, get a GPT-6.1 Sol review, owner approval;
+- baseline;
+- a throwaway probe for the fixture matrix, live/persisted measurements, determinism,
+  identity, the snapshot-wins evidence and four prototyped alternatives;
+- the report, review edits (§1.16, §2.4 progress, §9 rows L/Q, counts);
+- a Claude Fable 5.1 report review;
+- deleting the probe and an end-state gate.
+
+### Previous session goal (Batch K, closed)
 
 Plan and implement Batch K end to end:
 - read the sources, inventory with a cheap subagent, and ask the owner every open decision;
@@ -41,6 +70,18 @@ Planned, implemented and verified Batch H (CI/tooling) and Batch I (docs); the o
 released and confirmed both.
 
 ## 2. Fixes applied
+
+### Batch L (this session): none in code
+
+Documentation only:
+- [the report](investigations/batch-l-compact-state.md) (new);
+- the [Batch L plan](plans/batch-l-compact-state-investigation.md) phase summaries;
+- [the review](backlog/review-gpt-6-astra-09-07.md): §1.16 added, the §2.4 Progress
+  paragraph, §9 rows L (updated) and Q (new), the progress line and the current total;
+- this handoff.
+
+The probe `cmd/batchlprobe` existed only during the session and is deleted; its sources are
+in gitignored `.agent/memories/batch-l/probe-src/`.
 
 ### Batch K Phases 2–4, committed in `27b2933` (details in the plan's phase summaries)
 
@@ -182,6 +223,33 @@ All are committed in `35e0fab` and **marked FIXED**. They are closed; do not reo
   so redraws always settle, even in the error branch.
 
 ## 3. Features added / changed
+
+### Batch L decisions (owner, 2026-10-12)
+
+| ID | Decision |
+| --- | --- |
+| L1 | Report at `.agent/investigations/batch-l-compact-state.md`. |
+| L2 | All measurement code throwaway (`cmd/batchlprobe`, deleted; copies in `.agent/memories/batch-l/`). |
+| L3 | Delta encodings prototyped and measured. |
+| L4 | Frozen fixture matrix: 4 layouts × untouched + 10 edit cases. |
+| L5 | The owner's Colosseum samples may be read (numbers only). |
+| L6 | Snapshot-wins is an unintended bug: recorded as review §1.16, not fixed. |
+| L7 | Live state measured, not tuned. |
+| L8 | Non-determinism shown empirically. |
+| L9 | Design depth: semantics + illustrative JSON + §2.5/§2.6 coordination. |
+| L10 | The report recommends; the owner decides. |
+| L11 | Lighter gate (build, unit, coverage, testlayoutcheck, lint) before and after. |
+| L12 | Plan review GPT-6.1 Sol; report review Claude Fable 5.1. |
+| L13 | Temporary architecture exception for the probe (no allow-list edit; unit suite only before and after). |
+
+**Key findings** (details in the report):
+- One manual edit stores the whole layout (6p GeometricHub move: 202 KB vs 8 KB).
+- Per-frame `AutoRegenerate` costs 80 µs / 201 KB with the snapshot.
+- 6 of 7 topologies and tournaments generate deterministically; Random and RandomPortals
+  do not.
+- Round trips: A/B, C1, C3 and D pass 40/40; C2 (derived roads) fails 0/40.
+- C3 is −78% for deterministic layouts and −44% for Random.
+- §1.16: nine kinds of setting go stale after a manual edit.
 
 ### Batch K decisions (owner, 2026-10-04; committed, settled)
 
@@ -342,6 +410,17 @@ in the tree; the merged code is the reference.
 
 ## 4. File modifications
 
+**Batch L (uncommitted, docs only):**
+- `M .agent/backlog/review-gpt-6-astra-09-07.md`
+- `M .agent/plans/batch-l-compact-state-investigation.md`
+- `?? .agent/investigations/batch-l-compact-state.md`
+- this handoff
+
+The gitignored artifacts are in `.agent/memories/batch-l/`: baseline, endstate, fixtures,
+bench, phase TSVs and probe-src. `.agent/memories/tooling-and-shell.md` gained the lint and
+toolchain traps. **Not touched:** production Go, tests, `data/`, the schema, the registry,
+Wire, the output path, review §8.
+
 **Batch K Phases 2–4, committed in `27b2933`.** The plan's Phase 2 summary lists
 the production and test files. Docs: README, the plan, the review document (§2.3, row K, the
 progress line; §8 untouched), `test_observations.md` (`createTopologyAdjacency` Circles
@@ -471,6 +550,18 @@ batches; the review's §0 is the disposition of record).
 (reverted byte-identical), dependencies and `.agent/backlog/owner_findings.md`.
 
 ## 5. Tests added or updated
+
+### Batch L: no tests added (investigation)
+
+All runs were Windows/amd64, go1.27.2. Baseline at `45876cf`, and the end state after
+deleting the probe, are **identical**:
+- build PASS; unit PASS;
+- coverage **73.0% (5587 / 7646)**;
+- testlayoutcheck PASS;
+- `golangci-lint` v2.14.0: the same 8 `exhaustive` findings, none new.
+
+While the probe existed, lint showed 19 extra probe-only findings (L13). The tagged
+integration and GUI suites were not run (L11).
 
 ### Batch K Phase 0 baseline (HEAD `d50f34d`, Windows/amd64, Go 1.27.0, empty `GOFLAGS`)
 
@@ -656,25 +747,41 @@ in-game behaviour.
 
 ## 6. Git status snapshot
 
-The branch is **`AD/pbi_resolution`** and HEAD is **`002df02`**. Newest first:
-- `002df02` (README comment, PR finding)
-- `3e37b9f` (release tag regex, PR finding)
-- `27b2933` ("Batch K")
-- `1ee746b` ("Batch K part 1")
-- `d50f34d` ("plan")
-- then `dd2b8bf` (Batch I) and `a140e0a` (Batch H)
+The branch is **`AD/compact_state`** (the owner created it) and HEAD is **`45876cf`**. Newest
+first:
+- `45876cf` ("Update": Batch L plan, linter rename)
+- `a9ae09c` ("Package updates": go 1.27.2, deps)
+- `8cf9c80` (PR #50, H/I/K; = `master`)
 
-`master` is `ec42217`.
+`git status --short`:
 
-`git status --short` shows only this closing turn's documentation edits: the review
-(§2.3 heading, row K, progress line), the Batch K plan (CLOSED, Deployment Plan) and this
-handoff.
+```
+ M .agent/backlog/review-gpt-6-astra-09-07.md
+ M .agent/plans/batch-l-compact-state-investigation.md
+?? .agent/investigations/batch-l-compact-state.md
+```
 
-`.agent/memories/` and `tmp/` are gitignored. **The assistant performed no staging,
-unstaging, commit, push, stash, branch switch or worktree change.** Deletions used
-`Remove-Item`, never `git rm`.
+This handoff is modified too. `.agent/memories/` and `tmp/` are gitignored. **The assistant
+performed no staging, unstaging, commit, push, stash, branch switch or worktree change.** The
+probe was deleted with `Remove-Item`.
 
 ## 7. Rejections / things the user declined
+
+- **Batch L.**
+  - Declined alternatives:
+    - committed baseline benchmarks (everything throwaway);
+    - a temporary probe in `test/performance` (`cmd/` chosen);
+    - a neutral report without a recommendation;
+    - recording §1.16 only in the report or in `owner_findings.md`;
+    - the full gate (the lighter gate was chosen);
+    - `GOTOOLCHAIN=go1.27.0`, or skipping lint.
+  - All 10 plan-review and 13 report-review findings were applied.
+  - Recorded, not assigned:
+    - Random topology reapply takes `orientation` from the fresh generation;
+    - the per-frame snapshot cloning (report §4/§12.3);
+    - two pre-existing broken links in the review (`webTopology.go`, the deleted Batch K
+      plan);
+    - the local linter v2.14.0 vs the `tools/go.mod` pin v2.13.1.
 
 - **Batch K (owner choices; the alternatives were declined):**
   - keeping the entity constants;
@@ -827,31 +934,39 @@ Other pending decisions: arena/manual invalidation and effective-mode aliases (�
 
 ## 9. Next recommended actions
 
-**Batches A–K are closed, with no open questions and no blockers.** This closing turn marked
-Batch K closed in the review (§2.3 heading, row K, the progress line) and in its plan; those
-edits await the owner's commit. Owner-only actions:
-- push `AD/pbi_resolution` (PR CI covers Linux) and merge it to `master`;
-- decide when to delete the Batch K plan;
-- optionally check in-game a two-player tournament on a former chain-fallback topology (e.g.
-  Random), since that output changed.
+**Batch L is delivered; its decision gate is open.** Owner-only actions:
+- review and commit the report, plan, review and handoff edits;
+- answer the report's §15 decisions:
+  1. representation (C3 recommended / D / A / B);
+  2. migration of old snapshots;
+  3. override semantics;
+  4. the §1.16 route;
+  5. `generatorVersion`;
+  6. the quick wins;
+  7. a live-cloning item;
+- reconcile the local linter v2.14.0 with the `tools/go.mod` pin v2.13.1 (CI);
+- optionally fix the two pre-existing broken review links.
 
-**The next batch is the owner's choice.** The binding scope for each is in §8's retained
-decisions:
-- **L:** the compact-state investigation, §2.4 (can start independently; the owner reviews
-  feasibility before any representation change);
-- **M:** the persistence format, §2.5 and §2.6 (after L's decision gate);
-- **N:** panel/state organization, §2.7 and §2.9;
-- **O:** naming and lookup, §2.8 and §2.10;
-- **P:** the Vec2 audit, §4.1.
+**After the decisions:**
+- If the owner approves a §2.4 representation, Batch **M** (§2.5 + §2.6 + the approved §2.4
+  format) becomes **one** coordinated migration (v3, a frozen v2 entity package).
+- Batch **Q** (§1.16) is scheduled with or after it, or as an approved lossy stop-gap.
+- Batches N, O and P remain independent.
 
 Routing for the next session, in order:
-1. Read [AGENTS.md](../AGENTS.md), this handoff, then the chosen review item and its §9 row.
-2. Inspect the current code yourself, because review line numbers predate Batches F–K.
-   Delegate the inventory to a cheap read-only subagent.
+1. Read [AGENTS.md](../AGENTS.md), this handoff, the Batch L report and the chosen review item
+   and its §9 row.
+2. Inspect the current code yourself. Delegate the inventory to a cheap read-only subagent.
 3. Ask the owner every open decision, summarize the scope, and get approval.
 4. Write a durable plan under `.agent/plans/`, get an independent review (GPT-6.1 Sol) and
-   explicit approval, and capture a fresh baseline before the first Go edit. The coverage
-   baseline is now **73.2% (6441 / 8781)**, owner-accepted after Batch K.
+   explicit approval, and capture a fresh baseline before the first Go edit. The baseline is
+   now **73.0% (5587 / 7646)** under go1.27.2, plus 8 `exhaustive` lint findings with the
+   local v2.14.0.
+
+**Reusable Batch L assets** (gitignored `.agent/memories/batch-l/`):
+- the probe sources (`probe-src/`), with comparators, fixture builder and prototypes;
+- the frozen 44-fixture matrix (`fixtures/`), which future acceptance tests can copy into
+  `test/` if the owner wants.
 
 **Recorded, not assigned (Batch K):**
 - `SaveState` and `UpdateTemplate` do not validate;
@@ -860,10 +975,8 @@ Routing for the next session, in order:
 - the pre-existing `common_topologies/topologies/` test folder does not mirror
   `topologyDescriptors.go`.
 
-**Deployment.** Nothing is deployed and nothing is authorized to be. The owner alone stages,
-commits, merges and releases. Release tags now follow the `3e37b9f` regex (see the top of this
-handoff). Batch K needs no schema migration, output-path change or Wire change. Users with a
-retired-topology `.gen.json` get a refusal naming it. Native Linux and Steam Deck remain
+**Deployment.** Nothing is deployed and nothing is authorized to be. Batch L changed no code.
+The owner alone stages, commits, merges and releases. Native Linux and Steam Deck remain
 unmeasured.
 
 ## 10. Carry-forward prompt
@@ -871,34 +984,36 @@ unmeasured.
 > Read [AGENTS.md](../AGENTS.md) first, then [this handoff](session-carry-forward.md). It is
 > self-contained.
 >
-> **Batches A–K are CLOSED.** Never revisit them.
-> - **Batch K (§2.3, topology retirement):** owner commits `1ee746b` and `27b2933` (plan
->   `d50f34d`), owner-reviewed. Coverage 73.2% (6441 / 8781) accepted.
-> - **Batch I:** `dd2b8bf`. **Batch H:** `a140e0a`, released as `v0.3.9-alpha.3`.
-> - **Later owner PR-finding commits:** `3e37b9f` (the release tag regex now allows hyphenated
->   prerelease identifiers and rejects empty ones; this supersedes H5's charset) and `002df02`
->   (a README comment).
-> - H–K are on `AD/pbi_resolution`, not yet merged to `master` (`ec42217`, which has G and J).
->   The review reads 24 fixed, 8 remaining (0 High, 5 Medium, 3 Low).
+> **Batches A–K are CLOSED** (H–K merged to `master` by PR #50, `8cf9c80`). Never revisit them.
+> **Batch L (§2.4) is DELIVERED**: the report
+> [batch-l-compact-state.md](investigations/batch-l-compact-state.md) recommends C3
+> (structure + derived-field overrides) and lists 7 decisions. **No representation, seed,
+> delta or migration work is authorized until the owner decides.** The new review item
+> **§1.16 🔴** (snapshot overrides later zone-affecting settings) is batch Q. The review reads
+> 24 fixed, 9 remaining (1 High, 5 Medium, 3 Low).
 >
-> **State:** HEAD `002df02`. The working tree holds only the closing turn's documentation edits
-> (the review, the Batch K plan, this handoff). The assistant performed no Git mutation;
-> preserve the owner's state exactly.
+> **State:** branch `AD/compact_state`, HEAD `45876cf`. The working tree holds only Batch L
+> docs (the review, the plan, the new report, this handoff). The assistant performed no Git
+> mutation; preserve the owner's state exactly.
 >
-> **Next work is the owner's choice of batch** (L §2.4, M §2.5/§2.6, N §2.7/§2.9, O §2.8/§2.10,
-> P §4.1). Follow the routing in §9: read, inspect, ask, summarize, plan, independent review
-> (GPT-6.1 Sol), plan approval, and a fresh baseline (coverage 73.2%, 6441 / 8781) before the
-> first Go edit.
+> **Next work:** the owner's Batch L decisions, then M (§2.5/§2.6 + the approved §2.4 format
+> as one migration) and Q, or N/O/P. Follow the routing in §9: read, inspect, ask, summarize,
+> plan, independent review (GPT-6.1 Sol), plan approval, and a fresh baseline (73.0%,
+> 5587 / 7646 under go1.27.2; lint = 8 pre-existing `exhaustive` findings with local
+> `golangci-lint` v2.14.0) before the first Go edit.
 >
 > **Native Linux, Steam Deck and the race detector are UNAVAILABLE.** No in-game result is
 > claimed.
 >
 > **Traps:**
 > - PowerShell 5.1 splits an unquoted `-bench=.`, so quote flags.
-> - Clear the lint cache (`golangci-lint-v2 cache clean`) before believing an unexpected
->   baseline finding.
+> - The linter binary is now `golangci-lint` (no `-v2`). Clear its cache before believing an
+>   unexpected finding, and check `$LASTEXITCODE`: "0 issues." printed next to a typecheck
+>   error is not clean.
+> - A Go toolchain bump shifts the coverage denominator without any code change.
 > - Run `gofmt -l` on new files.
 > - `gofmt -r` cannot rewrite statements; use UTF-8-safe .NET file APIs for literal swaps.
+> - PowerShell here-strings eat backticks, and `String.Replace` replaces every occurrence.
 > - `wire diff` is the reliable Wire check.
 > - Never keep a blanket GUI `-update`; accept only explained `.failure` files.
 > - Go 1.27 promoted-field literals stay flat (`modernize/embedlit`).

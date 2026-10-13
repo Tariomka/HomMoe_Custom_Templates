@@ -8,10 +8,11 @@
 
 **Severity:** 🔴 High: bug/correctness/user-visible · 🟠 Medium: architecture, performance, CI gaps · 🟡 Low: readability/hygiene · ⚪ Informational.
 
-**Finding count:** **32 actionable items: 8 High, 17 Medium, 7 Low.** This includes owner-requested architecture/product work scoped on 2026-09-08, not just proved defects. Informational observations and prior-item dispositions are not included in that count. Findings are source-verified unless a runtime reproduction is explicitly recorded. Performance claims are reasoned, not benchmark measurements. In-game behavior was not tested.
+**Finding count:** **32 actionable items: 8 High, 17 Medium, 7 Low.** This includes owner-requested architecture/product work scoped on 2026-09-08, not just proved defects. Informational observations and prior-item dispositions are not included in that count. Findings are source-verified unless a runtime reproduction is explicitly recorded. Performance claims are reasoned, not benchmark measurements. In-game behavior was not tested. **Current total (2026-10-12): 33 actionable items: 9 High, 17 Medium, 7 Low**, including the owner-added §1.16.
 
-**Current progress (2026-10-04):** **24 fixed, 8 remaining**: 0 High, 5 Medium,
-3 Low. Batch K (§2.3) closed with owner commits `1ee746b` and `27b2933` on 2026-10-04 (plan
+**Current progress (2026-10-12):** **24 fixed, 9 remaining**: 1 High, 5 Medium,
+3 Low. §1.16 (High) was added by the owner from the Batch L investigation; §2.4's
+investigation is delivered and its decision gate is open. Batch K (§2.3) closed with owner commits `1ee746b` and `27b2933` on 2026-10-04 (plan
 `d50f34d`); the owner reviewed it and accepted 73.2% coverage. Batches A/D, B, C, E, F, G, H, I,
 J and K are owner-committed and closed; Batch I
 (§7.1, §7.2) closed with owner commit `dd2b8bf` on 2026-10-04 (plan `599ff23`),
@@ -403,6 +404,18 @@ an actual change, which also removes the per-frame overwrite of unlisted types.
 
 **Owner decision.** Confirm whether changing the editor type should clear old placement rules or merely display the effective type. Never silently rewrite protected schema vocabulary.
 
+### 1.16 🔴 Manual snapshots silently override later zone-affecting settings
+
+**Origin.** Found by the Batch L investigation (2026-10-12) and added to this review by the owner, who classified it as an unintended bug. Evidence and the full per-setting table are in [the Batch L report §6](../investigations/batch-l-compact-state.md#6-the-snapshot-wins-bug-review-116).
+
+**Evidence.** [LayoutDefiningOptionsChanged](../../internal/models/editor_state_model/editorState.go) excludes zone-affecting settings, so after a manual edit [handleGenerateTemplate](../../app/gui/drivers/stateGeneration.go) regenerates and [reapplyManualEdits](../../app/gui/drivers/stateManualEdits.go) writes the whole stored snapshot back over the fresh variant. Only castle counts are reapplied ([ManualReapplyService](../../internal/services/connection_editor/manualReapplyService.go)); `UpdateTemplate` rebuilds template-level mandatory content and reconciles roads. Measured on the real driver with paired same-generation comparisons: `MapSize` (all six content values), resource and structure density (content values), player/neutral/hub zone size (`size`), neutral-stack strength (`guardMultiplier`, main-object guards), border-guard strength (main-object guards and connection `guardValue`), abandoned outposts (never added), City Hold (hub main objects, roads, biomes) and, in advanced mode, guard randomization stay at their pre-change values; hub castle changes leave the hub biomes stale.
+
+**Why wrong.** The settings panel accepts the change and the template regenerates, but the exported template keeps the old values in every zone, with no warning. A border-guard or density change after one zone drag silently has no effect.
+
+**Fix.** Separate batch Q, not authorized. A precise fix needs per-field provenance (which values the user edited), which the current snapshot cannot provide; see the Batch L report §6 and §12. Options for the owner: fix together with an approved §2.4 representation that stores overrides, or ship a lossy stop-gap first (re-derive the listed fields, losing same-field manual edits, or treat zone-affecting settings as layout-defining and discard edits with a warning). Tests: one regression per stale setting through the driver, with a castle control and a no-op control.
+
+**Owner decision.** Choose the fix route and its ordering relative to M.
+
 ## §2 Architecture, product scope, and duplication
 
 ### 2.1 ✅ FIXED — Connection-curve construction is duplicated with divergent visual policies
@@ -492,6 +505,8 @@ K1–K16, F1–F6), owner commits `1ee746b` (Phase 1) and `27b2933` (Phases 2–
 **Implementation / verification.** Inventory descriptors, validation/load paths, ordinary/tournament dispatch, preview helpers, zone labeling, factories, constructors, benchmarks, and all test fixtures before deletion; retain code shared with surviving topologies. Update the [README topology catalogue](../../README.md) and other active user documentation. Regenerate Wire. Replace retired topology tests with explicit rejection and surviving-dispatch coverage, including Random tournament fallback, Circles, Geometric Hub, and all remaining supported choices. Extend [topology-provider tests](../../test/unit/internal/services/template_generator/providers/topologyProvider/createTopologyVariant_test.go), [tournament tests](../../test/unit/internal/services/template_generator/providers/topology/tournamentTopology/createTopologyVariant_test.go), and [wire-format integration tests](../../test/integration/editorStateWireFormat_integration_test.go); cover old-version rejected loads and unchanged current state after failure. Compile/run the appropriate unit, integration, GUI, and performance suites explicitly so retired constants cannot remain hidden behind tags. Add GUI selection coverage and remeasure coverage after the deliberate code/test deletions. Keep §1.12's two-player enforcement as a separate coordinated item.
 
 ### 2.4 🟠 Investigate compact manual deltas and derivable editor state before redesign
+
+**Progress (2026-10-12).** Batch L delivered the feasibility investigation: [the report](../investigations/batch-l-compact-state.md), with live and persisted measurements, determinism and identity evidence, four prototyped alternatives (all round-tripping export and preview on 40 fixtures), a lossless-omission table, §2.5/§2.6 coordination points and acceptance tests. It recommends structure plus derived-field overrides (option C3). It also found §1.16. **The decision gate is open**: no representation, seed, delta or migration work is authorized until the owner decides; the item stays open until then.
 
 **Evidence / owner request O11.** [ManualZoneSave](../../internal/models/editor_state_model/manualZoneSave.go) persists complete edited zones; [EditorState](../../internal/models/editor_state_model/editorState.go) retains manual zone/connection snapshots. A single manual edit can therefore persist substantially more than the changed data. Redundant candidates include generated pools, guard reaction distribution, content limits, inferable zone classification, and unchanged default content rows. These are candidates to verify, not fields approved for deletion.
 
@@ -757,11 +772,12 @@ The configured run includes existing exclusions (protected registry duplication,
 | I: docs | §7.1, §7.2 | Complete: owner commit `dd2b8bf` (plan `599ff23`); every audited README/QUICKSTART inaccuracy, test observations, AGENTS.md interface example. Independent plan/implementation reviews (GPT-6.1 Sol); docs-only checks (links, snippet compile, vet on comment-touched packages); no coverage run (owner decision). |
 | J: reopened service boundary | §2.2 | Complete: owner commit `3c0ad87`, whole zone-content exception removed (bonuses kept), Windows verification and independent plan/implementation reviews; finding marked fixed 2026-09-28. Coverage 74.5% (covered statements 6909 → 6915); native Linux unavailable. |
 | K: topology retirement | §2.3 | Complete: owner commits `1ee746b` and `27b2933` (plan `d50f34d`), owner-reviewed 2026-10-04. Retired IDs rejected at load, balanced tournaments, panic-free lookup contract; independent plan/implementation reviews (GPT-6.1 Sol). Owner accepted 73.2% coverage (74.5% before; the drop is deleted fully-covered code only); native Linux unavailable. |
-| L: compact-state investigation | §2.4 | Can begin independently; owner reviews live/persisted feasibility and reconstruction semantics before implementation or schema design. |
+| L: compact-state investigation | §2.4 | Investigation delivered 2026-10-12 ([report](../investigations/batch-l-compact-state.md)); the owner's decision gate is open. Found §1.16. |
 | M: coordinated persistence format | §2.5, §2.6; approved outcome of §2.4 only | Follow L's decision gate. One migration plan, supported legacy loading, typed entries, and explicit root-versus-section wire assertions. |
 | N: panel/state organization | §2.7, §2.9 | Driver accessors first; preserve public panel API, GUI snapshots, and state round trips. Coordinate Bonuses work with M. |
 | O: focused naming and lookup | §2.8, §2.10 | Separate behavior-preserving changes; schedule rename outside overlapping service work, regenerate Wire, test the config lookup directly. |
 | P: vector arithmetic audit | §4.1 | Coordinate with F; equivalent permitted production edits only, dedicated numerical tests and hot-path checks. |
+| Q: snapshot-wins fix | §1.16 | Owner-added 2026-10-12. A precise fix needs per-field provenance: schedule with or after an approved §2.4 representation (M), or approve a lossy stop-gap first. Driver-level regressions per stale setting. |
 
 For every code batch: capture coverage before/after, build, unit suite, test-layout check, full lint baseline, relevant tagged integration/GUI suites, and Wire regeneration when constructors/provider sets change. Preserve **74.4% or higher comparable Windows coverage** and **0 lint issues**, unless a measured denominator/platform change is separately explained and approved. Owner stages/commits. Mark items in place; never renumber.
 
