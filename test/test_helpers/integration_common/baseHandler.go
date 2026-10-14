@@ -5,9 +5,21 @@ package integration_common
 import (
 	"os"
 	"path/filepath"
+	"time"
 
 	"gioui.org/f32"
 )
+
+// framesAfterLoad is how many frames LoadFile lays out after a load: enough for
+// the first regeneration, the dialog it opens and the frame that draws it.
+const framesAfterLoad = 3
+
+// regenerationDebounceWait outlasts the 300ms the editor waits for a
+// non-layout change to settle before it regenerates.
+const regenerationDebounceWait = 400 * time.Millisecond
+
+// messageDialogOKButtonLabel labels the one button of the informational dialog.
+const messageDialogOKButtonLabel = "OK"
 
 // BaseHandler drives the editor window through the AppRunner with a fluent API,
 // standing in for the Playwright/Selenium-style driver that Gio has no
@@ -139,6 +151,40 @@ func (this *BaseHandler) ClickBrowseOutput() *FileExplorerHandler {
 	this.runner.tb.Helper()
 	this.runner.ClickButton(browseOutputButtonLabel)
 	return newFileExplorerHandler(this)
+}
+
+// LoadFile loads an editor state file the way the Load dialog would, then lays
+// out the frames that follow: the first regeneration, and with it any
+// conversion notice, happens on a frame rather than during the load itself.
+func (this *BaseHandler) LoadFile(path string) *BaseHandler {
+	this.runner.tb.Helper()
+	this.runner.LoadStateFromFile(path)
+	for range framesAfterLoad {
+		this.runner.NextFrame()
+	}
+
+	this.runner.VerifySnapshot()
+	return this
+}
+
+// WaitForRegeneration lets the editor's debounce window pass and lays out the
+// frames that regenerate the template, for a change that is not applied at once.
+func (this *BaseHandler) WaitForRegeneration() *BaseHandler {
+	this.runner.tb.Helper()
+	this.runner.NextFrame()
+	time.Sleep(regenerationDebounceWait)
+	this.runner.NextFrame()
+	this.runner.NextFrame()
+	return this
+}
+
+// ClickMessageDialogOK dismisses the informational dialog on top of the window.
+func (this *BaseHandler) ClickMessageDialogOK() *BaseHandler {
+	this.runner.tb.Helper()
+	this.runner.ClickButtonIn(messageDialogRect(), messageDialogOKButtonLabel)
+	this.commit()
+	this.runner.VerifySnapshot()
+	return this
 }
 
 // ClickGenerate builds a template in memory; nothing is written to disk.

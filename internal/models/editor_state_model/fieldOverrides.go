@@ -75,6 +75,48 @@ func isNilKind(kind reflect.Kind) bool {
 	return kind == reflect.Pointer || kind == reflect.Slice || kind == reflect.Map || kind == reflect.Interface
 }
 
+// cloneFieldOverrides deep-copies every pointer and slice reachable from the
+// overrides. Interface values (placement-rule args) are immutable scalars and
+// are shared.
+func cloneFieldOverrides[Overrides any](overrides Overrides) Overrides {
+	var clone Overrides
+	reflect.ValueOf(&clone).Elem().Set(deepCopy(reflect.ValueOf(overrides)))
+	return clone
+}
+
+func deepCopy(value reflect.Value) reflect.Value {
+	//nolint:exhaustive // only containers need copying; every other kind copies by value.
+	switch value.Kind() {
+	case reflect.Pointer:
+		if value.IsNil() {
+			return value
+		}
+
+		copied := reflect.New(value.Type().Elem())
+		copied.Elem().Set(deepCopy(value.Elem()))
+		return copied
+	case reflect.Slice:
+		if value.IsNil() {
+			return value
+		}
+
+		copied := reflect.MakeSlice(value.Type(), value.Len(), value.Len())
+		for index := range value.Len() {
+			copied.Index(index).Set(deepCopy(value.Index(index)))
+		}
+		return copied
+	case reflect.Struct:
+		copied := reflect.New(value.Type()).Elem()
+		copied.Set(value)
+		for index := range value.NumField() {
+			copied.Field(index).Set(deepCopy(value.Field(index)))
+		}
+		return copied
+	default:
+		return value
+	}
+}
+
 func fieldJSONName(field reflect.StructField) string {
 	name, _, _ := strings.Cut(field.Tag.Get("json"), ",")
 	return name

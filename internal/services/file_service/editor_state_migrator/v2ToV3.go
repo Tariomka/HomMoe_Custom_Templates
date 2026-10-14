@@ -9,6 +9,8 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state/editor_state_v2"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 )
 
 // legacyContentDefaultsVersion is the default-rows table every pre-v3 file was
@@ -180,18 +182,22 @@ func toV2ZoneContentRow(seed editor_state.ZoneContentRow) editor_state_v2.ZoneCo
 // connections and writes them in the all-overridden form, so the v3 encoding
 // has a single implementation.
 func fromV2ManualEditSettings(legacy editor_state_v2.ManualEditSettings) editor_state.ManualEditSettings {
-	zones := helpers.MapSlice(
-		legacy.ManualZones,
-		func(save editor_state_v2.ManualZoneSave) editor_state.ManualZoneSave {
-			return editor_state.ManualZoneSave(save)
-		},
-	)
-	connections := helpers.MapSlice(legacy.ManualConnections,
-		func(save editor_state_v2.ManualConnectionSave) editor_state.ManualConnectionSave {
-			return editor_state.ManualConnectionSave(save)
+	zones := helpers.MapSlice(legacy.ManualZones, func(save editor_state_v2.ManualZoneSave) template_model.Zone {
+		zone := template_model.ToZoneModel(save.Zone)
+		zone.GeneratorPosition = save.GeneratorPosition
+		zone.GeneratorRing = save.GeneratorRing
+		zone.ManualPosition = save.ManualPosition
+		zone.Quality = helpers.MapPointer(save.Quality, func(ordinal int8) neutral_zone.Quality {
+			return neutral_zone.Quality(ordinal)
 		})
-	return editor_state_model.ToManualEditSettingsEntity(editor_state_model.ManualEditSettings{
-		ManualZones:       editor_state_model.ToManualZoneModels(zones),
-		ManualConnections: editor_state_model.ToManualConnectionSaveModels(connections),
+		return zone
 	})
+	connections := helpers.MapSlice(legacy.ManualConnections,
+		func(save editor_state_v2.ManualConnectionSave) template_model.Connection {
+			connection := template_model.ToConnectionModel(save.Connection)
+			connection.IsUserAdded = save.IsUserAdded
+			return connection
+		})
+	return editor_state_model.ToManualEditSettingsEntity(
+		editor_state_model.ManualEditSettingsFromSnapshot(zones, connections))
 }

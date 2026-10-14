@@ -1,0 +1,44 @@
+{
+  "1": {
+    "Circles": {
+      "rmg": "59116a2790eb6b38f36a895f50c9ac4bc9aca646a43d502f004f6c4c02f390ae",
+      "model": "2e4cbccabf9d38e03395b36d66038c62ef4d0c1b0849838806e01beda7454fe9"
+    },
+    "Cross": {
+      "rmg": "919fc86f27418264e29fab32a357235b1d15e9cb0d1f2e7cf06d0db9c09de81b",
+      "model": "0c2aa2497995e6cdb6e0482511e81481e8cb0186ac01d07ae4c5d1f119e5d5b8"
+    },
+    "Fractal": {
+      "rmg": "cfff8e4eb6d613c0ba48d0993ad9ce1f0d1512eed5ea4eb96aaf04551ff7ce2d",
+      "model": "7db17d668c864f9ead22fa306dbd743a74467fb4f0e55f75ad1b79c552347826"
+    },
+    "Geometric": {
+      "rmg": "a669e19c6d37a0d2dfc57a3becb5d1841df25f3f3377ebdcf1748d24e078674c",
+      "model": "a7114f7383ad2534ed8313a0b12bf9fb53d7cc78fcec0a06ba386eb05894f41b"
+    },
+    "GeometricHub": {
+      "rmg": "66bd8342a0213f7b523c809ce658a9807708e414ca3b40b6bd754f6707401766",
+      "model": "0e29f1d6dbe0bd0d80f6a2e287e9270fb86087ffdb3e1772d69da4f201097cb1"
+    },
+    "GeometricRandomPortals": {
+      "rmg": "",
+      "model": "d0cbde4081582262525951ad25c16a4791ed108fa898ab95a1645ecb99eb8a93"
+    },
+    "Random": {
+      "rmg": "",
+      "model": "d0cbde4081582262525951ad25c16a4791ed108fa898ab95a1645ecb99eb8a93"
+    },
+    "Square": {
+      "rmg": "6e78af4eede52c628feddc109574b4fdc79a37aef0ff88db0734aa2ac7192f53",
+      "model": "a89e2123c7f2b563ecf81873eaf05dee44117d9a70a5a196c11546dd5a72f428"
+    },
+    "SquareRandomPortals": {
+      "rmg": "",
+      "model": "d0cbde4081582262525951ad25c16a4791ed108fa898ab95a1645ecb99eb8a93"
+    },
+    "Tournament2p": {
+      "rmg": "234cf42a98ec000c0ff2c97e2ee2f4fbb8392d7c249c1bcb00bb65fd1fea7051",
+      "model": "492152123bf96a64b3ca19370f0b93f7f3705c5a522fcc0617f1757ec0ab5e75"
+    }
+  }
+}

@@ -159,7 +159,7 @@ func TestWhenGenerationFailsAfterADiscard_TheRetryCarriesTheNotice(t *testing.T)
 	handlerMock.On("GenerateTemplate", mock.Anything).Return(dtos.TemplateLoadDto{Template: &template}, nil)
 	state := newStateWithHandler(handlerMock)
 	state.UpdateState(func(dto *editor_state_model.EditorState) {
-		dto.ManualZones = []template_model.Zone{{Name: "Zone A"}}
+		dto.ManualEditSettings = zoneAManualEdits()
 	})
 	state.UpdateState(func(dto *editor_state_model.EditorState) { dto.Tournament = true })
 	state.Generate()
@@ -195,7 +195,7 @@ func TestWhenIdleUpdatesFollowFailedGeneration_TheErrorStatusSurvives(t *testing
 		Return(dtos.TemplateLoadDto{}, errors.New("generator unavailable"))
 	state := newStateWithHandler(handlerMock)
 	state.UpdateState(func(candidate *editor_state_model.EditorState) {
-		candidate.ManualZones = []template_model.Zone{{Name: "Zone A"}}
+		candidate.ManualEditSettings = zoneAManualEdits()
 	})
 	state.UpdateState(func(candidate *editor_state_model.EditorState) { candidate.Tournament = true })
 	state.AutoRegenerate(time.Now())
@@ -271,7 +271,7 @@ func TestWhenASecondTransitionPrecedesGeneration_TheDiscardIsStillReported(t *te
 	// Arrange
 	state := newStateWithHandler(newTournamentCorrectingHandler())
 	state.UpdateState(func(dto *editor_state_model.EditorState) {
-		dto.ManualZones = []template_model.Zone{{Name: "Zone A"}}
+		dto.ManualEditSettings = zoneAManualEdits()
 	})
 	state.UpdateState(func(dto *editor_state_model.EditorState) { dto.GladiatorArena = true })
 
@@ -292,7 +292,7 @@ func TestWhenASecondTransitionPrecedesGeneration_TheCorrectionIsAlsoReported(t *
 	// Arrange
 	state := newStateWithHandler(newTournamentCorrectingHandler())
 	state.UpdateState(func(dto *editor_state_model.EditorState) {
-		dto.ManualZones = []template_model.Zone{{Name: "Zone A"}}
+		dto.ManualEditSettings = zoneAManualEdits()
 	})
 	state.UpdateState(func(dto *editor_state_model.EditorState) { dto.GladiatorArena = true })
 
@@ -346,9 +346,13 @@ func newStateWithManualEdits() *drivers.State {
 	handlerMock.On("GenerateTemplate", mock.Anything).Return(dtos.TemplateLoadDto{Template: &template}, nil)
 	state := newStateWithHandler(handlerMock)
 	state.UpdateState(func(dto *editor_state_model.EditorState) {
-		dto.ManualZones = []template_model.Zone{{Name: "Zone A"}}
+		dto.ManualEditSettings = zoneAManualEdits()
 	})
 	return state
+}
+
+func zoneAManualEdits() editor_state_model.ManualEditSettings {
+	return editor_state_model.ManualEditSettingsFromSnapshot([]template_model.Zone{{Name: "Zone A"}}, nil)
 }
 
 func newStateWithHandler(handlerMock *test_helpers.TemplateHandlerMock) *drivers.State {

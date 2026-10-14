@@ -47,9 +47,18 @@ func (this *GUIHandler) UpdateTemplate(templateDto dtos.TemplateUpdateDto) (dtos
 	return this.templateHandler.UpdateTemplate(templateDto)
 }
 
-func (this *GUIHandler) ReapplyCastleSettings(
-	request dtos.CastleSettingsReapplyRequestDto) []template_model.Zone {
-	return this.templateHandler.ReapplyCastleSettings(request)
+func (this *GUIHandler) CaptureManualEdits(
+	request dtos.ManualEditCaptureRequestDto) (dtos.ManualEditCaptureDto, error) {
+	return this.templateHandler.CaptureManualEdits(request)
+}
+
+func (this *GUIHandler) ExpandManualEdits(request dtos.ManualEditExpandRequestDto) dtos.ManualEditExpansionDto {
+	return this.templateHandler.ExpandManualEdits(request)
+}
+
+func (this *GUIHandler) ConvertManualEdits(
+	request dtos.ManualEditConvertRequestDto) (dtos.ManualEditCaptureDto, error) {
+	return this.templateHandler.ConvertManualEdits(request)
 }
 
 func (this *GUIHandler) GetZoneEditorOptions(

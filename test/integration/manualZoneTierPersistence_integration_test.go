@@ -176,42 +176,39 @@ func saveStateWithRetieredNeutralZone(t *testing.T) retieredGuardEdit {
 	}
 }
 
-// reloadedState loads a saved editor state into a fresh session.
-func reloadedState(t *testing.T, path string) editor_state_model.EditorState {
+// reloadedState loads a saved editor state into a fresh session and returns
+// the layout its first regeneration rebuilds from the stored manual edits.
+func reloadedState(t *testing.T, path string) template_model.Variant {
 	t.Helper()
 	reloaded := newUIState()
 	reloaded.LoadStateFromFile(path)
 	_, isError := reloaded.GetStatus()
 	require.False(t, isError, "loading the state failed")
+	reloaded.AutoRegenerate(time.Now())
+	template := reloaded.GetLastTemplate()
+	require.NotNil(t, template, "the reloaded state did not regenerate")
+	require.NotEmpty(t, template.Variants)
 
-	return reloaded.GetStateData()
+	return template.Variants[0]
 }
 
 func reloadedGuardValue(
-	t *testing.T, state editor_state_model.EditorState, connectionName string) int {
+	t *testing.T, layout template_model.Variant, connectionName string) int {
 	t.Helper()
-	for _, save := range state.ManualConnections {
-		if save.Connection.Name == connectionName {
-			return save.Connection.GuardValue
-		}
-	}
-	t.Fatalf("the restored snapshot holds no connection called %q", connectionName)
+	connection, ok := connectionByName(layout.Connections, connectionName)
+	require.Truef(t, ok, "the restored layout holds no connection called %q", connectionName)
 
-	return 0
+	return connection.GuardValue
 }
 
 func reloadedZoneTier(
-	t *testing.T, state editor_state_model.EditorState, zoneName string) neutral_zone.Quality {
+	t *testing.T, layout template_model.Variant, zoneName string) neutral_zone.Quality {
 	t.Helper()
-	for _, zone := range state.ManualZones {
-		if zone.Name == zoneName {
-			require.NotNil(t, zone.Quality, "the re-tiered zone came back with no recorded tier")
-			return *zone.Quality
-		}
-	}
-	t.Fatalf("the restored snapshot holds no zone called %q", zoneName)
+	zone, ok := zoneByName(layout.Zones, zoneName)
+	require.Truef(t, ok, "the restored layout holds no zone called %q", zoneName)
+	require.NotNil(t, zone.Quality, "the re-tiered zone came back with no recorded tier")
 
-	return neutral_zone.QualityUnknown
+	return *zone.Quality
 }
 
 // neutralToPlayerEdge finds a connection between a neutral zone and a player
@@ -313,7 +310,7 @@ func reloadedNeutralTier(t *testing.T, path string) *neutral_zone.Quality {
 	require.NotEmpty(t, zones, "the manual snapshot was not persisted")
 	for _, zone := range zones {
 		if zone_helpers.IsZoneNameNeutral(zone.Name) {
-			return zone.Quality
+			return zone.GetQuality()
 		}
 	}
 	t.Fatal("the restored snapshot holds no neutral zone")

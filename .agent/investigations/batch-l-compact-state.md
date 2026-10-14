@@ -486,6 +486,9 @@ generator position.
 
 ## 15. Decisions requested
 
+**Answered by M-D1 to M-D9** (owner, 2026-10-13; see
+[the Batch M plan](../plans/batch-m-persistence-format.md)), implemented in Batch M.
+
 1. Representation: C3 (recommended), D only, A, or B.
 2. Migration of old snapshots: derived when equal (size win, behaviour change) or
    all-overridden (no change, no win).

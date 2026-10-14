@@ -47,7 +47,7 @@ func (this *regenerationHandler) DecideManualEditReapplication(
 		return dtos.ManualEditDecisionDto{}
 	}
 
-	return dtos.ManualEditDecisionDto{ReapplyWithCastleChanges: decision.ReapplyWithCastleChanges}
+	return dtos.ManualEditDecisionDto(decision)
 }
 
 func toEditorStateModel(dto *editor_state_dto.EditorStateDto) *editor_state_model.EditorState {

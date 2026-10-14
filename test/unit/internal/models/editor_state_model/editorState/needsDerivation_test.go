@@ -27,7 +27,8 @@ func TestWhenNeedsDerivationIsAsked_AnswersFromEditsAndGeneratorVersion(t *testi
 			state := editor_state_model.NewDefaultEditorStateModel()
 			state.GeneratorVersion = testCase.generatorVersion
 			if testCase.hasEdits {
-				state.ManualZones = []template_model.Zone{{Name: "Neutral-A"}}
+				state.ManualZones = editor_state_model.ManualEditSettingsFromSnapshot(
+					[]template_model.Zone{{Name: "Neutral-A"}}, nil).ManualZones
 			}
 
 			// Act

@@ -2,7 +2,6 @@ package test_helpers
 
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state"
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template_entity"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/mappers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
@@ -112,8 +111,8 @@ func NewAllFieldsEditorStateModel() editor_state_model.EditorState {
 		HighNeutralContentRows:   allFieldsContentRows("fixture_high_neutral_row", 45),
 		HubZoneContentRows:       allFieldsContentRows("fixture_hub_zone_row", 46),
 
-		ManualZones:       allFieldsManualZones(),
-		ManualConnections: allFieldsManualConnections(),
+		ManualEditSettings: editor_state_model.ManualEditSettingsFromSnapshot(
+			allFieldsManualZones(), allFieldsManualConnections()),
 	}
 }
 
@@ -151,18 +150,16 @@ func allFieldsManualZones() []template_model.Zone {
 	}}
 }
 
-// allFieldsManualConnections builds a manual connection carrying the
-// user-added flag, which lives on the save rather than on the connection.
-func allFieldsManualConnections() []editor_state_model.ManualConnectionSave {
-	return []editor_state_model.ManualConnectionSave{{
-		Connection: template_entity.Connection{
-			Name:                 "Fixture-Conn-A-B",
-			From:                 "Fixture-Spawn-A",
-			To:                   "Fixture-Spawn-B",
-			ConnectionType:       "Portal",
-			GuardValue:           26500,
-			GuardWeeklyIncrement: 0.15,
-		},
-		IsUserAdded: true,
+// allFieldsManualConnections builds a user-added manual connection, a flag
+// the .rmg.json connection has nowhere to put.
+func allFieldsManualConnections() []template_model.Connection {
+	return []template_model.Connection{{
+		Name:                 "Fixture-Conn-A-B",
+		From:                 "Fixture-Spawn-A",
+		To:                   "Fixture-Spawn-B",
+		ConnectionType:       "Portal",
+		GuardValue:           26500,
+		GuardWeeklyIncrement: 0.15,
+		IsUserAdded:          true,
 	}}
 }

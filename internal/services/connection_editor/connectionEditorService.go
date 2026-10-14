@@ -10,6 +10,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/variant_content"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor/connection_editor_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
 )
 
@@ -18,7 +19,7 @@ type ConnectionEditorService struct {
 }
 
 func NewConnectionEditorService(
-	tierService zone_interfaces.IZoneTierService) IConnectionEditorService {
+	tierService zone_interfaces.IZoneTierService) connection_editor_interfaces.IConnectionEditorService {
 	return &ConnectionEditorService{tierService: tierService}
 }
 

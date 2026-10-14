@@ -6,6 +6,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor/connection_editor_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/stretchr/testify/mock"
 )
@@ -22,7 +23,7 @@ const (
 // the node placement (which the preview layout service owns and tests).
 func newGeometryFixture(
 	positions map[string]models.Position,
-) (connection_editor.IZoneEditorGeometryService, *test_helpers.PreviewLayoutServiceMock) {
+) (connection_editor_interfaces.IZoneEditorGeometryService, *test_helpers.PreviewLayoutServiceMock) {
 	previewLayout := &test_helpers.PreviewLayoutServiceMock{}
 	previewLayout.
 		On("BuildPreviewLayout", mock.Anything, mock.Anything, mock.Anything).

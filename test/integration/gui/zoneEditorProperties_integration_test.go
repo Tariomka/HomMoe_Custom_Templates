@@ -105,22 +105,40 @@ func editedZone(
 	return template_model.Zone{}
 }
 
-// manualConnectionSave finds the committed manual record of a connection, which
-// is what Apply writes and the only place a connection's edited properties can
-// be read back from.
+// manualConnectionSave finds a connection the editor state records as manually
+// edited and returns it as Apply committed it, which is the only place a
+// connection's edited properties can be read back from.
 func manualConnectionSave(
 	t *testing.T,
 	runner *integration_common.AppRunner,
-	name string) editor_state_model.ManualConnectionSave {
+	name string) template_model.Connection {
 	t.Helper()
-	for _, save := range runner.CurrentState().ManualConnections {
-		if save.Connection.Name == name {
-			return save
+	for _, edit := range runner.CurrentState().ManualConnections {
+		if edit.Name == name {
+			return appliedConnectionOf(t, runner, edit)
 		}
 	}
 	t.Fatalf("the editor state committed no manual connection called %q", name)
 
-	return editor_state_model.ManualConnectionSave{}
+	return template_model.Connection{}
+}
+
+// appliedConnectionOf returns the full connection a stored edit stands for. The
+// edit holds only its differences from a derivation, so the connection is read
+// from the applied template, which the edit is the delta of.
+func appliedConnectionOf(
+	t *testing.T,
+	runner *integration_common.AppRunner,
+	edit editor_state_model.ManualConnectionEdit) template_model.Connection {
+	t.Helper()
+	for _, connection := range runner.AppliedConnections() {
+		if connection.Name == edit.Name && connection.From == edit.From && connection.To == edit.To {
+			return connection
+		}
+	}
+	t.Fatalf("the applied template has no connection %q between %q and %q", edit.Name, edit.From, edit.To)
+
+	return template_model.Connection{}
 }
 
 // selectPlacedNeutralZone places a zone on empty canvas and selects it, which is
@@ -167,24 +185,23 @@ func neutralEdgeGuardValue(
 	return pendingConnection(t, zoneEditor, placedZoneName, spawnAZoneName).GuardValue
 }
 
-// manualConnectionSaveBetween finds the committed manual record of the edge
-// joining two zones. A user-added connection carries no name, so it is found by
-// its endpoints.
+// manualConnectionSaveBetween finds the manual record of the edge joining two
+// zones and returns it as Apply committed it. A user-added connection carries no
+// name, so it is found by its endpoints.
 func manualConnectionSaveBetween(
 	t *testing.T,
 	runner *integration_common.AppRunner,
 	from string,
-	to string) editor_state_model.ManualConnectionSave {
+	to string) template_model.Connection {
 	t.Helper()
-	for _, save := range runner.CurrentState().ManualConnections {
-		if (save.Connection.From == from && save.Connection.To == to) ||
-			(save.Connection.From == to && save.Connection.To == from) {
-			return save
+	for _, edit := range runner.CurrentState().ManualConnections {
+		if (edit.From == from && edit.To == to) || (edit.From == to && edit.To == from) {
+			return appliedConnectionOf(t, runner, edit)
 		}
 	}
 	t.Fatalf("the editor state committed no manual connection between %q and %q", from, to)
 
-	return editor_state_model.ManualConnectionSave{}
+	return template_model.Connection{}
 }
 
 //nolint:paralleltest // Driving the window needs exclusive access to the single headless GPU window.
@@ -311,7 +328,7 @@ func TestWhenAConnectionGuardValueIsTyped_TheAppliedConnectionRecordsIt(t *testi
 	zoneEditor.TypeConnectionGuardValue("1").ClickApply()
 
 	// Assert
-	assert.Equal(t, 135000, manualConnectionSave(t, runner, hubToSpawnAName).Connection.GuardValue)
+	assert.Equal(t, 135000, manualConnectionSave(t, runner, hubToSpawnAName).GuardValue)
 }
 
 // A guard value that is not a number leaves the connection alone: the writeback
@@ -327,7 +344,7 @@ func TestWhenAConnectionGuardValueIsNotNumeric_ThePreviousValueIsKept(t *testing
 	zoneEditor.TypeConnectionGuardValue("abc").ClickApply()
 
 	// Assert
-	assert.Equal(t, 35000, manualConnectionSave(t, runner, hubToSpawnAName).Connection.GuardValue)
+	assert.Equal(t, 35000, manualConnectionSave(t, runner, hubToSpawnAName).GuardValue)
 }
 
 //nolint:paralleltest // Driving the window needs exclusive access to the single headless GPU window.
@@ -341,7 +358,7 @@ func TestWhenAConnectionIncrementIsTyped_TheAppliedConnectionRecordsIt(t *testin
 
 	// Assert
 	assert.InDelta(t, 70.15,
-		manualConnectionSave(t, runner, hubToSpawnAName).Connection.GuardWeeklyIncrement, 1e-9)
+		manualConnectionSave(t, runner, hubToSpawnAName).GuardWeeklyIncrement, 1e-9)
 }
 
 //nolint:paralleltest // Driving the window needs exclusive access to the single headless GPU window.
@@ -355,7 +372,7 @@ func TestWhenAConnectionTypeIsSelected_TheAppliedConnectionRecordsIt(t *testing.
 
 	// Assert
 	assert.Equal(t, directConnectionTypeLabel,
-		manualConnectionSave(t, runner, hubToSpawnAName).Connection.ConnectionType)
+		manualConnectionSave(t, runner, hubToSpawnAName).ConnectionType)
 }
 
 //nolint:paralleltest // Driving the window needs exclusive access to the single headless GPU window.
@@ -369,7 +386,7 @@ func TestWhenAConnectionGuardZoneIsSelected_TheAppliedConnectionRecordsIt(t *tes
 
 	// Assert
 	assert.Equal(t, spawnAZoneName,
-		manualConnectionSave(t, runner, hubToSpawnAName).Connection.GuardZone)
+		manualConnectionSave(t, runner, hubToSpawnAName).GuardZone)
 }
 
 // The preset does not carry a value of its own: picking one rewrites the guard
@@ -385,7 +402,7 @@ func TestWhenAConnectionGuardPresetIsSelected_TheGuardValueFollowsIt(t *testing.
 	zoneEditor.SelectConnectionGuardPreset(lowGuardPresetLabel).ClickApply()
 
 	// Assert
-	assert.Equal(t, 52000, manualConnectionSave(t, runner, hubToSpawnAName).Connection.GuardValue)
+	assert.Equal(t, 52000, manualConnectionSave(t, runner, hubToSpawnAName).GuardValue)
 }
 
 //nolint:paralleltest // Driving the window needs exclusive access to the single headless GPU window.
@@ -399,7 +416,7 @@ func TestWhenAConnectionWeeklyIncrementIsSelected_TheIncrementFollowsIt(t *testi
 
 	// Assert
 	assert.InDelta(t, 0.2,
-		manualConnectionSave(t, runner, hubToSpawnAName).Connection.GuardWeeklyIncrement, 1e-9)
+		manualConnectionSave(t, runner, hubToSpawnAName).GuardWeeklyIncrement, 1e-9)
 }
 
 // The match group row only exists while the advanced options are shown, so this
@@ -416,7 +433,7 @@ func TestWhenAdvancedOptionsAreShownAndAMatchGroupIsTyped_TheAppliedConnectionRe
 
 	// Assert
 	assert.Equal(t, probeMatchGroup,
-		manualConnectionSave(t, runner, hubToSpawnAName).Connection.GuardMatchGroup)
+		manualConnectionSave(t, runner, hubToSpawnAName).GuardMatchGroup)
 }
 
 //nolint:paralleltest // Driving the window needs exclusive access to the single headless GPU window.
@@ -429,7 +446,7 @@ func TestWhenGuardEscapeIsToggled_TheAppliedConnectionRecordsIt(t *testing.T) {
 	zoneEditor.ToggleGuardEscape().ClickApply()
 
 	// Assert
-	assert.True(t, manualConnectionSave(t, runner, hubToSpawnAName).Connection.GuardEscape)
+	assert.True(t, manualConnectionSave(t, runner, hubToSpawnAName).GuardEscape)
 }
 
 //nolint:paralleltest // Driving the window needs exclusive access to the single headless GPU window.
@@ -442,7 +459,7 @@ func TestWhenSimTurnSquadIsToggled_TheAppliedConnectionRecordsIt(t *testing.T) {
 	zoneEditor.ToggleSimTurnSquad().ClickApply()
 
 	// Assert
-	assert.True(t, manualConnectionSave(t, runner, hubToSpawnAName).Connection.SimTurnSquad)
+	assert.True(t, manualConnectionSave(t, runner, hubToSpawnAName).SimTurnSquad)
 }
 
 // Raising a neutral zone's tier carries its incident guards to the same named
@@ -636,7 +653,7 @@ func TestWhenAConnectionIsEditedAfterAQualityChange_TheAppliedGuardIsTheLaterEdi
 
 	// Assert
 	assert.Equal(t, editedGuardValue,
-		manualConnectionSaveBetween(t, runner, placedZoneName, spawnAZoneName).Connection.GuardValue)
+		manualConnectionSaveBetween(t, runner, placedZoneName, spawnAZoneName).GuardValue)
 }
 
 //nolint:paralleltest // Driving the window needs exclusive access to the single headless GPU window.
@@ -652,7 +669,7 @@ func TestWhenAQualityChangeIsApplied_TheCommittedGuardCarriesTheNewValue(t *test
 
 	// Assert
 	assert.Equal(t, goldMediumGuardValue,
-		manualConnectionSaveBetween(t, runner, placedZoneName, spawnAZoneName).Connection.GuardValue)
+		manualConnectionSaveBetween(t, runner, placedZoneName, spawnAZoneName).GuardValue)
 }
 
 // A quality edit is pending dialog work until Apply, so cancelling has to leave
@@ -819,7 +836,7 @@ func TestWhenAQualityChangeIsCancelled_AnAlreadyCommittedGuardIsKept(t *testing.
 		ClickLayoutAndZonesTab().
 		OpenZoneEditor()
 	require.Equal(t, silverMediumGuardValue,
-		manualConnectionSaveBetween(t, runner, placedZoneName, spawnAZoneName).Connection.GuardValue)
+		manualConnectionSaveBetween(t, runner, placedZoneName, spawnAZoneName).GuardValue)
 	reopened.ClickZone(placedZoneName).SelectZoneQuality(goldZoneQualityLabel)
 
 	// Act
@@ -827,7 +844,7 @@ func TestWhenAQualityChangeIsCancelled_AnAlreadyCommittedGuardIsKept(t *testing.
 
 	// Assert
 	assert.Equal(t, silverMediumGuardValue,
-		manualConnectionSaveBetween(t, runner, placedZoneName, spawnAZoneName).Connection.GuardValue)
+		manualConnectionSaveBetween(t, runner, placedZoneName, spawnAZoneName).GuardValue)
 }
 
 // The layout the cancelled dialog was opened over is committed work too, so the
@@ -865,7 +882,7 @@ func applyRemappedGuardThenSelectVictory(t *testing.T, victoryLabel string) (
 		SelectZoneQuality(goldZoneQualityLabel).
 		ClickApply()
 	require.Equal(t, goldMediumGuardValue,
-		manualConnectionSaveBetween(t, runner, placedZoneName, spawnAZoneName).Connection.GuardValue,
+		manualConnectionSaveBetween(t, runner, placedZoneName, spawnAZoneName).GuardValue,
 		"precondition: Apply commits the remapped guard, so the mode change has real work to discard")
 	require.Contains(t, manualZoneNames(runner), placedZoneName,
 		"precondition: Apply commits the placed zone too")

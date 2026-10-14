@@ -55,6 +55,7 @@ var GenerationSet = wire.NewSet(
 var EditorSet = wire.NewSet(
 	bonuses.NewBonusEntryService,
 	connection_editor.NewConnectionEditorService,
+	connection_editor.NewManualEditDeltaService,
 	connection_editor.NewManualReapplyService,
 	connection_editor.NewZoneEditorService,
 	connection_editor.NewZoneEditorGeometryService,

@@ -120,6 +120,26 @@ from the `.gen.json` entity (`internal/entities/editor_state`).
 The toolbar's right-hand label always shows the active `.gen.json` path
 and an asterisk when there are unsaved changes.
 
+### The `.gen.json` format (schema 3)
+
+- The root holds `schemaVersion`, `generatorVersion`, the template identity and
+  map settings; everything else sits in sections: `players`, `neutralZones`,
+  `castles`, `generation`, `gameRules`, `content` and `manualEdits`.
+- `content.bannedItems` / `bannedMagics` are `[{ "sid": ... }]` lists and
+  `content.valueOverrides` is `[{ "sid": ..., "guardValue": ... }]`. Default
+  player content rows are omitted (`contentDefaultsVersion`); a cleared list is
+  written as `[]`.
+- `manualEdits` stores only what you changed in the zone editor: per zone its
+  name, tier and positions (`origin: "added"` and `castles` for zones you added
+  or re-profiled), per connection its name, endpoints, type and `isUserAdded`,
+  plus `fieldOverrides` / `unset` for values that differ from a fresh
+  generation. Every other value follows the current settings, so changing a
+  setting after a manual edit still reaches the zones you did not touch.
+- Older files (schema 0-2) load as before; their manual snapshot is converted
+  at the first regeneration and a notice explains it. Save to keep the new
+  format. A file saved by a different generator version shows a status note
+  that untouched values may differ.
+
 ## 4. Generate a Template
 
 1. The output folder is pre-filled with the game's detected templates folder.

@@ -109,11 +109,13 @@ func TestCastleOptionChange_AfterManualEdits_UpdatesSnapshotCastles(t *testing.T
 	assert.Equal(t, expectedConnections, gotConnections,
 		"the manual connection graph must survive a castle-count regeneration untouched")
 
-	// The updated counts must be persisted back into the snapshot so saves and
-	// later regenerations carry them.
+	// The re-tiered zone owns its castle count, so the reapplied count must be
+	// recorded back into the stored edits for saves and later regenerations.
 	for _, zone := range state.GetStateData().ManualZones {
-		if zone_helpers.IsZoneNameNeutral(zone.Name) {
-			assert.Equal(t, 3, test_helpers.NewZoneEditorService().CountZoneCastles(zone))
+		if zone.Name == retieredName {
+			castles, recorded := zone.GetCastles()
+			assert.True(t, recorded)
+			assert.Equal(t, 3, castles)
 		}
 	}
 }

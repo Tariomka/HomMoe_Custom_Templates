@@ -33,49 +33,57 @@ func newEditorStateWithValidation(validation stateValidationFunc) *models.Editor
 // manualZoneFieldCase reads a value reachable only through a slice or pointer,
 // and mutates that same value in place.
 type manualZoneFieldCase struct {
-	read   func(zone template_model.Zone) any
-	mutate func(zone template_model.Zone)
+	read   func(edit editor_state_model.ManualZoneEdit) any
+	mutate func(edit editor_state_model.ManualZoneEdit)
 }
 
 // manualZoneFieldCases covers the nested storage a caller still holds a handle
-// on after handing a zone to the snapshot, or receives back from it.
+// on after handing edits to the state, or receives back from it.
 func manualZoneFieldCases() map[string]manualZoneFieldCase {
 	return map[string]manualZoneFieldCase{
 		"WhenManualPositionIsMutated_TheSnapshotIsUnchanged": {
-			read:   func(zone template_model.Zone) any { return *zone.ManualPosition },
-			mutate: func(zone template_model.Zone) { zone.ManualPosition.X = 9 },
+			read:   func(edit editor_state_model.ManualZoneEdit) any { return *edit.ManualPosition },
+			mutate: func(edit editor_state_model.ManualZoneEdit) { edit.ManualPosition.X = 9 },
 		},
 		"WhenGeneratorPositionIsMutated_TheSnapshotIsUnchanged": {
-			read:   func(zone template_model.Zone) any { return *zone.GeneratorPosition },
-			mutate: func(zone template_model.Zone) { zone.GeneratorPosition.Y = 9 },
+			read:   func(edit editor_state_model.ManualZoneEdit) any { return *edit.GeneratorPosition },
+			mutate: func(edit editor_state_model.ManualZoneEdit) { edit.GeneratorPosition.Y = 9 },
 		},
 		"WhenGeneratorRingIsMutated_TheSnapshotIsUnchanged": {
-			read:   func(zone template_model.Zone) any { return *zone.GeneratorRing },
-			mutate: func(zone template_model.Zone) { *zone.GeneratorRing = 9 },
+			read:   func(edit editor_state_model.ManualZoneEdit) any { return *edit.GeneratorRing },
+			mutate: func(edit editor_state_model.ManualZoneEdit) { *edit.GeneratorRing = 9 },
 		},
 		"WhenQualityIsMutated_TheSnapshotIsUnchanged": {
-			read:   func(zone template_model.Zone) any { return *zone.Quality },
-			mutate: func(zone template_model.Zone) { *zone.Quality = neutral_zone.QualityHighest },
+			read:   func(edit editor_state_model.ManualZoneEdit) any { return *edit.Quality },
+			mutate: func(edit editor_state_model.ManualZoneEdit) { *edit.Quality = int8(neutral_zone.QualityHighest) },
 		},
 		"WhenEncounterHolesSettingsIsMutated_TheSnapshotIsUnchanged": {
-			read:   func(zone template_model.Zone) any { return *zone.EncounterHolesSettings },
-			mutate: func(zone template_model.Zone) { zone.EncounterHolesSettings.TwoHoleEncounters = 9 },
+			read: func(edit editor_state_model.ManualZoneEdit) any { return *edit.FieldOverrides.EncounterHolesSettings },
+			mutate: func(edit editor_state_model.ManualZoneEdit) {
+				edit.FieldOverrides.EncounterHolesSettings.TwoHoleEncounters = 9
+			},
 		},
 		"WhenAContentPoolEntryIsMutated_TheSnapshotIsUnchanged": {
-			read:   func(zone template_model.Zone) any { return zone.GuardedContentPool[0] },
-			mutate: func(zone template_model.Zone) { zone.GuardedContentPool[0] = "changed" },
+			read: func(edit editor_state_model.ManualZoneEdit) any { return edit.FieldOverrides.GuardedContentPool[0] },
+			mutate: func(edit editor_state_model.ManualZoneEdit) {
+				edit.FieldOverrides.GuardedContentPool[0] = "changed"
+			},
 		},
 		"WhenAMainObjectFactionIsMutated_TheSnapshotIsUnchanged": {
-			read:   func(zone template_model.Zone) any { return zone.MainObjects[0].Factions[0] },
-			mutate: func(zone template_model.Zone) { zone.MainObjects[0].Factions[0] = "changed" },
+			read: func(edit editor_state_model.ManualZoneEdit) any {
+				return edit.FieldOverrides.MainObjects[0].Factions[0]
+			},
+			mutate: func(edit editor_state_model.ManualZoneEdit) {
+				edit.FieldOverrides.MainObjects[0].Factions[0] = "changed"
+			},
 		},
 		"WhenARoadIsMutated_TheSnapshotIsUnchanged": {
-			read:   func(zone template_model.Zone) any { return zone.Roads[0].Type },
-			mutate: func(zone template_model.Zone) { zone.Roads[0].Type = "changed" },
+			read:   func(edit editor_state_model.ManualZoneEdit) any { return edit.FieldOverrides.Roads[0].Type },
+			mutate: func(edit editor_state_model.ManualZoneEdit) { edit.FieldOverrides.Roads[0].Type = "changed" },
 		},
 		"WhenARoadFlagIsMutated_TheSnapshotIsUnchanged": {
-			read:   func(zone template_model.Zone) any { return *zone.Roads[0].Road },
-			mutate: func(zone template_model.Zone) { *zone.Roads[0].Road = false },
+			read:   func(edit editor_state_model.ManualZoneEdit) any { return *edit.FieldOverrides.Roads[0].Road },
+			mutate: func(edit editor_state_model.ManualZoneEdit) { *edit.FieldOverrides.Roads[0].Road = false },
 		},
 	}
 }
@@ -105,4 +113,9 @@ func newPopulatedManualZone() template_model.Zone {
 			Road: new(true),
 		}},
 	}
+}
+
+// newPopulatedManualEdits encodes newPopulatedManualZone as a manual-edit layer.
+func newPopulatedManualEdits() editor_state_model.ManualEditSettings {
+	return editor_state_model.ManualEditSettingsFromSnapshot([]template_model.Zone{newPopulatedManualZone()}, nil)
 }

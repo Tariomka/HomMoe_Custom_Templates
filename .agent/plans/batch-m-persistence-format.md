@@ -630,22 +630,22 @@ change, before building.
   `copyloopvar`); `wire diff` clean.
 
 ## Phase 4: C3 semantics and §1.16 (M-D1 to M-D5)
-Status: Not started
+Status: Complete
 
-- [ ] Behaviour-neutral move first: `connection_editor` interfaces → new
+- [x] Behaviour-neutral move first: `connection_editor` interfaces → new
   `internal/services/connection_editor/connection_editor_interfaces/` (4 files), all imports,
   mocks and Wire updated; `wire gen` + `wire diff`, build and unit green before continuing.
-- [ ] `ManualEditDeltaService` (D3) + interface + Wire; `templateHandler` gains the dependency
+- [x] `ManualEditDeltaService` (D3) + interface + Wire; `templateHandler` gains the dependency
   and the three methods (D4), mirrored in the `IGuiHandler` facade, interfaces, mocks and tests;
   `ReapplyCastleSettings`, its DTO, facade method, mock and tests removed;
   `ManualReapplyService` used from `Expand` per M6.
-- [ ] Live model switches to compact (D2/D4); mapper persists the compact form directly.
-- [ ] `messageDialog.go` (D6) moved here so the conversion path is complete in this phase.
-- [ ] Driver flows (D4): Apply capture with the all-overridden failure fallback; baseline and
+- [x] Live model switches to compact (D2/D4); mapper persists the compact form directly.
+- [x] `messageDialog.go` (D6) moved here so the conversion path is complete in this phase.
+- [x] Driver flows (D4): Apply capture with the all-overridden failure fallback; baseline and
   `announceConversion`; conversion + modal + M17; expansion; warnings appended to the final
   status; M-D5 (`DecideManualEditReapplication` returns `GeneratorVersionChanged`, compared in
   the regeneration decision service, which may import `internal/common`).
-- [ ] **Generator version guard + determinism contract** (untagged integration test
+- [x] **Generator version guard + determinism contract** (untagged integration test
   `test/integration/generatorOutput_integration_test.go`, production APIs only). Matrix: the
   7 topologies with `RandomPortals` off; Square and Geometric with `RandomPortals` on; a
   tournament 2p. Each generated twice.
@@ -657,7 +657,7 @@ Status: Not started
     (model, including tier) across runs.
   - A hash change at the same version fails ("bump `GeneratorOutputVersion`"); a version with no
     recorded hashes fails ("regenerate with `-update`"); `-update` rewrites only that file.
-- [ ] Unit tests (mirrored layout, one function per file): `Capture` (untouched → no overrides;
+- [x] Unit tests (mirrored layout, one function per file): `Capture` (untouched → no overrides;
   move; field override; nil → `unset`; `[]`/`false`/`0` → override; re-tier → factory +
   `castles`; castles-only → factory; added zone; delete-then-re-add of a reused label → added;
   legacy-unstamped snapshot → added by name; deleted zone absent; non-deterministic → roads
@@ -672,7 +672,7 @@ Status: Not started
   `GeneratorVersionChanged`; driver flows (`test/unit/app/gui/drivers/`): capture failure →
   all-overridden, unsaved, Save writes `generatorVersion: 0`, Exit prompts; warnings survive in
   the final status; baseline cleared by Reset / load / mode transition.
-- [ ] **Conversion acceptance** (integration): legacy load → save without any successful
+- [x] **Conversion acceptance** (integration): legacy load → save without any successful
   generation → reload → conversion still happens; legacy load → change density and castles
   before the first successful regeneration → conversion uses the load-time baseline, castle
   deltas baseline → current reach re-profiled and `mainObjects`-overridden zones, expansion
@@ -680,29 +680,29 @@ Status: Not started
   no value lost, the density-dependent fields stay overridden (the documented conservative
   rule); conversion failure with non-empty castle changes → snapshot reapplied unchanged,
   `generatorVersion` 0 kept, error in the status.
-- [ ] Dialog provenance: existing user-added edge → reopen → Undo → Apply keeps `isUserAdded`;
+- [x] Dialog provenance (factory half here; the reopen → Undo → Apply half is a GUI test, done in Phase 5): existing user-added edge → reopen → Undo → Apply keeps `isUserAdded`;
   a user-added connection whose name and endpoints equal a fresh generated connection still
   derives from the factory.
-- [ ] **Round-trip acceptance** (integration, curated fixtures, scoped comparator from Phase 3):
+- [x] **Round-trip acceptance** (integration, curated fixtures, scoped comparator from Phase 3):
   load v2 → first regeneration → raw zones/connections equal the v2 snapshot, export and preview
   equal; then save → load → regenerate: equal again.
-- [ ] **§1.16 regressions** (integration through the driver, `drivers.NewUIState`): after one move,
+- [x] **§1.16 regressions** (integration through the driver, `drivers.NewUIState`): after one move,
   changing each setting in report §6 (`MapSize`, resource density, structure density, player /
   neutral / hub zone size, neutral-stack strength, border-guard strength incl. connection
   `guardValue`, abandoned outposts on and count, City Hold on a hub topology, hub castles' biomes,
   advanced-mode guard randomization) makes the affected fields equal a fresh generation; an
   explicit override of the same field survives; castle control (player castles change still
   applied); no-op control (template rename changes no zone).
-- [ ] Identity tests: delete then re-add the same label (`origin: added`), parallel edges,
+- [x] Identity tests: delete then re-add the same label (`origin: added`), parallel edges,
   user-added naming, order preserved, Undo and Revert-to-Base then Apply.
-- [ ] **Size gate** (integration test, deterministic): for the geohub6p move fixture,
+- [x] **Size gate** (integration test, deterministic): for the geohub6p move fixture,
   `json.Compact` of the v2 `manualZones` + `manualConnections` values vs `json.Compact` of the
   converted v3 `manualEdits` value; v3 ≤ 30% (report §13). The indented file sizes are recorded
   separately in the phase summary.
-- [ ] **Performance**: rerun the Phase 2 protocol. `BenchmarkEditorStateFile_SaveLoad` median
+- [x] **Performance**: rerun the Phase 2 protocol. `BenchmarkEditorStateFile_SaveLoad` median
   ns/op not above the Phase 2 baseline; `BenchmarkAutoRegenerate_IdleFrame` allocs/op and B/op
   not above the Phase 2 "after" figures.
-- [ ] Update `manualCastleReapply_integration_test.go`, `manualEditDirtyTracking_integration_test.go`,
+- [x] Update `manualCastleReapply_integration_test.go`, `manualEditDirtyTracking_integration_test.go`,
   `manualZoneTierPersistence_integration_test.go`, `zoneEditorRevertToBase_integration_test.go`
   to the new semantics (each change justified in the phase summary).
 
@@ -714,51 +714,147 @@ Status: Not started
   handler methods and the driver flows covered or recorded as GUI-only.
 
 ### Phase Summary
-_(write when phase completes)_
+**Complete (2026-10-13, session 3).**
+- **Interfaces:** the four `connection_editor` interfaces moved to
+  `connection_editor_interfaces/` (now five with `IManualEditDeltaService`); Wire regenerated.
+- **Live model is compact:** `editor_state_model.ManualZoneEdit` / `ManualConnectionEdit` embed
+  the entity edits and own `NewManualZoneEdit(derived, edited, alwaysStoreRoads)`, `Apply`,
+  `Clone` (reflection deep copy of the overrides), provenance (`IsAdded`, `GetCastles`,
+  `AsAdded`, `AsReprofiled`, `HasMainObjectsOverride`) and `Structure`.
+  `ManualEditSettings{ManualZones, ManualConnections}` adds `ManualEditSettingsFromSnapshot` /
+  `ToSnapshot` (the derivation-free, all-overridden form). Entity and model `ManualZoneSave` /
+  `ManualConnectionSave` are gone from v3 (v1/v2 keep theirs); the mapper wraps/unwraps only.
+- **`ManualEditDeltaService`** (`Capture`, `Expand`) per D3/D3a/D3b. Requests and the expansion
+  are models (`models.ManualEditCaptureRequest`, `ManualEditExpandRequest`,
+  `ManualEditExpansion`). `ManualReapplyService.ApplyCastleSettingChanges` takes an `eligible`
+  mask (tuning still over all zones).
+- **Handler:** `CaptureManualEdits`, `ExpandManualEdits`, `ConvertManualEdits` (+ five DTOs,
+  facade, mock); `ReapplyCastleSettings` and its DTO removed. `config.GeneratorConfig.
+  HasNonDeterministicLayout()` is the determinism flag. `DecideManualEditReapplication`
+  returns `GeneratorVersionChanged`.
+- **Driver:** Apply captures (failure: all-overridden, version 0, baseline, unsaved, error
+  status); regeneration converts a pending snapshot against the baseline (retry with current
+  settings), opens the conversion modal once for a loaded file, then expands; castle deltas
+  baseline → current; warnings and the M-D5 note appended to the final status. Baseline
+  cleared by Reset, load, Revert-to-Base, discarded edits and success. `MessageDialog` (OK).
+  M29: the two `IsUserAdded` clearing lines are gone.
+- **Deviations:** (1) non-deterministic layouts derive **every** connection from the factory,
+  not only unmatched ones: Random generations differ in connection values (`SimTurnSquad`) under
+  the same name, which broke the round trip; (2) `Expand` runs the castle reapply before
+  deriving connections, so connections derive against the final zones; (3) the modal closes on
+  OK or the host's close button (no Escape handling exists in any dialog); (4) the guard test's
+  flag is `-update-generator-hashes` (the integration package already owns `-update`);
+  (5) Random-layout determinism is asserted per zone name without positions, rings and roads
+  (zone order and positions vary per run).
+- **Tests:** unit for every new/changed function (delta service 100% incl. all branches,
+  models, handler, facade, GUI model, regeneration decision/handler, driver flows, migration);
+  integration: `generatorOutput_integration_test.go` + `testdata/generatorOutputHashes.json`
+  (version 1, 7 deterministic cases, 3 non-deterministic), `manualEditConversion_integration_test.go`
+  (14 curated fixtures: convert + expand rebuilds zones and connections exactly; size gate),
+  tagged `manualEditConversionFlow_integration_test.go` (modal, unsaved, save-before-regenerate,
+  load-time baseline, conservative pinned rule, castle deltas, M-D5) and
+  `manualEditRegeneration_integration_test.go` (§1.16: map size, both densities, player and
+  neutral size, neutral-stack and border-guard strength, outposts, guard randomization,
+  player castles, City Hold on GeometricHub, override survives, rename is a no-op). Updated:
+  `manualCastleReapply` (re-tiered zone records `castles: 3`), `manualZoneTierPersistence`
+  (reads the reloaded layout after a regeneration); `manualEditDirtyTracking` and
+  `zoneEditorRevertToBase` pass unchanged.
+- **Size gate:** geohub6p move manual section compact 108,289 B → 8,133 B (7.5%).
+- **Performance** (medians of 5, `.agent/memories/batch-m/bench/phase4.txt`): SaveLoad
+  6,180,455 ns / 286,916 B / 1,146 allocs (baseline 10,277,678 ns / 818,139 B / 4,930);
+  IdleFrame with edits 9,443 ns / 10,482 B / 110 allocs (unchanged).
+- **Gates:** build, vet × 3, unit, `./test/...`, tagged integration, tagged GUI (44.6 s, 0
+  `.failure`, no golden moved), testlayoutcheck, gofmt, lint 0, `wire diff` clean, layering
+  test unchanged. Coverage **74.34% (5981 / 8046)**, floor 73.07%. GUI-only gaps:
+  `MessageDialog` (Phase 5 GUI test), `handleLoadState` and the modal branch of
+  `convertManualEdits` (load path, covered by the tagged integration tests).
 
 ## Phase 5: GUI notices and regression flows
-Status: Not started
+Status: Complete
 
-- [ ] GUI-only statements of the modal and the driver's dialog opening recorded in
+- [x] GUI-only statements of the modal and the driver's dialog opening recorded in
   `test_observations.md`.
-- [ ] GUI integration (`integration_test && gui`): loading a v2 file with manual edits opens the
+- [x] GUI integration (`integration_test && gui`): loading a v2 file with manual edits opens the
   modal once, OK closes it, the document is unsaved; a v2 file without edits opens no modal and
   stays saved; the M-D5 status suffix for a v3 file with an older non-zero `generatorVersion` and
   edits, absent without edits; malformed-legacy load message lists the line warnings.
-- [ ] Manual-edit flows through the window harness: move, add zone, delete zone, quality,
+- [x] Manual-edit flows through the window harness: move, add zone, delete zone, quality,
   connection edit, apply, revert to base, save, load, settings change (border-guard strength) —
   each asserts the exported zone values and the persisted `manualEdits` shape.
-- [ ] Bonuses panel: add/remove ban item, ban spell, override; save; load; values and order
+- [x] Bonuses panel: add/remove ban item, ban spell, override; save; load; values and order
   preserved; goldens unchanged.
-- [ ] New modal goldens accepted only from `.failure` files, listed for the owner.
+- [x] New modal goldens accepted only from `.failure` files, listed for the owner.
 
 ### Verification Plan
 - GUI tagged suite PASS (twice, `-count=1` then cached), 0 unexplained `.failure`; all other
   gates as Phase 4, including a coverage comparison.
 
 ### Phase Summary
-_(write when phase completes)_
+**Complete (2026-10-13, session 3).**
+- New GUI files (`//go:build integration_test && gui`) in `test/integration/gui/`:
+  `manualEditConversion_integration_test.go` (modal after the first regeneration, OK closes it,
+  no reopen, unsaved; no-edit legacy file: no modal, saved; M-D5 suffix with and without edits;
+  malformed override warning in the load status; modal golden),
+  `manualEditFlows_integration_test.go` (Undo-baseline provenance: reopen, Undo → Apply, and
+  `isUserAdded: true` persisted; move → only `manualPosition`; add → `origin: added`; delete →
+  absent; quality → `castles`; guard edit → `fieldOverrides.guardValue`; border-guard strength
+  after a move → an unedited connection equals a fresh generation),
+  `bonusesPersistence_integration_test.go` (banned items, spell, override survive save/load in
+  order; a removed ban stays removed).
+- Harness additions (test-only): `window_testexports.go` `TopDialogTitle`, `IPickerDialog`,
+  `TopPicker`; `integration_common` runner/handler/coordinate helpers (`LoadFile`,
+  `ClickMessageDialogOK`, `WaitForRegeneration` (400 ms, the debounce is wall-clock),
+  `DragBorderGuardStrengthToMaximum`, Bonuses & Bans pickers, message-dialog and slider
+  coordinates). `AppliedConnections()` was added in Phase 4.
+- **One new golden** (created with `-update` scoped to that test, no `.failure` left):
+  `test/test_helpers/integration_common/snapshot/__snapshots__/manualEditConversion_integration_test/TestWhenALegacyFileWithEditsIsConverted_TheConversionNoticeMatchesGolden_1.golden`.
+  No other golden moved.
+- GUI suite PASS twice (`-count=1`, then cached), 0 `.failure`.
+- Observation for the owner (pre-existing, not changed): moving only the Hub in the dialog
+  also stamps a `manualPosition` on the spawns that differs from their generator position
+  (canvas scaling). Recorded in the handoff.
 
 ## Phase 6: Final gate, review and close-out
-Status: Not started
+Status: Complete
 
-- [ ] Full gate: build, vet × 3, coverage (≥ Phase 0 floor; every new/changed function at full
+- [x] Full gate: build, vet × 3, coverage (≥ Phase 0 floor; every new/changed function at full
   reachable coverage, gaps recorded), `./test/...`, both tagged suites, both benchmark suites
   (protocol from Phase 2), testlayoutcheck, `gofmt -l` on new files, lint 0 after cache clean,
   `wire diff` clean, `go mod tidy -diff` in both modules.
-- [ ] Independent implementation review (GPT-6.1 Sol); apply or record each finding.
-- [ ] Review document: §2.4, §2.5, §2.6 and §1.16 marked fixed in place (pending the owner's
+- [x] Independent implementation review (GPT-6.1 Sol); apply or record each finding.
+- [x] Review document: §2.4, §2.5, §2.6 and §1.16 marked fixed in place (pending the owner's
   commit) with Progress paragraphs; §9 rows M and Q (Q folded into M); progress line and totals.
   §8 untouched. Report §15: "answered by M-D1 to M-D9".
-- [ ] `test_observations.md`; README/QUICKSTART where they describe the `.gen.json` shape or the
+- [x] `test_observations.md`; README/QUICKSTART where they describe the `.gen.json` shape or the
   manual-edit snapshot; `.agent/memories/` notes (format, traps).
-- [ ] Handoff refreshed per AGENTS.md §5.2 for the owner's review.
+- [x] Handoff refreshed per AGENTS.md §5.2 for the owner's review.
 
 ### Verification Plan
 - All gates green; review verdict recorded; the owner's end review is the approval.
 
 ### Phase Summary
-_(write when phase completes)_
+**Complete (2026-10-13, session 3).**
+- **Gate** (artifacts `.agent/memories/batch-m/phase6/`): build, vet × 3, `./test/...`, tagged
+  integration, tagged GUI (0 `.failure`), GPU-free benchmarks, testlayoutcheck, gofmt clean,
+  lint **0** after `golangci-lint cache clean`, `wire diff` clean, `tools/` `go mod tidy -diff`
+  clean. The root module's `go mod tidy -diff` still fails as recorded in Phase 1
+  (pre-existing, untouched). Coverage **74.38% (5985 / 8047)**, floor 73.07%. The GPU
+  window-driving benchmark was not rerun (unchanged code path).
+- **Implementation review (GPT-6.1 Sol): APPROVE WITH FINDINGS**, 7 minor, all applied:
+  (1) `ExpandManualEdits` now maps the **validated** state like Capture (new unit test);
+  (2) a successful capture also clears `announceConversion` (no stale notice);
+  (3) §1.16 matrix: advanced-mode guard randomization made real, hub zone size added, every
+  case guarded by "the setting changes the generation"; (4) curated fixtures now run the full
+  convert → save → load → expand cycle; (5) explicit pending/converted assertions after a
+  save-before-regeneration reload; (6) Random layouts' per-zone content is now version-hashed
+  too and every topology's generator stamps are asserted; (7) bonuses persistence compares
+  override guard values and covers spell and override removal. Not changed: export/preview
+  comparators (zone and connection equality already implies identical export input);
+  hub-castle biomes have no dedicated case (same derivation path as City Hold).
+- Docs: review §1.16, §2.4, §2.5, §2.6 marked fixed (pending commit), §9 rows M and Q,
+  progress 28 fixed / 5 remaining; Batch L report §15 answered; QUICKSTART §3 describes the
+  schema-3 format; `test_observations.md` and `.agent/memories/architecture.md` updated;
+  handoff refreshed.
 
 ## Risks and open points for the reviewer
 - Random layouts: connection derivation will mostly fall back to the factory (names and
@@ -775,7 +871,28 @@ _(write when phase completes)_
   end.
 
 ## Final Recap
-_(write when all phases complete)_
+Batch M ships editor-state **schema 3** in one coordinated change. Settings are sectioned with
+identity, map and version fields at the root (§2.6); bans and value overrides are typed lists
+end to end (§2.5); manual edits use the **C3** representation (§2.4): structure plus the
+fields that differ from a fresh generation, captured at Apply and rebuilt at every
+regeneration, which fixes §1.16 (Batch Q folded in). Legacy files (v0–v2) still load; their
+snapshot converts at the first regeneration with a one-time notice and an unsaved document.
+`generatorVersion` is persisted and guarded by golden hashes; a file from another generator
+version gets a status note. Default player content rows are omitted behind
+`contentDefaultsVersion`. The per-frame regeneration decision no longer clones manual edits,
+and the linter is v2.14.0. Measured: the 6-player hub move's manual section is 7.5% of the old
+snapshot; save + load is 40% faster with a third of the memory; idle frames allocate the same
+with or without edits. Coverage 73.07% → 74.38%, lint 0, every suite green; three plan
+reviews and one implementation review by GPT-6.1 Sol.
 
 ## Deployment Plan
-_(write when all phases complete)_
+1. Owner reviews the working tree (Phases 4–6; Phases 0–3 already committed) and commits.
+2. Push `AD/compact_state`; CI runs lint (v2.14.0 from `tools/go.mod`), unit and integration
+   suites. Decide separately on the pre-existing root `go mod tidy -diff` failure (missing
+   `godbus/dbus/v5` indirect, stale `go.sum` lines) before CI enforces it.
+3. Merge to `master` by PR. Release notes: `.gen.json` schema 3; older files convert on first
+   regeneration and should be re-saved; files saved by this build are not readable by older
+   builds (they refuse schema 3).
+4. Whenever generator output changes in future, bump `common_generator.GeneratorOutputVersion`
+   and re-record `test/integration/testdata/generatorOutputHashes.json` with
+   `-update-generator-hashes`.

@@ -133,6 +133,15 @@ const (
 	// columns: its left column ends around x=555, its right one starts at 583.
 	layoutPanelColumnSplit = 570
 
+	// borderGuardSlider* address the Layout & Zones tab's Border guard strength
+	// slider, the fourth row of the Difficulty & Density section. The row sits
+	// below the Hub zone size row, so it was measured on a topology that uses a
+	// hub (Geometric Hub); on one without it moves up. Confirmed by dragging it
+	// and asserting EditorStateDto.BorderGuardStrengthPercent reached 199.
+	borderGuardSliderCenterY = 873
+	borderGuardSliderStartX  = 324
+	borderGuardSliderEndX    = 510
+
 	// panelScroll* is a point over the left settings column that carries no
 	// interactive widget, so a wheel event there reaches the panel's list rather
 	// than a slider. Confirmed by scrolling and observing the rows move.
@@ -169,6 +178,14 @@ const (
 	fileDialogPanelHeight = 560
 	fileDialogPanelLeft   = (WindowWidth - fileDialogPanelWidth) / 2
 	fileDialogPanelTop    = (WindowHeight - fileDialogPanelHeight) / 2
+
+	// messageDialogPanel* bound the modal panel DialogHost centers on screen for
+	// the informational dialog's 460x220 PreferredSize, which is where its OK
+	// button is looked up.
+	messageDialogPanelWidth  = 460
+	messageDialogPanelHeight = 220
+	messageDialogPanelLeft   = (WindowWidth - messageDialogPanelWidth) / 2
+	messageDialogPanelTop    = (WindowHeight - messageDialogPanelHeight) / 2
 
 	// fileDialogListScroll* is a point over the file explorer's listing. Every
 	// row is clickable, but a row absorbs taps only - the wheel reaches the
@@ -284,6 +301,19 @@ func fileDialogRect() image.Rectangle {
 	return image.Rect(
 		fileDialogPanelLeft, fileDialogPanelTop,
 		fileDialogPanelLeft+fileDialogPanelWidth, fileDialogPanelTop+fileDialogPanelHeight)
+}
+
+// messageDialogRect is the modal panel the informational dialog is drawn into.
+func messageDialogRect() image.Rectangle {
+	return image.Rect(
+		messageDialogPanelLeft, messageDialogPanelTop,
+		messageDialogPanelLeft+messageDialogPanelWidth, messageDialogPanelTop+messageDialogPanelHeight)
+}
+
+// bonusesPanelRect is the settings column of the Bonuses & Bans tab, which
+// holds every entry row and its remove button.
+func bonusesPanelRect() image.Rectangle {
+	return image.Rect(0, tabStripCenterY, previewPanelContentLeft, WindowHeight)
 }
 
 // fileStatusMask covers the toolbar's current-file path, which is per-run.

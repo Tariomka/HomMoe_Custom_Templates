@@ -64,6 +64,8 @@ func TestWhenReturnedCurrentSettingsAreMutated_StoredStateIsUnaffected(t *testin
 // of the default settings, whose player content rows are never empty.
 func newEditorStateWithManualEdits() *models.EditorState {
 	state := newEditorState()
-	state.SetManualEdits([]template_model.Zone{{Name: "Neutral-A"}}, nil)
+	state.SetManualEdits(
+		editor_state_model.ManualEditSettingsFromSnapshot([]template_model.Zone{{Name: "Neutral-A"}}, nil),
+	)
 	return state
 }

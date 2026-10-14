@@ -105,6 +105,11 @@ func (this *State) handleLoadState(path string) bool {
 	this.currentPath = path
 	this.unsaved = false
 	this.clearGeneratedState()
+	this.clearDerivationBaseline()
+	if this.innerState.NeedsDerivation() {
+		this.derivationBaseline = new(this.innerState.GetCurrentSettings())
+		this.announceConversion = true
+	}
 
 	this.pendingOutcome = outcome
 	if outcome.TournamentCountCorrected {

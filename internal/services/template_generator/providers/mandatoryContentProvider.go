@@ -16,19 +16,19 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/mandatory_content"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/builders/placement_rule"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor/connection_editor_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/providers/provider_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
 )
 
 type MandatoryContentProvider struct {
 	tierService zone_interfaces.IZoneTierService
-	zoneEditor  connection_editor.IZoneEditorService
+	zoneEditor  connection_editor_interfaces.IZoneEditorService
 }
 
 func NewMandatoryContentProvider(
 	tierService zone_interfaces.IZoneTierService,
-	zoneEditor connection_editor.IZoneEditorService) provider_interfaces.IMandatoryContentProvider {
+	zoneEditor connection_editor_interfaces.IZoneEditorService) provider_interfaces.IMandatoryContentProvider {
 	return &MandatoryContentProvider{
 		tierService: tierService,
 		zoneEditor:  zoneEditor,

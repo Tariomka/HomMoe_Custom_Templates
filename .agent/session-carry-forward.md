@@ -1,4 +1,4 @@
-# Carry-forward: Batch M IN PROGRESS (coordinated persistence format, review §2.4 + §2.5 + §2.6 + §1.16)
+# Carry-forward: Batch M COMPLETE, awaiting the owner's review (coordinated persistence format, review §2.4 + §2.5 + §2.6 + §1.16)
 
 Date: 2026-10-13.
 
@@ -6,9 +6,29 @@ Date: 2026-10-13.
 
 **The plan is the source of truth:**
 [batch-m-persistence-format.md](plans/batch-m-persistence-format.md). It holds every owner
-decision (M-D1 to M-D9, M1 to M29), the design (D1 to D6), the three-round review log, and
-the phase summaries. **Phases 0 to 3 are Complete and green. Next: Phase 4** (C3 semantics,
-§1.16, migration modal). Phases 0–2 are owner-committed (`58948f9`); Phase 3 is uncommitted
+decision (M-D1 to M-D9, M1 to M29), the design (D1 to D6), the three-round review log, the
+phase summaries, the Final Recap and the Deployment Plan. **All phases 0 to 6 are Complete and
+green.** Phases 0–3 are owner-committed (`58948f9`, `a185dbe`); **Phases 4–6 are uncommitted
+in the working tree** for the owner's single end review (M1).
+
+- **Phase 4 (C3 + §1.16):** compact live model, `ManualEditDeltaService` (Capture/Expand),
+  handler `CaptureManualEdits` / `ExpandManualEdits` / `ConvertManualEdits`
+  (`ReapplyCastleSettings` removed), driver capture/convert/expand flows with the conversion
+  modal and the M-D5 note, generator-output guard with golden hashes, §1.16 regressions,
+  size gate 7.5%, SaveLoad 6.18 ms (was 10.28). Deviations are listed in its summary.
+- **Phase 5 (GUI):** modal, M-D5, malformed-load, provenance, manual-edit flows and bonuses
+  persistence through the window harness; one new golden (modal).
+- **Phase 6:** full gate green (coverage **74.38%, 5985 / 8047**; lint 0); GPT-6.1 Sol
+  implementation review APPROVE WITH FINDINGS, all 7 minor findings applied; review document,
+  report §15, QUICKSTART, test observations and memories updated.
+- **For the owner:** the root `go mod tidy -diff` still fails (pre-existing); moving only the
+  Hub in the zone editor also stamps a `manualPosition` on the spawns (pre-existing canvas
+  behaviour, observed by the Phase 5 GUI work, not changed).
+
+### Earlier status (kept for history)
+
+**Phases 0 to 3 were Complete and green. Next was Phase 4** (C3 semantics,
+§1.16, migration modal). Phases 0–2 are owner-committed (`58948f9`); Phase 3 was then uncommitted
 in the working tree (owner reviews everything at the end, M1).
 
 - **Owner process (M1):** all phases run end to end; the owner reviews and commits **once at
@@ -146,6 +166,18 @@ Planned, implemented and verified Batch H (CI/tooling) and Batch I (docs); the o
 released and confirmed both.
 
 ## 2. Fixes applied
+
+### Batch M Phases 4–6 (session 3, uncommitted; details in the plan's phase summaries)
+
+- **§1.16 fixed** by C3: untouched values follow every setting after a manual edit; explicit
+  overrides survive. **§2.4** implemented (C3, migration notice, `generatorVersion` guard).
+- Zone-editor Undo keeps `IsUserAdded` (M29).
+- Review fixes: Expand maps the validated state; a successful capture clears a stale
+  conversion notice.
+
+### Batch M Phase 3 (session 2, owner-committed in `a185dbe`)
+
+- **§2.5, §2.6:** schema 3 with sections and typed lists; legacy text parsed once at load.
 
 ### Batch M Phases 1–2 (this session, uncommitted)
 
@@ -642,6 +674,12 @@ batches; the review's §0 is the disposition of record).
 
 ## 5. Tests added or updated
 
+### Batch M Phases 3–6 (sessions 2–3)
+
+Full lists are in the plan's Phase 3–6 summaries. Last runs (session 3, after the review
+fixes): `go test ./test/... -count=1` PASS; tagged integration PASS; tagged GUI PASS, 0
+`.failure`; GPU-free benchmarks PASS; testlayoutcheck PASS; lint 0; coverage 74.38%.
+
 ### Batch M Phases 0–2 (this session)
 
 - **New:** `test/unit/internal/models/editor_state_model/editorState/cloneWithoutManualEdits_test.go`
@@ -852,6 +890,19 @@ Each group was shown to fail under a temporary production mutation, reverted aft
 in-game behaviour.
 
 ## 6. Git status snapshot
+
+**Current (end of session 3):** branch **`AD/compact_state`**, HEAD **`b686891`**
+("updated docs"), then `e3093ba` ("docs"), `a185dbe` ("Batch M update 2" = Phase 3),
+`ce3f173` (= `origin/AD/compact_state`), `58948f9`. `git status --short`: **142 entries**, all
+Batch M Phases 4–6 (production: `connection_editor_interfaces/` (new), `manualEditDeltaService.go`
+(new), `manualReapplyService.go`, the edit models (`manualZoneEdit.go`, `manualConnectionEdit.go`
+new; `manualZoneSave.go`, `manualConnectionSave.go` deleted, entity copies deleted), handlers,
+five `internal/dtos/manualEdit*` DTOs (new; `castleSettingsReapplyRequestDto.go` deleted),
+three `internal/models/manualEdit*` models (new), regeneration decision, drivers,
+`messageDialog.go` (new), `zoneEditorDialog.go`, Wire; tests, fixtures, the hashes file
+`test/integration/testdata/generatorOutputHashes.json` and one golden; docs). Nothing staged.
+
+### Snapshot at the end of session 2 (historical)
 
 The branch is **`AD/compact_state`** and HEAD is **`ce3f173`**. Newest first:
 - `ce3f173` ("removed old plans": owner deleted the Batch L plan)
@@ -1064,7 +1115,17 @@ Other pending decisions: arena/manual invalidation and effective-mode aliases (�
 
 ## 9. Next recommended actions
 
-**Batch M continues at Phase 4** of
+**Batch M is complete.** In order:
+1. **Owner:** review the working tree against the plan's Phase 4–6 summaries (deviations
+   listed there) and commit. Check the new golden
+   (`snapshot/__snapshots__/manualEditConversion_integration_test/`) and the hashes file.
+2. Follow the plan's **Deployment Plan** (push, CI, PR, release notes on schema 3).
+3. Decide on the root `go mod tidy -diff` failure.
+4. Remaining review items: §2.7, §2.9 (Batch N), §2.8, §2.10 (Batch O), §4.1 (Batch P).
+
+### Earlier next actions (historical)
+
+**Batch M continued at Phase 4** of
 [batch-m-persistence-format.md](plans/batch-m-persistence-format.md). Scoping, questions,
 plan, review, approval and the baseline are **done**; do not re-ask M1 to M29.
 
@@ -1119,7 +1180,13 @@ commits, merges and releases. Native Linux and Steam Deck remain unmeasured.
 > **Batches A–L are CLOSED** (H–K merged to `master` by PR #50, `8cf9c80`; L committed as
 > `2269e73`/`85752a8`). Never revisit them.
 >
-> **Batch M is IN PROGRESS. Continue at Phase 4** of
+> **Batch M is COMPLETE and awaits the owner's review.** Phases 0–3 are committed
+> (`58948f9`, `a185dbe`); Phases 4–6 are uncommitted in the working tree (HEAD `b686891`).
+> Everything is in [batch-m-persistence-format.md](plans/batch-m-persistence-format.md):
+> decisions, design, phase summaries with deviations, Final Recap and Deployment Plan.
+> Coverage 74.38%, lint 0, every suite green. Do not start new work before the owner commits.
+>
+> **Historical (session 2 prompt follows).** Batch M was IN PROGRESS. Continue at Phase 4 of
 > [batch-m-persistence-format.md](plans/batch-m-persistence-format.md), the source of truth:
 > owner decisions M-D1 to M-D9 and M1 to M29, design D1 to D6, the review log and the phase
 > summaries. Scoping, plan reviews (GPT-6.1 Sol, 3 rounds) and owner approval are **done**; do

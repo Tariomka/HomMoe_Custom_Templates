@@ -70,6 +70,34 @@ func TestWhenAV2StateIsMigrated_TheSnapshotIsKeptWhole(t *testing.T) {
 		migrated.ManualEdits.Zones[0])
 }
 
+func TestWhenAV2ZoneRecordsATier_TheTierIsKept(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	legacy := newV2State()
+	legacy.ManualZones[0].Quality = new(int8(0))
+
+	// Act
+	migrated, _ := editor_state_migrator.MigrateToV3(legacy)
+
+	// Assert
+	assert.Equal(t, new(int8(0)), migrated.ManualEdits.Zones[0].Quality)
+}
+
+func TestWhenAV2ConnectionWasAddedByTheUser_TheFlagIsKept(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	legacy := newV2State()
+	var connection template_entity.Connection
+	connection.Name = "Manual-A-B"
+	legacy.ManualConnections = []editor_state_v2.ManualConnectionSave{{Connection: connection, IsUserAdded: true}}
+
+	// Act
+	migrated, _ := editor_state_migrator.MigrateToV3(legacy)
+
+	// Assert
+	assert.True(t, migrated.ManualEdits.Connections[0].IsUserAdded)
+}
+
 func TestWhenAV2StateIsMigrated_ItAwaitsDerivationAtTheFirstDefaultsVersion(t *testing.T) {
 	t.Parallel()
 	// Arrange

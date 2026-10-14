@@ -19,8 +19,8 @@ func TestWhenNoChangeIsFlagged_LeavesZoneCastlesUntouched(t *testing.T) {
 	zones := []template_model.Zone{makeNeutralZone("G", neutral_zone.QualityMedium, 1)}
 
 	// Act
-	newManualReapplyService().
-		ApplyCastleSettingChanges(zones, editor_state_model.CastleSettingChanges{}, configuration)
+	newManualReapplyService().ApplyCastleSettingChanges(
+		zones, allEligible(zones), editor_state_model.CastleSettingChanges{}, configuration)
 
 	// Assert
 	assert.Equal(t, 1, test_helpers.NewZoneEditorService().CountZoneCastles(zones[0]))
@@ -161,7 +161,7 @@ func TestWhenSpawnZoneLacksSpawnCastle_LeavesItUntouched(t *testing.T) {
 
 	// Act
 	newManualReapplyService().ApplyCastleSettingChanges(
-		zones, editor_state_model.CastleSettingChanges{PlayerCastles: true}, configuration)
+		zones, allEligible(zones), editor_state_model.CastleSettingChanges{PlayerCastles: true}, configuration)
 
 	// Assert
 	assert.Equal(t, []template_model.MainObject{{Type: "City"}}, zones[0].MainObjects,
@@ -179,7 +179,7 @@ func TestWhenHubCountChanges_RebuildsHubZoneCastles(t *testing.T) {
 
 	// Act
 	newManualReapplyService().ApplyCastleSettingChanges(
-		zones, editor_state_model.CastleSettingChanges{Hub: true}, configuration)
+		zones, allEligible(zones), editor_state_model.CastleSettingChanges{Hub: true}, configuration)
 
 	// Assert
 	assert.Equal(t, 3, test_helpers.NewZoneEditorService().CountZoneCastles(zones[0]))
@@ -196,7 +196,7 @@ func TestWhenHubZoneHasLetterSuffix_RebuildsItsCastlesToo(t *testing.T) {
 
 	// Act
 	newManualReapplyService().ApplyCastleSettingChanges(
-		zones, editor_state_model.CastleSettingChanges{Hub: true}, configuration)
+		zones, allEligible(zones), editor_state_model.CastleSettingChanges{Hub: true}, configuration)
 
 	// Assert
 	assert.Equal(t, 2, test_helpers.NewZoneEditorService().CountZoneCastles(zones[0]))
@@ -211,7 +211,7 @@ func TestWhenNeutralCastlesAreRebuilt_CreatesCastleRoadsToEachExtraCastle(t *tes
 
 	// Act
 	newManualReapplyService().ApplyCastleSettingChanges(
-		zones, editor_state_model.CastleSettingChanges{NeutralSimple: true}, configuration)
+		zones, allEligible(zones), editor_state_model.CastleSettingChanges{NeutralSimple: true}, configuration)
 
 	// Assert
 	castleRoadCount := 0
@@ -262,6 +262,24 @@ func TestWhenHubCountChanges_UpdatesPlatinumTieredNeutralZone(t *testing.T) {
 	assert.Equal(t, 3, test_helpers.NewZoneEditorService().CountZoneCastles(zones[0]))
 }
 
+func TestWhenZoneIsNotEligible_LeavesItsCastlesUntouched(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.ZoneConfiguration.NeutralZoneCastles = 3
+	zones := []template_model.Zone{
+		makeNeutralZone("G", neutral_zone.QualityMedium, 1),
+		makeNeutralZone("H", neutral_zone.QualityMedium, 1),
+	}
+
+	// Act
+	newManualReapplyService().ApplyCastleSettingChanges(
+		zones, []bool{true, false}, editor_state_model.CastleSettingChanges{NeutralSimple: true}, configuration)
+
+	// Assert
+	assert.Equal(t, 1, test_helpers.NewZoneEditorService().CountZoneCastles(zones[1]))
+}
+
 // applyAdvancedTierChange raises the advanced per-zone castle count of the given
 // tier to 3 and flags only that tier's option as changed, so the returned zone
 // is the one the tier switch routed to.
@@ -283,7 +301,7 @@ func applyAdvancedTierChange(quality neutral_zone.Quality) []template_model.Zone
 	}
 
 	zones := []template_model.Zone{makeNeutralZone("G", quality, 1)}
-	newManualReapplyService().ApplyCastleSettingChanges(zones, changes, configuration)
+	newManualReapplyService().ApplyCastleSettingChanges(zones, allEligible(zones), changes, configuration)
 	return zones
 }
 
@@ -298,7 +316,7 @@ func applySimpleModeChange() []template_model.Zone {
 		makeSpawnZone("A", "Player1", 1),
 	}
 	newManualReapplyService().ApplyCastleSettingChanges(
-		zones, editor_state_model.CastleSettingChanges{NeutralSimple: true}, configuration)
+		zones, allEligible(zones), editor_state_model.CastleSettingChanges{NeutralSimple: true}, configuration)
 	return zones
 }
 
@@ -313,7 +331,7 @@ func applyAdvancedHighChange() []template_model.Zone {
 		makeNeutralZone("I", neutral_zone.QualityHigh, 0),
 	}
 	newManualReapplyService().ApplyCastleSettingChanges(
-		zones, editor_state_model.CastleSettingChanges{NeutralHigh: true}, configuration)
+		zones, allEligible(zones), editor_state_model.CastleSettingChanges{NeutralHigh: true}, configuration)
 	return zones
 }
 
@@ -328,6 +346,6 @@ func applyPlayerCastleChange() []template_model.Zone {
 		makeNeutralZone("G", neutral_zone.QualityMedium, 1),
 	}
 	newManualReapplyService().ApplyCastleSettingChanges(
-		zones, editor_state_model.CastleSettingChanges{PlayerCastles: true}, configuration)
+		zones, allEligible(zones), editor_state_model.CastleSettingChanges{PlayerCastles: true}, configuration)
 	return zones
 }

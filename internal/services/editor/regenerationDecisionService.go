@@ -3,6 +3,7 @@ package editor
 import (
 	"time"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_generator"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/regeneration"
 )
@@ -75,9 +76,12 @@ func (this *RegenerationDecisionService) DecideManualEditReapplication(
 		return regeneration.ManualEditDecision{}
 	}
 
+	versionChanged := current.GeneratorVersion != 0 &&
+		current.GeneratorVersion != common_generator.GeneratorOutputVersion
 	if previous == nil {
 		return regeneration.ManualEditDecision{
 			ReapplyWithCastleChanges: &editor_state_model.CastleSettingChanges{},
+			GeneratorVersionChanged:  versionChanged,
 		}
 	}
 
@@ -87,5 +91,6 @@ func (this *RegenerationDecisionService) DecideManualEditReapplication(
 
 	return regeneration.ManualEditDecision{
 		ReapplyWithCastleChanges: new(previous.DiffCastleSettings(current)),
+		GeneratorVersionChanged:  versionChanged,
 	}
 }

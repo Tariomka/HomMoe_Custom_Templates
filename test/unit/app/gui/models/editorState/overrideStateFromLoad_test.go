@@ -36,7 +36,7 @@ func TestWhenALoadedTournamentCountIsCorrected_ManualEditsAreDropped(t *testing.
 	raw := editor_state_model.NewDefaultEditorStateModel()
 	raw.VictoryCondition = registry.GetWinningConditionValues().Tournament
 	raw.PlayerCount = 6
-	raw.ManualZones = []template_model.Zone{{Name: "Zone A"}}
+	raw.ManualEditSettings = zoneAManualEdits()
 	corrected := raw.Clone()
 	corrected.PlayerCount = editor_state_model.TournamentPlayerCount
 
@@ -54,7 +54,7 @@ func TestWhenALoadedTournamentCountIsCorrected_ReportsTheDiscard(t *testing.T) {
 	raw := editor_state_model.NewDefaultEditorStateModel()
 	raw.Tournament = true
 	raw.PlayerCount = 6
-	raw.ManualZones = []template_model.Zone{{Name: "Zone A"}}
+	raw.ManualEditSettings = zoneAManualEdits()
 	corrected := raw.Clone()
 	corrected.PlayerCount = editor_state_model.TournamentPlayerCount
 
@@ -72,7 +72,7 @@ func TestWhenAValidTournamentIsLoaded_ManualEditsSurvive(t *testing.T) {
 	raw := editor_state_model.NewDefaultEditorStateModel()
 	raw.Tournament = true
 	raw.PlayerCount = editor_state_model.TournamentPlayerCount
-	raw.ManualZones = []template_model.Zone{{Name: "Zone A"}}
+	raw.ManualEditSettings = zoneAManualEdits()
 	corrected := raw.Clone()
 
 	// Act
@@ -90,7 +90,7 @@ func TestWhenALoadChangesTheEffectiveMode_ManualEditsSurvive(t *testing.T) {
 	state := newLoadCorrectingEditorState()
 	state.UpdateCurrentState(func(current *editor_state_model.EditorState) { current.GladiatorArena = true })
 	raw := editor_state_model.NewDefaultEditorStateModel()
-	raw.ManualZones = []template_model.Zone{{Name: "Zone A"}}
+	raw.ManualEditSettings = zoneAManualEdits()
 	corrected := raw.Clone()
 
 	// Act
@@ -105,7 +105,7 @@ func TestWhenAStateIsLoaded_TheStoredStateDoesNotAliasTheCaller(t *testing.T) {
 	// Arrange
 	state := newLoadCorrectingEditorState()
 	raw := editor_state_model.NewDefaultEditorStateModel()
-	raw.ManualZones = []template_model.Zone{{Name: "Zone A"}}
+	raw.ManualEditSettings = zoneAManualEdits()
 	corrected := raw.Clone()
 	state.OverrideStateFromLoad(raw, corrected)
 
@@ -113,7 +113,11 @@ func TestWhenAStateIsLoaded_TheStoredStateDoesNotAliasTheCaller(t *testing.T) {
 	corrected.ManualZones[0].Name = "Renamed"
 
 	// Assert
-	assert.Equal(t, "Zone A", state.GetManualZones()[0].Name)
+	assert.Equal(t, "Zone A", state.GetManualEdits().ManualZones[0].Name)
+}
+
+func zoneAManualEdits() editor_state_model.ManualEditSettings {
+	return editor_state_model.ManualEditSettingsFromSnapshot([]template_model.Zone{{Name: "Zone A"}}, nil)
 }
 
 // newLoadCorrectingEditorState returns a state whose validation corrects a

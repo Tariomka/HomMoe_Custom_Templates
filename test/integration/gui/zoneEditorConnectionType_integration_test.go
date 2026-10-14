@@ -5,7 +5,6 @@ package gui_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template_entity"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers/integration_common"
 	"github.com/stretchr/testify/assert"
@@ -28,7 +27,7 @@ type connectionTypeRecord struct {
 	HasPortalRules bool
 }
 
-func typeRecordOf(connection template_entity.Connection) connectionTypeRecord {
+func typeRecordOf(connection template_model.Connection) connectionTypeRecord {
 	return connectionTypeRecord{
 		ConnectionType: connection.ConnectionType,
 		HasPortalRules: len(connection.PortalPlacementRulesFrom) > 0 || len(connection.PortalPlacementRulesTo) > 0,
@@ -103,7 +102,7 @@ func TestWhenAConnectionWithAnUnlistedTypeIsSelected_ItsTypeSurvivesApply(t *tes
 
 			// Assert
 			assert.Equal(t, connectionType,
-				manualConnectionSave(t, runner, hubToSpawnAName).Connection.ConnectionType)
+				manualConnectionSave(t, runner, hubToSpawnAName).ConnectionType)
 		})
 	}
 }
@@ -173,7 +172,7 @@ func TestWhenADirectConnectionWithPortalRulesIsOnlySelected_ItIsAppliedUnchanged
 	// Assert
 	assert.Equal(t,
 		connectionTypeRecord{ConnectionType: directConnectionTypeLabel, HasPortalRules: true},
-		typeRecordOf(manualConnectionSave(t, runner, hubToSpawnAName).Connection))
+		typeRecordOf(manualConnectionSave(t, runner, hubToSpawnAName)))
 }
 
 //nolint:paralleltest // Driving the window needs exclusive access to the single headless GPU window.
@@ -187,7 +186,7 @@ func TestWhenDirectIsPickedForAConnectionShownAsPortal_ItsPortalRulesAreCleared(
 	// Assert
 	assert.Equal(t,
 		connectionTypeRecord{ConnectionType: directConnectionTypeLabel, HasPortalRules: false},
-		typeRecordOf(manualConnectionSave(t, runner, hubToSpawnAName).Connection))
+		typeRecordOf(manualConnectionSave(t, runner, hubToSpawnAName)))
 }
 
 //nolint:paralleltest // Driving the window needs exclusive access to the single headless GPU window.
@@ -202,7 +201,7 @@ func TestWhenPortalIsPickedAgainAfterDirect_TheClearedRulesStayCleared(t *testin
 	// Assert
 	assert.Equal(t,
 		connectionTypeRecord{ConnectionType: portalConnectionTypeLabel, HasPortalRules: false},
-		typeRecordOf(manualConnectionSave(t, runner, hubToSpawnAName).Connection))
+		typeRecordOf(manualConnectionSave(t, runner, hubToSpawnAName)))
 }
 
 // A Proximity connection carrying portal rules reads Portal, and picking its own
@@ -219,7 +218,7 @@ func TestWhenTheStoredTypeIsPickedForAConnectionShownAsPortal_ItsPortalRulesAreC
 	// Assert
 	assert.Equal(t,
 		connectionTypeRecord{ConnectionType: proximityConnectionTypeLabel, HasPortalRules: false},
-		typeRecordOf(manualConnectionSave(t, runner, hubToSpawnAName).Connection))
+		typeRecordOf(manualConnectionSave(t, runner, hubToSpawnAName)))
 }
 
 //nolint:paralleltest // Driving the window needs exclusive access to the single headless GPU window.
@@ -234,5 +233,5 @@ func TestWhenAPortalWithPlacementRulesIsSelected_ItKeepsItsRulesOnApply(t *testi
 	// Assert
 	assert.Equal(t,
 		connectionTypeRecord{ConnectionType: portalConnectionTypeLabel, HasPortalRules: true},
-		typeRecordOf(manualConnectionSave(t, runner, hubToSpawnAName).Connection))
+		typeRecordOf(manualConnectionSave(t, runner, hubToSpawnAName)))
 }

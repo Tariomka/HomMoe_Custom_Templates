@@ -6,7 +6,6 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template_entity"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
@@ -32,10 +31,9 @@ func TestWhenOnlyManualEditFieldsDiffer_ReportsEqual(t *testing.T) {
 	// Arrange
 	left := editor_state_model.NewDefaultEditorStateModel()
 	right := left
-	right.ManualZones = []template_model.Zone{{Name: "Zone A"}}
-	right.ManualConnections = []editor_state_model.ManualConnectionSave{
-		{Connection: template_entity.Connection{Name: "A-B"}, IsUserAdded: true},
-	}
+	right.ManualEditSettings = editor_state_model.ManualEditSettingsFromSnapshot(
+		[]template_model.Zone{{Name: "Zone A"}},
+		[]template_model.Connection{{Name: "A-B", IsUserAdded: true}})
 
 	// Act
 	equal := left.EqualsIgnoringManualEdits(&right)
@@ -192,12 +190,12 @@ func TestWhenFuzzedStatePairsCompared_MatchesReflectDeepEqual(t *testing.T) {
 			state.MediumNeutralContentRows = []editor_state_model.ZoneContentRow{}
 		}},
 		{"ManualZonesDiffer_MatchesDeepEqual", func(state *editor_state_model.EditorState) {
-			state.ManualZones = []template_model.Zone{{Name: "Zone A"}}
+			state.ManualZones = editor_state_model.ManualEditSettingsFromSnapshot(
+				[]template_model.Zone{{Name: "Zone A"}}, nil).ManualZones
 		}},
 		{"ManualConnectionsDiffer_MatchesDeepEqual", func(state *editor_state_model.EditorState) {
-			state.ManualConnections = []editor_state_model.ManualConnectionSave{
-				{Connection: template_entity.Connection{Name: "A-B"}, IsUserAdded: true},
-			}
+			state.ManualConnections = editor_state_model.ManualEditSettingsFromSnapshot(
+				nil, []template_model.Connection{{Name: "A-B", IsUserAdded: true}}).ManualConnections
 		}},
 	}
 	for _, testCase := range testCases {

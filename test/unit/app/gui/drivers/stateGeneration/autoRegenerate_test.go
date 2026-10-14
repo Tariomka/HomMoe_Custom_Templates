@@ -185,7 +185,8 @@ func newAutoRegenerateStateWith(
 
 func storeManualZone(state *drivers.State) {
 	state.UpdateState(func(current *editor_state_model.EditorState) {
-		current.ManualZones = []template_model.Zone{{Name: "Neutral-A"}}
+		current.ManualEditSettings = editor_state_model.ManualEditSettingsFromSnapshot(
+			[]template_model.Zone{{Name: "Neutral-A"}}, nil)
 	})
 }
 

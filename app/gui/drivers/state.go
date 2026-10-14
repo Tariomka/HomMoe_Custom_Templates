@@ -47,6 +47,12 @@ type State struct {
 	applyNextStateAt time.Time               // for debouncing
 	pendingBaseZones dtos.ZoneEditorZonesDto // uncommitted layout produced by PreviewBaseZones.
 
+	// derivationBaseline holds the settings an all-overridden manual snapshot
+	// was made with, until it is converted; announceConversion opens the
+	// conversion notice when that happens for a loaded file.
+	derivationBaseline *editor_state_model.EditorState
+	announceConversion bool
+
 	confirmExit bool
 	onExit      func() // app closing callback for Gio app.DestroyEvent flow.
 }
@@ -111,6 +117,7 @@ func (this *State) Reset() {
 	this.currentPath = ""
 	this.unsaved = false
 	this.pendingOutcome = editor_state_model.ModeTransitionOutcome{}
+	this.clearDerivationBaseline()
 	this.clearGeneratedState()
 	this.SetStatus("New settings file.", false)
 }
@@ -119,6 +126,9 @@ func (this *State) UpdateState(updateFunc func(*editor_state_model.EditorState))
 	outcome := this.innerState.UpdateCurrentState(updateFunc)
 	if this.innerState.WasStateChanged() || outcome.ManualEditsDiscarded || outcome.TournamentCountCorrected {
 		this.flagAsUnsaved()
+	}
+	if outcome.ManualEditsDiscarded {
+		this.clearDerivationBaseline()
 	}
 
 	this.noteStateTransition(outcome)
@@ -188,4 +198,9 @@ func (this *State) getNextSettingsDto() *editor_state_dto.EditorStateDto {
 func (this *State) flagAsUnsaved() {
 	this.unsaved = true
 	this.confirmExit = false // New edits invalidate a pending exit confirmation.
+}
+
+func (this *State) clearDerivationBaseline() {
+	this.derivationBaseline = nil
+	this.announceConversion = false
 }

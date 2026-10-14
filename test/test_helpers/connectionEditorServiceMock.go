@@ -6,7 +6,7 @@ import (
 )
 
 // ConnectionEditorServiceMock is a testify mock of
-// connection_editor.IConnectionEditorService, used to unit-test collaborators
+// connection_editor_interfaces.IConnectionEditorService, used to unit-test collaborators
 // without the real connection graph analysis.
 type ConnectionEditorServiceMock struct {
 	mock.Mock

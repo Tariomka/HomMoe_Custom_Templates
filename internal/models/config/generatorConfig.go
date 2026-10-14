@@ -117,6 +117,10 @@ func (this *GeneratorConfig) IsSingleHeroMode() bool {
 	return this.GameMode == registry.GetGameModeValues().SingleHero
 }
 
+func (this *GeneratorConfig) HasNonDeterministicLayout() bool {
+	return this.Topology == TopologyRandom || this.RandomPortals
+}
+
 func (this *GeneratorConfig) GetVictoryCondition() string {
 	if this.GameEndConditions != nil {
 		return this.GameEndConditions.VictoryCondition
