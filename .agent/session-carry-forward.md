@@ -1,15 +1,65 @@
-# Carry-forward: Batch M COMPLETE, awaiting the owner's review (coordinated persistence format, review §2.4 + §2.5 + §2.6 + §1.16)
+# Carry-forward: Batch N NEXT (panel/state organization, review §2.7 + §2.9); Batch M CLOSED
 
-Date: 2026-10-13.
+Date: 2026-10-14.
 
-## Batch M status (read this first)
+## Batch N brief (read this first)
 
-**The plan is the source of truth:**
-[batch-m-persistence-format.md](plans/batch-m-persistence-format.md). It holds every owner
-decision (M-D1 to M-D9, M1 to M29), the design (D1 to D6), the three-round review log, the
-phase summaries, the Final Recap and the Deployment Plan. **All phases 0 to 6 are Complete and
-green.** Phases 0–3 are owner-committed (`58948f9`, `a185dbe`); **Phases 4–6 are uncommitted
-in the working tree** for the owner's single end review (M1).
+**Nothing for Batch N exists yet**: no questions asked, no plan, no baseline. Start with the
+AGENTS.md §3.1 protocol: read, inventory, ask the owner every open question, summarize scope,
+write `.agent/plans/batch-n-<name>.md`, get an independent plan review (GPT-6.1 Sol), owner
+approval, then a fresh full baseline before the first Go edit.
+
+**Scope (review [§2.7 and §2.9](backlog/review-gpt-6-astra-09-07.md), owner requests O14 and
+O18; §8 retains both as binding later scope):**
+- **§2.7 / O14:** move the six zone-content getter/setter pairs that
+  [layoutPanelZones.go](../app/gui/panels/layoutPanelZones.go) builds inline for
+  `openZoneContentDialog` (Player, Lowest, Low, Medium, High, Hub; `handleZoneContentDialogClicks`)
+  onto **`app/gui/drivers.State`** (not the domain `EditorState`, not the GUI model), selected
+  by a zone/tier selector. The driver only orchestrates view-state access/update through the
+  existing `UpdateState` path (validation, dirty tracking); no content composition or
+  generation policy. Getters must not leak mutable aliases; dialog cancel stays non-mutating.
+  Mirrored unit tests for every new public driver accessor (all six targets, unrelated rows
+  unchanged, nil/empty, isolation, no-op vs changed, invalid selectors if the API allows them)
+  plus content-dialog GUI flows (open, edit, cancel, Apply).
+- **§2.9 / O18:** move `GeneralPanel`, `LayoutPanel`, `BonusesPanel` into
+  `app/gui/panels/general_panel`, `layout_panel`, `bonuses_panel`; each cohesive section a
+  private struct owning its widgets, click handling and state load/save; the panel composes
+  them. Public panel structs stay reachable through aliases in a new `app/gui/panels/types.go`
+  with thin forwarding constructors. Preview unchanged. Child packages must not import the
+  parent alias package. Preserve appearance, ordering, input behaviour, frame-to-frame widget
+  identity, save/load semantics and public API. Move the tagged `*_testexports.go` methods
+  (`generalPanel_testexports.go`, `layoutPanel_testexports.go`) with their owning structs
+  (methods cannot be declared on aliases of non-local types). Do §2.7 first so the moved
+  Layout sections reuse the driver API instead of recreating closures. Compare
+  `BenchmarkEditorWindow_TabCycling` before/after (GPU benchmark; no global allocation
+  threshold). No golden may move without explanation.
+- The review's §9 N row says: driver accessors first; preserve public panel API, GUI snapshots
+  and state round trips. The Bonuses panel already uses Batch M's typed entries (§2.5 done),
+  so there is no remaining coordination with M.
+
+**Open questions to put to the owner** (non-exhaustive starting list): the selector type and
+where it lives (`app/gui/models`? `internal/models`?), accessor names/signatures, whether
+N ships as one plan with §2.7 then §2.9 phases, the section inventory per panel, how
+`window.go` construction and per-frame save/load coordination change, test-export placement
+after the move, the TabCycling acceptance criterion, and whether the owner again wants
+end-to-end phases with one final review (as M1).
+
+## Batch M (CLOSED, owner commit `f24b1fa`)
+
+Plan: [batch-m-persistence-format.md](plans/batch-m-persistence-format.md), the reference for
+every decision (M-D1–M-D9, M1–M29), design (D1–D6), phase summaries, Final Recap and Deployment
+Plan. Owner commits `58948f9` (Phases 0–2), `a185dbe` (Phase 3), `f24b1fa` (Phases 4–6),
+all reviewed. Delivered: schema 3 (sections, typed ban/override lists, `generatorVersion`,
+`contentDefaultsVersion`), the C3 compact manual edits (fixes §1.16, Q folded in), legacy
+conversion with a one-time notice, the generator-output hash guard, the per-frame cloning fix
+and golangci-lint v2.14.0. End state: coverage **74.38% (5985 / 8047)**, lint 0, every suite
+green. **Never revisit Batches A–M.**
+
+**Recorded for the owner, not assigned:** the root `go mod tidy -diff` fails (pre-existing,
+missing `godbus/dbus/v5` indirect + stale `go.sum` lines from `a9ae09c`); moving only the Hub
+in the zone editor also stamps a `manualPosition` on the spawns (pre-existing canvas behaviour).
+
+### Batch M history (sessions 1–3)
 
 - **Phase 4 (C3 + §1.16):** compact live model, `ManualEditDeltaService` (Capture/Expand),
   handler `CaptureManualEdits` / `ExpandManualEdits` / `ConvertManualEdits`
@@ -18,12 +68,9 @@ in the working tree** for the owner's single end review (M1).
   size gate 7.5%, SaveLoad 6.18 ms (was 10.28). Deviations are listed in its summary.
 - **Phase 5 (GUI):** modal, M-D5, malformed-load, provenance, manual-edit flows and bonuses
   persistence through the window harness; one new golden (modal).
-- **Phase 6:** full gate green (coverage **74.38%, 5985 / 8047**; lint 0); GPT-6.1 Sol
-  implementation review APPROVE WITH FINDINGS, all 7 minor findings applied; review document,
-  report §15, QUICKSTART, test observations and memories updated.
-- **For the owner:** the root `go mod tidy -diff` still fails (pre-existing); moving only the
-  Hub in the zone editor also stamps a `manualPosition` on the spawns (pre-existing canvas
-  behaviour, observed by the Phase 5 GUI work, not changed).
+- **Phase 6:** full gate green; GPT-6.1 Sol implementation review APPROVE WITH FINDINGS, all
+  7 minor findings applied; review document, report §15, QUICKSTART, test observations and
+  memories updated.
 
 ### Earlier status (kept for history)
 
@@ -125,7 +172,16 @@ else §8 retains as later scope remains **binding**. Do not edit §8.
 
 ## 1. Session goal
 
-**This session (Batch M, part 1):** ask the owner every open question (29 decisions, M1 to
+**Last session (Batch M, part 3):** Phases 4–6 end to end (C3 semantics, GUI flows, final
+gate, implementation review, docs). The owner reviewed and committed everything (`f24b1fa`)
+and named **Batch N** as next.
+
+**Next session (Batch N):** scope, questions, plan, review and approval for review §2.7 and
+§2.9 (see the Batch N brief above), then implementation per the approved plan.
+
+### Earlier Batch M sessions
+
+**Session 1 (Batch M, part 1):** ask the owner every open question (29 decisions, M1 to
 M29), write the plan, run three GPT-6.1 Sol plan reviews, get approval, capture the baseline,
 and implement Phases 1 (linter bump) and 2 (per-frame cloning fix + benchmarks). Stopped at a
 green phase boundary before the large Phase 3.
@@ -167,7 +223,7 @@ released and confirmed both.
 
 ## 2. Fixes applied
 
-### Batch M Phases 4–6 (session 3, uncommitted; details in the plan's phase summaries)
+### Batch M Phases 4–6 (session 3, owner-committed in `f24b1fa`; details in the plan's phase summaries)
 
 - **§1.16 fixed** by C3: untouched values follow every setting after a manual edit; explicit
   overrides survive. **§2.4** implemented (C3, migration notice, `generatorVersion` guard).
@@ -339,6 +395,18 @@ All are committed in `35e0fab` and **marked FIXED**. They are closed; do not reo
   so redraws always settle, even in the error branch.
 
 ## 3. Features added / changed
+
+### Batch M decisions (owner, committed, settled)
+
+The full tables are in [the plan](plans/batch-m-persistence-format.md). In short: C3 manual
+edits by value difference (M-D1, M-D3); legacy snapshots converted at the first regeneration
+with a one-time modal and an unsaved document (M-D2, M14, M16, M17); §1.16 fixed inside M
+(M-D4); `generatorVersion` persisted with a status note when it differs and edits exist (M-D5,
+M19); default player rows omitted behind `contentDefaultsVersion`, cleared lists written as
+`[]` (M-D6, M13); settings-only clones per frame (M-D7); linter v2.14.0 (M-D8); writing stays
+indented (M-D9); sections `players`, `neutralZones`, `castles`, `generation`, `gameRules`,
+`content`, `manualEdits` (M8); conservative pending-baseline rule (M28); the zone-editor Undo
+baseline keeps `IsUserAdded` (M29).
 
 ### Batch L decisions (owner, 2026-10-12)
 
@@ -523,6 +591,18 @@ in the tree; the merged code is the reference.
 - All Batch J behavior is committed and settled. `internal/services/zone_content` must not
   name a DTO again, and the DTO allow-list only ever shrinks. New content-rule shapes go in
   `content_rule_model`; conversion stays in the handlers.
+- All Batch M behavior is committed and settled:
+  - schema 3 sections and typed lists; v0–v2 still load through `MigrateToV2` → `MigrateToV3`;
+    frozen `editor_state_v1`/`editor_state_v2` are data only, never edited;
+  - manual edits are C3 deltas; with `generatorVersion: 0` they are the derivation-free
+    all-overridden snapshot (`NeedsDerivation()`); only `ManualEditDeltaService.Expand`
+    decodes the compact form; Random/RandomPortals always store roads and derive every
+    connection from the editor factory;
+  - any change to generator output must bump `common_generator.GeneratorOutputVersion` and
+    re-record `test/integration/testdata/generatorOutputHashes.json`
+    (`-update-generator-hashes`);
+  - the per-frame regeneration decision receives settings-only clones; never feed it the full
+    state with manual edits again.
 
 ## 4. File modifications
 
@@ -891,7 +971,15 @@ in-game behaviour.
 
 ## 6. Git status snapshot
 
-**Current (end of session 3):** branch **`AD/compact_state`**, HEAD **`b686891`**
+**Current (2026-10-14):** branch **`AD/compact_state`**, HEAD **`f24b1fa`** ("Batch M
+finished"), then `b686891`, `e3093ba`, `a185dbe`, `ce3f173` (= `origin/AD/compact_state`),
+`58948f9`. The working tree was clean before this handoff refresh; the only uncommitted
+changes are this file and the review document's Batch M commit references. Not yet pushed
+or merged to `master`. Nothing staged.
+
+### Snapshot at the end of session 3 (historical)
+
+Branch **`AD/compact_state`**, HEAD **`b686891`**
 ("updated docs"), then `e3093ba` ("docs"), `a185dbe` ("Batch M update 2" = Phase 3),
 `ce3f173` (= `origin/AD/compact_state`), `58948f9`. `git status --short`: **142 entries**, all
 Batch M Phases 4–6 (production: `connection_editor_interfaces/` (new), `manualEditDeltaService.go`
@@ -1115,6 +1203,28 @@ Other pending decisions: arena/manual invalidation and effective-mode aliases (�
 
 ## 9. Next recommended actions
 
+**Batch N is next** (review §2.7, §2.9). In order:
+1. Read [AGENTS.md](../AGENTS.md), the Batch N brief at the top of this file, review §2.7,
+   §2.9 and §9's N row, and §8 below (O14 and O18 are binding).
+2. Confirm `git status --short` and HEAD (`f24b1fa` plus this handoff refresh unless the owner
+   committed more). Never stage or commit.
+3. Inventory with a cheap read-only subagent: `app/gui/panels/*` (sections, widgets,
+   load/save closures, click handlers), `app/gui/editor/window.go` (construction, per-frame
+   save/load), `drivers.State.UpdateState`, the zone-content dialog, the two panel
+   `*_testexports.go` files and every test/harness that uses them
+   (`test/test_helpers/integration_common/`, `test/integration/gui/`, `test/performance/`).
+4. Ask the owner every open question (§3.1); summarize scope; write the plan; GPT-6.1 Sol
+   review; owner approval.
+5. Baseline: build, vet × 3, coverage (current 74.38%, 5985 / 8047), `./test/...`, both
+   tagged suites (0 `.failure`), GPU-free benchmarks and the GPU `TabCycling` benchmark,
+   testlayoutcheck, gofmt, lint after cache clean, `wire diff`.
+6. Implement §2.7 first, then §2.9, per the approved plan.
+
+**Owner follow-ups (not Batch N):** push/merge Batch M per its Deployment Plan; decide on the
+root `go mod tidy -diff` failure. Later batches: O (§2.8, §2.10), P (§4.1).
+
+### Batch M closing actions (historical)
+
 **Batch M is complete.** In order:
 1. **Owner:** review the working tree against the plan's Phase 4–6 summaries (deviations
    listed there) and commit. Check the new golden
@@ -1177,8 +1287,26 @@ commits, merges and releases. Native Linux and Steam Deck remain unmeasured.
 > Read [AGENTS.md](../AGENTS.md) first, then [this handoff](session-carry-forward.md). It is
 > self-contained.
 >
-> **Batches A–L are CLOSED** (H–K merged to `master` by PR #50, `8cf9c80`; L committed as
-> `2269e73`/`85752a8`). Never revisit them.
+> **Batches A–M are CLOSED** (H–K merged to `master` by PR #50, `8cf9c80`; L committed as
+> `2269e73`/`85752a8`; M committed as `58948f9`/`a185dbe`/`f24b1fa` on `AD/compact_state`,
+> owner-reviewed). Never revisit them.
+>
+> **Start Batch N:** review §2.7 (zone-content accessors from `LayoutPanel` closures onto
+> `drivers.State`, O14) and §2.9 (General/Layout/Bonuses panels into `general_panel`,
+> `layout_panel`, `bonuses_panel` subpackages with private cohesive sections and public
+> aliases in `app/gui/panels/types.go`, O18). Nothing is planned yet: follow AGENTS.md §3.1
+> (inventory, ask every open question, summarize, plan in `.agent/plans/`, GPT-6.1 Sol review,
+> owner approval, baseline) before any Go edit. The Batch N brief at the top of this handoff
+> lists the scope, constraints and starting questions. Current coverage 74.38% (5985 / 8047),
+> lint 0.
+>
+> **State:** branch `AD/compact_state`, HEAD `f24b1fa`, clean apart from this handoff refresh
+> and the review document's commit references. The root module's `go mod tidy -diff` fails
+> (pre-existing, recorded for the owner). Preserve the owner's state exactly.
+>
+> **Historical (Batch M prompts follow; they no longer direct work).** Their **Traps**, **Hard
+> rules** and **Preserve** lists below still apply to Batch N, as do §3 "Settled behavior"
+> (now including Batch M) and the binding later-scope decisions in §8.
 >
 > **Batch M is COMPLETE and awaits the owner's review.** Phases 0–3 are committed
 > (`58948f9`, `a185dbe`); Phases 4–6 are uncommitted in the working tree (HEAD `b686891`).
