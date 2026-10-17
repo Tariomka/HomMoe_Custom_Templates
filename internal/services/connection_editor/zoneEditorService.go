@@ -14,6 +14,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor/connection_editor_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
 )
 
@@ -28,7 +29,7 @@ func NewZoneEditorService(
 	castleFactory zone_interfaces.ICastleFactory,
 	roadPolicy zone_interfaces.IRoadPolicyService,
 	zoneFactory zone_interfaces.IZoneFactory,
-	tierService zone_interfaces.IZoneTierService) IZoneEditorService {
+	tierService zone_interfaces.IZoneTierService) connection_editor_interfaces.IZoneEditorService {
 	return &ZoneEditorService{
 		zoneFactory:   zoneFactory,
 		castleFactory: castleFactory,

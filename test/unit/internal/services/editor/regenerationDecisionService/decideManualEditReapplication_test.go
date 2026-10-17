@@ -3,6 +3,7 @@ package regenerationDecisionService_test
 import (
 	"testing"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_generator"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/regeneration"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
@@ -138,8 +139,110 @@ func TestWhenManualEditsExistButArenaModeWasEntered_DoesNotReapply(t *testing.T)
 	assert.Nil(t, decision.ReapplyWithCastleChanges)
 }
 
-func manualZones() []template_model.Zone {
-	return []template_model.Zone{{Name: gofakeit.Word()}}
+func TestWhenManualEditsExistWithAStaleGeneratorVersion_ReportsGeneratorVersionChanged(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	service := editor.NewRegenerationDecisionService()
+	current := stateWithManualEdits()
+	current.GeneratorVersion = common_generator.GeneratorOutputVersion + 1
+
+	// Act
+	decision := service.DecideManualEditReapplication(defaultState(), current)
+
+	// Assert
+	assert.True(t, decision.GeneratorVersionChanged)
+}
+
+func TestWhenManualEditsExistWithAStaleGeneratorVersionAndNoPreviousGeneration_ReportsGeneratorVersionChanged(
+	t *testing.T) {
+	t.Parallel()
+	// Arrange
+	service := editor.NewRegenerationDecisionService()
+	current := stateWithManualEdits()
+	current.GeneratorVersion = common_generator.GeneratorOutputVersion + 1
+
+	// Act
+	decision := service.DecideManualEditReapplication(nil, current)
+
+	// Assert
+	assert.True(t, decision.GeneratorVersionChanged)
+}
+
+func TestWhenManualEditsExistWithTheCurrentGeneratorVersion_ReportsNoGeneratorVersionChange(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	service := editor.NewRegenerationDecisionService()
+	current := stateWithManualEdits()
+	current.GeneratorVersion = common_generator.GeneratorOutputVersion
+
+	// Act
+	decision := service.DecideManualEditReapplication(defaultState(), current)
+
+	// Assert
+	assert.False(t, decision.GeneratorVersionChanged)
+}
+
+func TestWhenManualEditsExistWithTheCurrentGeneratorVersionAndNoPreviousGeneration_ReportsNoGeneratorVersionChange(
+	t *testing.T) {
+	t.Parallel()
+	// Arrange
+	service := editor.NewRegenerationDecisionService()
+	current := stateWithManualEdits()
+	current.GeneratorVersion = common_generator.GeneratorOutputVersion
+
+	// Act
+	decision := service.DecideManualEditReapplication(nil, current)
+
+	// Assert
+	assert.False(t, decision.GeneratorVersionChanged)
+}
+
+func TestWhenManualEditsExistWithoutAGeneratorVersion_ReportsNoGeneratorVersionChange(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	service := editor.NewRegenerationDecisionService()
+	current := stateWithManualEdits()
+	current.GeneratorVersion = 0
+
+	// Act
+	decision := service.DecideManualEditReapplication(defaultState(), current)
+
+	// Assert
+	assert.False(t, decision.GeneratorVersionChanged)
+}
+
+func TestWhenThereAreNoManualEditsButAStaleGeneratorVersion_ReportsNoGeneratorVersionChange(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	service := editor.NewRegenerationDecisionService()
+	current := defaultState()
+	current.GeneratorVersion = common_generator.GeneratorOutputVersion + 1
+
+	// Act
+	decision := service.DecideManualEditReapplication(defaultState(), current)
+
+	// Assert
+	assert.False(t, decision.GeneratorVersionChanged)
+}
+
+func TestWhenTheLayoutChangedWithAStaleGeneratorVersion_ReportsNoGeneratorVersionChange(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	service := editor.NewRegenerationDecisionService()
+	current := layoutChangedState()
+	current.ManualZones = manualZones()
+	current.GeneratorVersion = common_generator.GeneratorOutputVersion + 1
+
+	// Act
+	decision := service.DecideManualEditReapplication(defaultState(), current)
+
+	// Assert
+	assert.False(t, decision.GeneratorVersionChanged)
+}
+
+func manualZones() []editor_state_model.ManualZoneEdit {
+	return editor_state_model.ManualEditSettingsFromSnapshot(
+		[]template_model.Zone{{Name: gofakeit.Word()}}, nil).ManualZones
 }
 
 func stateWithManualEdits() *editor_state_model.EditorState {

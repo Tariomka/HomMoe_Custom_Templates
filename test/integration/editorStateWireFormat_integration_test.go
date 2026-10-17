@@ -18,51 +18,57 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-// persistedEditorStateFieldCount is the number of settings keys the editor state
-// writes to a .gen.json file, excluding the schema version.
-const persistedEditorStateFieldCount = 72
+// legacyEditorStateFieldCount is the number of settings keys the flat pre-v3
+// editor state wrote to a .gen.json file, excluding the schema version.
+const legacyEditorStateFieldCount = 72
 
-const schemaVersionKey = "schemaVersion"
+const (
+	schemaVersionKey      = "schemaVersion"
+	currentStateFixture   = "editorState_v3_flat.gen.json"
+	previousStateFixture  = "editorState_v2_flat.gen.json"
+	unversionedFixture    = "editorState_v0_flat.gen.json"
+	arrayPositionsFixture = "editorState_v1_flat.gen.json"
+)
 
 // The v0 and v1 files wrote manualPosition as [x, y], which encoding/json/v2
-// refuses to read into the current struct, so the migration is the only way in.
+// refuses to read into a newer struct, so the migration is the only way in.
 // Everything they do carry has to come back untouched.
-func TestWhenTheLegacyStateFixtureIsLoaded_EveryPersistedFieldKeepsItsValue(t *testing.T) {
+func TestWhenTheUnversionedStateFixtureIsLoaded_EveryPersistedFieldKeepsItsValue(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	expected := newMigratedAllFieldsEntity()
+	expected := newStampFreeAllFieldsEntity()
 
 	// Act
-	loaded, err := decodeEditorStateFixture(t, "editorState_v0_flat.gen.json")
+	loaded, err := decodeEditorStateFixture(t, unversionedFixture)
 
 	// Assert
 	require.NoError(t, err)
 	assert.Equal(t, expected, loaded)
 }
 
-func TestWhenTheLegacyStateFixtureIsLoaded_ItLandsAtTheCurrentSchemaVersion(t *testing.T) {
+func TestWhenTheUnversionedStateFixtureIsLoaded_ItLandsAtTheCurrentSchemaVersion(t *testing.T) {
 	t.Parallel()
 	// Arrange & Act
-	loaded, err := decodeEditorStateFixture(t, "editorState_v0_flat.gen.json")
+	loaded, err := decodeEditorStateFixture(t, unversionedFixture)
 
 	// Assert
 	require.NoError(t, err)
 	assert.Equal(t, editor_state.CurrentEditorStateSchemaVersion, loaded.SchemaVersion)
 }
 
-func TestWhenTheLegacyStateFixtureIsParsed_ItCarriesEveryPersistedKey(t *testing.T) {
+func TestWhenTheUnversionedStateFixtureIsParsed_ItCarriesEveryFlatKey(t *testing.T) {
 	t.Parallel()
 	// Arrange & Act
-	keys := parseEditorStateFixtureKeys(t, "editorState_v0_flat.gen.json")
+	keys := parseEditorStateFixtureKeys(t, unversionedFixture)
 
 	// Assert
-	assert.Len(t, keys, persistedEditorStateFieldCount)
+	assert.Len(t, keys, legacyEditorStateFieldCount)
 }
 
-func TestWhenTheLegacyStateFixtureIsParsed_ItCarriesNoSchemaVersion(t *testing.T) {
+func TestWhenTheUnversionedStateFixtureIsParsed_ItCarriesNoSchemaVersion(t *testing.T) {
 	t.Parallel()
 	// Arrange & Act
-	keys := parseEditorStateFixtureKeys(t, "editorState_v0_flat.gen.json")
+	keys := parseEditorStateFixtureKeys(t, unversionedFixture)
 
 	// Assert
 	assert.NotContains(t, keys, schemaVersionKey)
@@ -71,10 +77,25 @@ func TestWhenTheLegacyStateFixtureIsParsed_ItCarriesNoSchemaVersion(t *testing.T
 func TestWhenTheV1StateFixtureIsLoaded_EveryPersistedFieldKeepsItsValue(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	expected := newMigratedAllFieldsEntity()
+	expected := newStampFreeAllFieldsEntity()
 
 	// Act
-	loaded, err := decodeEditorStateFixture(t, "editorState_v1_flat.gen.json")
+	loaded, err := decodeEditorStateFixture(t, arrayPositionsFixture)
+
+	// Assert
+	require.NoError(t, err)
+	assert.Equal(t, expected, loaded)
+}
+
+// v2 is the last flat format: its ban and override text, its full snapshot and
+// its flat groups all have to land in the sectioned v3 state unchanged.
+func TestWhenTheV2StateFixtureIsLoaded_EveryPersistedFieldKeepsItsValue(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	expected := test_helpers.NewAllFieldsEditorStateEntity()
+
+	// Act
+	loaded, err := decodeEditorStateFixture(t, previousStateFixture)
 
 	// Assert
 	require.NoError(t, err)
@@ -87,50 +108,110 @@ func TestWhenTheCurrentStateFixtureIsLoaded_EveryPersistedFieldKeepsItsValue(t *
 	expected := test_helpers.NewAllFieldsEditorStateEntity()
 
 	// Act
-	loaded, err := decodeEditorStateFixture(t, "editorState_v2_flat.gen.json")
+	loaded, err := decodeEditorStateFixture(t, currentStateFixture)
 
 	// Assert
 	require.NoError(t, err)
 	assert.Equal(t, expected, loaded)
 }
 
-// The generator stamps are the one thing v2 adds that no older file can carry,
-// so they are also the one thing that proves the new keys really round-trip.
+// The generator stamps are what no pre-v2 file can carry, so they prove the
+// structure keys really round-trip.
 func TestWhenTheCurrentStateFixtureIsLoaded_TheGeneratorStampsComeBack(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	expected := test_helpers.NewAllFieldsEditorStateEntity().ManualZones[0]
+	expected := test_helpers.NewAllFieldsEditorStateEntity().ManualEdits.Zones[0]
 
 	// Act
-	loaded, err := decodeEditorStateFixture(t, "editorState_v2_flat.gen.json")
+	loaded, err := decodeEditorStateFixture(t, currentStateFixture)
 
 	// Assert
 	require.NoError(t, err)
-	assert.Equal(t, expected, loaded.ManualZones[0])
+	assert.Equal(t, expected, loaded.ManualEdits.Zones[0])
+}
+
+func TestWhenTheCurrentStateFixtureIsParsed_OnlyIdentityMapAndSchemaFieldsSitAtTheRoot(t *testing.T) {
+	t.Parallel()
+	// Arrange & Act
+	keys := parseEditorStateFixtureKeys(t, currentStateFixture)
+
+	// Assert
+	assert.Equal(t,
+		[]string{
+			"castles", "content", "experimentalMapSizes", "gameMode", "gameRules", "generation", "generatorVersion",
+			"manualEdits", "mapSize", "neutralZones", "players", "schemaVersion", "templateName",
+		},
+		slices.Sorted(maps.Keys(keys)))
+}
+
+// Sectioning moves keys, it never renames them: every flat v2 settings key is
+// found again inside exactly one v3 section or at the root.
+func TestWhenTheCurrentStateFixtureIsParsed_EveryFlatSettingsKeyReappearsOnce(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	flatKeys := parseEditorStateFixtureKeys(t, previousStateFixture)
+	delete(flatKeys, "manualZones")
+	delete(flatKeys, "manualConnections")
+	currentKeys := parseEditorStateFixtureKeys(t, currentStateFixture)
+
+	// Act
+	var found []string
+	for key, value := range currentKeys {
+		if !slices.Contains([]string{"players", "neutralZones", "castles", "generation", "gameRules", "content"}, key) {
+			found = append(found, key)
+			continue
+		}
+
+		section := map[string]json.RawMessage{}
+		require.NoError(t, json.Unmarshal(value, &section))
+		found = slices.AppendSeq(found, maps.Keys(section))
+	}
+
+	// Assert
+	assert.Subset(t, found, slices.Collect(maps.Keys(flatKeys)))
 }
 
 func TestWhenAStateFileClaimsANewerSchema_TheLoadIsRefused(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	bumped := strings.Replace(
-		string(readEditorStateFixture(t, "editorState_v2_flat.gen.json")),
-		`"schemaVersion": 2`,
+		string(readEditorStateFixture(t, currentStateFixture)),
 		`"schemaVersion": 3`,
+		`"schemaVersion": 4`,
 		1)
 	statePath := filepath.Join(t.TempDir(), "tooNew.gen.json")
 	require.NoError(t, os.WriteFile(statePath, []byte(bumped), 0o644))
 	target := mappers.NewEditorStateMapper().NewDefaultEntity()
 
 	// Act
-	err := newEditorStateMigrator().Load(statePath, &target)
+	_, err := newEditorStateMigrator().Load(statePath, &target)
 
 	// Assert
 	assert.ErrorAs(t, err, new(*editor_state_migrator.UnsupportedSchemaVersionError))
 }
 
-// Files the user already has on disk predate the version key entirely. If any
-// of them stops loading, the migration is wrong, not the file. output/ is
-// gitignored, so this is an opt-in local check rather than a CI gate.
+func TestWhenAStateFileClaimsANewerContentDefaultsVersion_TheLoadIsRefused(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	bumped := strings.Replace(
+		string(readEditorStateFixture(t, currentStateFixture)),
+		`"contentDefaultsVersion": 1`,
+		`"contentDefaultsVersion": 2`,
+		1)
+	statePath := filepath.Join(t.TempDir(), "tooNewDefaults.gen.json")
+	require.NoError(t, os.WriteFile(statePath, []byte(bumped), 0o644))
+	target := mappers.NewEditorStateMapper().NewDefaultEntity()
+
+	// Act
+	_, err := newEditorStateMigrator().Load(statePath, &target)
+
+	// Assert
+	assert.ErrorAs(t, err, new(*editor_state_migrator.UnsupportedContentDefaultsVersionError))
+}
+
+// Files the user already has on disk span every older format. If any of them
+// stops loading, the migration is wrong, not the file. output/ is gitignored,
+// so this is an opt-in local check rather than a CI gate.
 func TestWhenTheStatesInTheOutputFolderAreLoaded_TheyAllStillLoad(t *testing.T) {
 	t.Parallel()
 	// Arrange
@@ -144,28 +225,29 @@ func TestWhenTheStatesInTheOutputFolderAreLoaded_TheyAllStillLoad(t *testing.T) 
 	// Act & Assert
 	for _, path := range paths {
 		target := mappers.NewEditorStateMapper().NewDefaultEntity()
-		assert.NoError(t, migrator.Load(path, &target), "%s no longer loads", filepath.Base(path))
+		_, loadErr := migrator.Load(path, &target)
+		assert.NoError(t, loadErr, "%s no longer loads", filepath.Base(path))
 	}
 }
 
-func TestWhenBothStateFixturesAreParsed_TheyShareEveryKeyButTheSchemaVersion(t *testing.T) {
+func TestWhenBothFlatStateFixturesAreParsed_TheyShareEveryKeyButTheSchemaVersion(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	legacyKeys := slices.Sorted(maps.Keys(parseEditorStateFixtureKeys(t, "editorState_v0_flat.gen.json")))
-	currentKeys := parseEditorStateFixtureKeys(t, "editorState_v2_flat.gen.json")
+	unversionedKeys := slices.Sorted(maps.Keys(parseEditorStateFixtureKeys(t, unversionedFixture)))
+	flatKeys := parseEditorStateFixtureKeys(t, previousStateFixture)
 
 	// Act
-	delete(currentKeys, schemaVersionKey)
+	delete(flatKeys, schemaVersionKey)
 
 	// Assert
-	assert.Equal(t, legacyKeys, slices.Sorted(maps.Keys(currentKeys)))
+	assert.Equal(t, unversionedKeys, slices.Sorted(maps.Keys(flatKeys)))
 }
 
 func TestWhenTheAllFieldsStateIsWritten_ItMatchesTheCurrentFixture(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	expected := map[string]any{}
-	require.NoError(t, json.Unmarshal(readEditorStateFixture(t, "editorState_v2_flat.gen.json"), &expected))
+	require.NoError(t, json.Unmarshal(readEditorStateFixture(t, currentStateFixture), &expected))
 
 	// Act
 	//nolint:musttag // data.Vec2 is deliberately tag-free: its field names X and Y are the wire form.
@@ -178,25 +260,25 @@ func TestWhenTheAllFieldsStateIsWritten_ItMatchesTheCurrentFixture(t *testing.T)
 	assert.Equal(t, expected, actual)
 }
 
-// newMigratedAllFieldsEntity is the all-fields state as it comes back from a
+// newStampFreeAllFieldsEntity is the all-fields state as it comes back from a
 // pre-v2 file: identical but for the generator stamps, which those files had
 // nowhere to put.
-func newMigratedAllFieldsEntity() editor_state.EditorState {
+func newStampFreeAllFieldsEntity() editor_state.EditorState {
 	expected := test_helpers.NewAllFieldsEditorStateEntity()
-	expected.ManualZones[0].GeneratorPosition = nil
-	expected.ManualZones[0].GeneratorRing = nil
+	expected.ManualEdits.Zones[0].GeneratorPosition = nil
+	expected.ManualEdits.Zones[0].GeneratorRing = nil
 
 	return expected
 }
 
 // decodeEditorStateFixture reads a fixture the way the app does: seeded with the
 // defaults and routed through the migrator, which is the only path that can
-// read a pre-v2 file at all.
+// read an older file at all.
 func decodeEditorStateFixture(t *testing.T, name string) (editor_state.EditorState, error) {
 	t.Helper()
 
 	target := mappers.NewEditorStateMapper().NewDefaultEntity()
-	err := newEditorStateMigrator().
+	_, err := newEditorStateMigrator().
 		Load(filepath.Join("..", "test_helpers", "testdata", name), &target)
 
 	return target, err
@@ -205,15 +287,14 @@ func decodeEditorStateFixture(t *testing.T, name string) (editor_state.EditorSta
 func newEditorStateMigrator() editor_state_migrator.IEditorStateMigrator {
 	return editor_state_migrator.NewEditorStateMigrator(
 		repositories.NewEditorStateRepository(),
+		repositories.NewV2EditorStateRepository(),
 		repositories.NewLegacyEditorStateRepository())
 }
 
-// readEditorStateFixture returns a committed .gen.json fixture. The `_v0_` one
-// freezes the wire format the editor produced before the state was split into
-// entity groups and versioned; `_v1_` is the last version that wrote
-// manualPosition as an array; the `_v2_` one is what the current writer emits.
-// Regrouping the fields reorders the keys, so every assertion above compares
-// parsed values and never raw bytes.
+// readEditorStateFixture returns a committed .gen.json fixture. `_v0_` freezes
+// the flat format before versioning, `_v1_` is the last one with array
+// positions, `_v2_` the last flat one, and `_v3_` is what the current writer
+// emits. Regrouping reorders keys, so assertions compare parsed values.
 func readEditorStateFixture(t *testing.T, name string) []byte {
 	t.Helper()
 

@@ -362,6 +362,61 @@ func (this *AppRunner) CloseTopDialog() {
 	this.mu.Unlock()
 }
 
+// TopDialogTitle returns the title of the top-most dialog, or an empty string
+// when none is open (lock-guarded).
+func (this *AppRunner) TopDialogTitle() string {
+	this.tb.Helper()
+	this.mu.Lock()
+	defer this.mu.Unlock()
+	return this.App.TopDialogTitle()
+}
+
+// IsUnsaved reports whether the document has changes the file does not hold
+// (lock-guarded).
+func (this *AppRunner) IsUnsaved() bool {
+	this.tb.Helper()
+	this.mu.Lock()
+	defer this.mu.Unlock()
+	return this.App.GetStateDriver().IsUnsaved()
+}
+
+// SelectInTopPicker narrows the open picker to id and queues a click on its
+// row, which the next frame consumes (lock-guarded). The test fails when the
+// top-most dialog is not a picker or lists no such entry.
+func (this *AppRunner) SelectInTopPicker(id string) {
+	this.tb.Helper()
+	this.mu.Lock()
+	picker, ok := this.App.TopPicker()
+	if !ok {
+		this.mu.Unlock()
+		this.tb.Fatal("the top-most dialog is not a picker")
+		return
+	}
+
+	picker.SetSearch(id)
+	listed := picker.ClickEntry(id)
+	this.mu.Unlock()
+	if !listed {
+		this.tb.Fatalf("the picker does not list %q", id)
+	}
+}
+
+// ConfirmTopPicker queues a click on the open picker's Add button, which the
+// next frame consumes (lock-guarded).
+func (this *AppRunner) ConfirmTopPicker() {
+	this.tb.Helper()
+	this.mu.Lock()
+	picker, ok := this.App.TopPicker()
+	if !ok {
+		this.mu.Unlock()
+		this.tb.Fatal("the top-most dialog is not a picker")
+		return
+	}
+
+	picker.ClickAdd()
+	this.mu.Unlock()
+}
+
 // TopFileExplorer returns the open file explorer dialog and whether the
 // top-most dialog is one (lock-guarded).
 func (this *AppRunner) TopFileExplorer() (editor.IFileExplorerDialog, bool) {
@@ -413,6 +468,26 @@ func (this *AppRunner) CurrentState() editor_state_model.EditorState {
 	this.mu.Lock()
 	defer this.mu.Unlock()
 	return this.App.CurrentState()
+}
+
+// AppliedConnections returns a copy of the connections of the last generated or
+// applied template; the stored manual edits only hold them relative to a
+// derivation (lock-guarded).
+func (this *AppRunner) AppliedConnections() []template_model.Connection {
+	this.tb.Helper()
+	this.mu.Lock()
+	defer this.mu.Unlock()
+	template := this.App.GetStateDriver().GetLastTemplate()
+	if template == nil || len(template.Variants) == 0 {
+		return nil
+	}
+
+	connections := make([]template_model.Connection, 0, len(template.Variants[0].Connections))
+	for _, connection := range template.Variants[0].Connections {
+		connections = append(connections, connection.Clone())
+	}
+
+	return connections
 }
 
 // LoadStateFromFile loads an editor state file programmatically, mirroring the

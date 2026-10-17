@@ -9,6 +9,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor/connection_editor_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/preview_service"
 )
 
@@ -39,7 +40,7 @@ type ZoneEditorGeometryService struct {
 }
 
 func NewZoneEditorGeometryService(
-	previewLayout preview_service.IPreviewLayoutService) IZoneEditorGeometryService {
+	previewLayout preview_service.IPreviewLayoutService) connection_editor_interfaces.IZoneEditorGeometryService {
 	return &ZoneEditorGeometryService{previewLayout: previewLayout}
 }
 

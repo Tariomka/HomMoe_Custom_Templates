@@ -10,6 +10,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/constants"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/dialogs"
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/themes"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 )
@@ -177,13 +178,13 @@ func TestWhenSpellPickerSelectionIsApplied_ReportsTheMakeFreeFlag(t *testing.T) 
 	assert.False(t, free)
 }
 
-func TestWhenValueOverrideSelectionIsApplied_EmitsSidEqualsDefaultGuardLines(t *testing.T) {
+func TestWhenValueOverrideSelectionIsApplied_EmitsEntriesWithTheDefaultGuard(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	theme := themes.NewTheme()
 	sid := constants.GetValueOverrideSidsWithExclusions(nil)[0]
-	var lines []string
-	picker := dialogs.NewValueOverridePickerDialog(nil, func(applied []string) { lines = applied })
+	var entries []config.ValueOverrideEntry
+	picker := dialogs.NewValueOverridePickerDialog(nil, func(applied []config.ValueOverrideEntry) { entries = applied })
 	selectPickerEntry(t, picker, sid, theme)
 
 	// Act
@@ -191,5 +192,5 @@ func TestWhenValueOverrideSelectionIsApplied_EmitsSidEqualsDefaultGuardLines(t *
 	require.True(t, framePicker(t, picker, theme))
 
 	// Assert
-	assert.Equal(t, []string{sid + "=5000"}, lines)
+	assert.Equal(t, []config.ValueOverrideEntry{{Sid: sid, GuardValue: 5000}}, entries)
 }

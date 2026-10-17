@@ -23,9 +23,9 @@ type GeneratorConfig struct {
 	GenerateRoads             bool
 	MatchPlayerCastleFactions bool
 
-	BannedItems        string
-	BannedMagics       string
-	ValueOverridesText string
+	BannedItems    []BanEntry
+	BannedMagics   []BanEntry
+	ValueOverrides []ValueOverrideEntry
 
 	Bonuses []BonusEntry
 
@@ -115,6 +115,10 @@ func (this *GeneratorConfig) IsHubCityToHold() bool {
 
 func (this *GeneratorConfig) IsSingleHeroMode() bool {
 	return this.GameMode == registry.GetGameModeValues().SingleHero
+}
+
+func (this *GeneratorConfig) HasNonDeterministicLayout() bool {
+	return this.Topology == TopologyRandom || this.RandomPortals
 }
 
 func (this *GeneratorConfig) GetVictoryCondition() string {

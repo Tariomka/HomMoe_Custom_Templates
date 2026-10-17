@@ -36,10 +36,23 @@ func (this *handlerDependenciesStub) UpdateTemplate(
 	return dtos.TemplateLoadDto{}, nil
 }
 
-func (this *handlerDependenciesStub) ReapplyCastleSettings(
-	dtos.CastleSettingsReapplyRequestDto,
-) []template_model.Zone {
-	return nil
+func (this *handlerDependenciesStub) CaptureManualEdits(
+	dtos.ManualEditCaptureRequestDto,
+) (dtos.ManualEditCaptureDto, error) {
+	this.templateWorkflowCalled = true
+	return dtos.ManualEditCaptureDto{}, nil
+}
+
+func (this *handlerDependenciesStub) ExpandManualEdits(dtos.ManualEditExpandRequestDto) dtos.ManualEditExpansionDto {
+	this.templateWorkflowCalled = true
+	return dtos.ManualEditExpansionDto{}
+}
+
+func (this *handlerDependenciesStub) ConvertManualEdits(
+	dtos.ManualEditConvertRequestDto,
+) (dtos.ManualEditCaptureDto, error) {
+	this.templateWorkflowCalled = true
+	return dtos.ManualEditCaptureDto{}, nil
 }
 
 func (this *handlerDependenciesStub) ValidateEditorState(

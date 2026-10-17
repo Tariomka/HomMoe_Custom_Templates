@@ -1,7 +1,6 @@
 package gameRulesProvider_test
 
 import (
-	"strings"
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
@@ -15,8 +14,8 @@ func TestWhenItemsAndMagicsBanned_ReturnsBothLists(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
-	configuration.BannedItems = "voodoosh_doll_artifact\nflag_of_truce_artifact"
-	configuration.BannedMagics = "magic_armageddon"
+	configuration.BannedItems = bans("voodoosh_doll_artifact", "flag_of_truce_artifact")
+	configuration.BannedMagics = bans("magic_armageddon")
 
 	// Act
 	actual := providers.NewGameRulesProvider().CreateGlobalBans(*configuration)
@@ -44,7 +43,7 @@ func TestWhenOnlyMagicsBanned_ReturnsBansWithNilItems(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
-	configuration.BannedMagics = "magic_armageddon"
+	configuration.BannedMagics = bans("magic_armageddon")
 
 	// Act
 	actual := providers.NewGameRulesProvider().CreateGlobalBans(*configuration)
@@ -53,33 +52,56 @@ func TestWhenOnlyMagicsBanned_ReturnsBansWithNilItems(t *testing.T) {
 	assert.Equal(t, &template_model.GlobalBans{Items: nil, Magics: []string{"magic_armageddon"}}, actual)
 }
 
-func TestWhenBannedLinesContainWhitespace_TrimsAndSkipsBlankLines(t *testing.T) {
+func TestWhenOnlyItemsBanned_ReturnsBansWithNilMagics(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
-	configuration.BannedItems = "  voodoosh_doll_artifact  \n\n\t\nflag_of_truce_artifact"
+	configuration.BannedItems = bans("voodoosh_doll_artifact")
 
 	// Act
 	actual := providers.NewGameRulesProvider().CreateGlobalBans(*configuration)
 
 	// Assert
-	assert.Equal(t, []string{"voodoosh_doll_artifact", "flag_of_truce_artifact"}, actual.Items)
+	assert.Equal(t, &template_model.GlobalBans{Items: []string{"voodoosh_doll_artifact"}, Magics: nil}, actual)
 }
 
-// Functional-equivalence check: feeding the real Blitz item bans back through
-// the parser must reproduce them exactly.
-func TestWhenBlitzItemBansParsed_ReproducesBlitzItems(t *testing.T) {
+func TestWhenBansRepeat_KeepsOrderAndDuplicates(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	configuration := config.NewGeneratorConfig()
+	configuration.BannedItems = bans("flag_of_truce_artifact", "voodoosh_doll_artifact", "flag_of_truce_artifact")
+
+	// Act
+	actual := providers.NewGameRulesProvider().CreateGlobalBans(*configuration)
+
+	// Assert
+	assert.Equal(t,
+		[]string{"flag_of_truce_artifact", "voodoosh_doll_artifact", "flag_of_truce_artifact"},
+		actual.Items)
+}
+
+// Functional-equivalence check: the real Blitz item bans fed back as entries
+// must be reproduced exactly.
+func TestWhenBlitzItemBansAreConfigured_ReproducesBlitzItems(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	blitz := loadExampleTemplate(t, "Blitz.rmg.json")
 	require.NotNil(t, blitz.GlobalBans)
 	require.NotEmpty(t, blitz.GlobalBans.Items)
 	configuration := config.NewGeneratorConfig()
-	configuration.BannedItems = strings.Join(blitz.GlobalBans.Items, "\n")
+	configuration.BannedItems = bans(blitz.GlobalBans.Items...)
 
 	// Act
 	actual := providers.NewGameRulesProvider().CreateGlobalBans(*configuration)
 
 	// Assert
 	assert.Equal(t, blitz.GlobalBans.Items, actual.Items)
+}
+
+func bans(sids ...string) []config.BanEntry {
+	entries := make([]config.BanEntry, 0, len(sids))
+	for _, sid := range sids {
+		entries = append(entries, config.BanEntry{Sid: sid})
+	}
+	return entries
 }

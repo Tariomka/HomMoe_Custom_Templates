@@ -2,10 +2,8 @@ package models
 
 import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
-	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 )
 
 type EditorState struct {
@@ -34,6 +32,11 @@ func (this *EditorState) OverrideState(state editor_state_model.EditorState) {
 
 func (this *EditorState) GetCurrentState() editor_state_model.EditorState {
 	return this.current.Clone()
+}
+
+// GetCurrentSettings returns the current state without any manual changes.
+func (this *EditorState) GetCurrentSettings() editor_state_model.EditorState {
+	return this.current.CloneWithoutManualEdits()
 }
 
 func (this *EditorState) GetTemplateName() string { return this.current.TemplateName }
@@ -79,6 +82,15 @@ func (this *EditorState) GetPreviousState() *editor_state_model.EditorState {
 	return &previousState
 }
 
+func (this *EditorState) GetPreviousSettings() *editor_state_model.EditorState {
+	if this.previous == nil {
+		return nil
+	}
+
+	previousSettings := this.previous.CloneWithoutManualEdits()
+	return &previousSettings
+}
+
 func (this *EditorState) GetNextState() *editor_state_model.EditorState {
 	if this.next == nil {
 		return nil
@@ -86,6 +98,15 @@ func (this *EditorState) GetNextState() *editor_state_model.EditorState {
 
 	nextState := this.next.Clone()
 	return &nextState
+}
+
+func (this *EditorState) GetNextSettings() *editor_state_model.EditorState {
+	if this.next == nil {
+		return nil
+	}
+
+	nextSettings := this.next.CloneWithoutManualEdits()
+	return &nextSettings
 }
 
 func (this *EditorState) ResetNextState() { this.next = nil }
@@ -103,16 +124,24 @@ func (this *EditorState) WasStateChanged() bool {
 
 func (this *EditorState) HasManualEdits() bool { return this.current.HasManualEdits() }
 
-func (this *EditorState) SetManualEdits(zones []template_model.Zone, connections []template_model.Connection) bool {
-	candidate := editor_state_model.ManualEditSettings{
-		ManualZones:       helpers.MapSlice(zones, template_model.Zone.Clone),
-		ManualConnections: editor_state_model.ToManualConnectionSaves(connections),
-	}
-
+func (this *EditorState) SetManualEdits(edits editor_state_model.ManualEditSettings) bool {
+	candidate := edits.Clone()
 	changed := !candidate.Equals(this.current.ManualEditSettings)
 	this.current.ManualEditSettings = candidate
 	return changed
 }
+
+func (this *EditorState) GetManualEdits() editor_state_model.ManualEditSettings {
+	return this.current.ManualEditSettings.Clone()
+}
+
+func (this *EditorState) SetGeneratorVersion(version int) { this.current.GeneratorVersion = version }
+
+func (this *EditorState) GetGeneratorVersion() int { return this.current.GeneratorVersion }
+
+// NeedsDerivation reports whether the manual edits are still an
+// all-overridden snapshot waiting to be recorded against a generation.
+func (this *EditorState) NeedsDerivation() bool { return this.current.NeedsDerivation() }
 
 // ClearManualEdits drops the manual snapshot, used when a layout-defining
 // option change invalidates the hand-made layout, and reports whether there
@@ -124,12 +153,4 @@ func (this *EditorState) ClearManualEdits() (changed bool) {
 	this.current.ManualZones = nil
 	this.current.ManualConnections = nil
 	return changed
-}
-
-func (this *EditorState) GetManualZones() []template_model.Zone {
-	return helpers.MapSlice(this.current.ManualZones, template_model.Zone.Clone)
-}
-
-func (this *EditorState) GetManualConnections() []template_model.Connection {
-	return editor_state_model.FromManualConnectionSaves(this.current.ManualConnections)
 }

@@ -8,11 +8,13 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestWhenValueOverridesAreAllValid_ReturnsNoWarnings(t *testing.T) {
+// Value-override text is parsed once at load now, so generation has nothing
+// left to warn about.
+func TestWhenValueOverridesAreConfigured_ReturnsNoWarnings(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
-	configuration.ValueOverridesText = "watchtower=25000"
+	configuration.ValueOverrides = []config.ValueOverrideEntry{{Sid: "watchtower", GuardValue: 25000}}
 	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
@@ -22,30 +24,24 @@ func TestWhenValueOverridesAreAllValid_ReturnsNoWarnings(t *testing.T) {
 	assert.Empty(t, warnings)
 }
 
-func TestWhenValueOverrideLineIsRejected_ReturnsWarning(t *testing.T) {
+func TestWhenValueOverridesAreConfigured_TheTemplateCarriesThem(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	configuration := config.NewGeneratorConfig()
-	configuration.ValueOverridesText = "watchtower=25000\nbad_line"
-	generator := test_helpers.NewTemplateGenerator(configuration)
-
-	// Act
-	_, warnings := generateTemplate(generator)
-
-	// Assert
-	assert.Equal(t, []string{"line 2: 'bad_line' is not sid=value"}, warnings)
-}
-
-func TestWhenValueOverrideLineIsRejected_StillReturnsTheTemplate(t *testing.T) {
-	t.Parallel()
-	// Arrange
-	configuration := config.NewGeneratorConfig()
-	configuration.ValueOverridesText = "bad_line"
+	configuration.ValueOverrides = []config.ValueOverrideEntry{{Sid: "watchtower", GuardValue: 25000}}
 	generator := test_helpers.NewTemplateGenerator(configuration)
 
 	// Act
 	template, _ := generateTemplate(generator)
 
 	// Assert
-	assert.NotNil(t, template)
+	assert.Equal(
+		t,
+		[]any{"watchtower", -1, 25000},
+		[]any{
+			template.ValueOverrides[0].SID,
+			template.ValueOverrides[0].Variant,
+			template.ValueOverrides[0].GuardValue,
+		},
+	)
 }

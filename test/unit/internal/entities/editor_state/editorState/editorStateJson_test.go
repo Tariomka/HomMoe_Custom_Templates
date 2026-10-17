@@ -3,6 +3,8 @@ package editorState_test
 import (
 	"encoding/json/jsontext"
 	"encoding/json/v2"
+	"maps"
+	"slices"
 	"testing"
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state"
@@ -10,44 +12,75 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestWhenTheStateIsWritten_TheGroupFieldsSitBesideTheSchemaVersion(t *testing.T) {
+func TestWhenTheStateIsWritten_IdentityMapAndSchemaFieldsSitAtTheRoot(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	entity := editor_state.EditorState{TemplateName: "Flat", SchemaVersion: 1}
+	entity := editor_state.EditorState{
+		ManualEdits: editor_state.ManualEditSettings{Zones: []editor_state.ManualZoneEdit{{Name: "Spawn-A"}}},
+	}
 
 	// Act
 	keys := marshalToKeys(t, entity)
 
 	// Assert
-	assert.JSONEq(t, `"Flat"`, string(keys["templateName"]))
+	assert.ElementsMatch(t,
+		[]string{
+			"schemaVersion", "generatorVersion", "templateName", "gameMode", "mapSize", "experimentalMapSizes",
+			"players", "neutralZones", "castles", "generation", "gameRules", "content", "manualEdits",
+		},
+		slices.Collect(maps.Keys(keys)))
 }
 
-// The two tests below characterize the `omitempty` tags rather than endorse
-// them: a nil slice and an empty one are indistinguishable once written, so the
-// distinction EqualsIgnoringManualEdits draws between them exists in memory
-// only. Loading either back yields whatever the reader seeded.
+func TestWhenThereAreNoManualEdits_TheManualEditsSectionIsNotWritten(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	entity := editor_state.EditorState{}
+
+	// Act
+	keys := marshalToKeys(t, entity)
+
+	// Assert
+	assert.NotContains(t, keys, "manualEdits")
+}
+
+func TestWhenTheStateIsWritten_SettingsSitInsideTheirSection(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	entity := editor_state.EditorState{Players: editor_state.PlayerSettings{PlayerCount: 5}}
+
+	// Act
+	keys := marshalToKeys(t, entity)
+
+	// Assert
+	assert.JSONEq(t, `5`, string(sectionKeys(t, keys, "players")["playerCount"]))
+}
+
 func TestWhenContentRowsAreNil_TheKeyIsNotWritten(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	entity := editor_state.EditorState{PlayerZoneContentRows: nil}
+	entity := editor_state.EditorState{Content: editor_state.ContentSettings{PlayerZoneContentRows: nil}}
 
 	// Act
 	keys := marshalToKeys(t, entity)
 
 	// Assert
-	assert.NotContains(t, keys, "playerZoneContentRows")
+	assert.NotContains(t, sectionKeys(t, keys, "content"), "playerZoneContentRows")
 }
 
-func TestWhenContentRowsAreEmpty_TheKeyIsNotWrittenEither(t *testing.T) {
+// A cleared list must survive as [], otherwise the load path would mistake it
+// for omitted defaults.
+func TestWhenContentRowsAreEmpty_TheKeyIsWrittenAsAnEmptyList(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	entity := editor_state.EditorState{PlayerZoneContentRows: []editor_state.ZoneContentRow{}}
+	entity := editor_state.EditorState{
+		Content: editor_state.ContentSettings{PlayerZoneContentRows: []editor_state.ZoneContentRow{}},
+	}
 
 	// Act
 	keys := marshalToKeys(t, entity)
 
 	// Assert
-	assert.NotContains(t, keys, "playerZoneContentRows")
+	assert.JSONEq(t, `[]`, string(sectionKeys(t, keys, "content")["playerZoneContentRows"]))
 }
 
 // The load path seeds the entity with the defaults before decoding, so this
@@ -56,14 +89,19 @@ func TestWhenContentRowsAreEmpty_TheKeyIsNotWrittenEither(t *testing.T) {
 func TestWhenAKeyIsAbsentFromTheFile_TheSeededValueSurvives(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	entity := editor_state.EditorState{TemplateName: "Seeded"}
+	entity := editor_state.EditorState{
+		TemplateName: "Seeded",
+		Players:      editor_state.PlayerSettings{HeroCountMax: 8},
+	}
 
 	// Act
-	err := json.Unmarshal([]byte(`{"playerCount":5}`), &entity)
+	err := json.Unmarshal([]byte(`{"players":{"playerCount":5}}`), &entity)
 
 	// Assert
 	require.NoError(t, err)
-	assert.Equal(t, "Seeded", entity.TemplateName)
+	assert.Equal(t,
+		[]any{"Seeded", 8},
+		[]any{entity.TemplateName, entity.Players.HeroCountMax})
 }
 
 func TestWhenAKeyIsPresentInTheFile_ItReplacesTheSeededValue(t *testing.T) {
@@ -102,4 +140,13 @@ func marshalToKeys(t *testing.T, entity editor_state.EditorState) map[string]jso
 	require.NoError(t, json.Unmarshal(data, &keys))
 
 	return keys
+}
+
+func sectionKeys(t *testing.T, keys map[string]jsontext.Value, section string) map[string]jsontext.Value {
+	t.Helper()
+
+	nested := map[string]jsontext.Value{}
+	require.NoError(t, json.Unmarshal(keys[section], &nested))
+
+	return nested
 }

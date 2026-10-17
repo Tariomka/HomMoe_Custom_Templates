@@ -161,18 +161,18 @@ func TestManualEdits_PersistToGenJson_AndReapplyAfterLoad(t *testing.T) {
 	var onDisk editor_state.EditorState
 	require.NoError(t, json.Unmarshal(raw, &onDisk))
 
-	require.Len(t, onDisk.ManualZones, len(zones), "gen.json did not persist all manual zones")
-	require.NotEmpty(t, onDisk.ManualConnections, "gen.json did not persist manual connections")
+	require.Len(t, onDisk.ManualEdits.Zones, len(zones), "gen.json did not persist all manual zones")
+	require.NotEmpty(t, onDisk.ManualEdits.Connections, "gen.json did not persist manual connections")
 
 	// template_entity.Zone carries no position at all, so the round trip relies on the
-	// save wrapper's sidecar preserving it.
-	require.NotNil(t, onDisk.ManualZones[0].ManualPosition, "manual position was lost on save")
-	assert.InDelta(t, 0.1, onDisk.ManualZones[0].ManualPosition.X, 1e-9)
-	assert.InDelta(t, 0.2, onDisk.ManualZones[0].ManualPosition.Y, 1e-9)
+	// zone structure preserving it.
+	require.NotNil(t, onDisk.ManualEdits.Zones[0].ManualPosition, "manual position was lost on save")
+	assert.InDelta(t, 0.1, onDisk.ManualEdits.Zones[0].ManualPosition.X, 1e-9)
+	assert.InDelta(t, 0.2, onDisk.ManualEdits.Zones[0].ManualPosition.Y, 1e-9)
 
-	lastConn := onDisk.ManualConnections[len(onDisk.ManualConnections)-1]
+	lastConn := onDisk.ManualEdits.Connections[len(onDisk.ManualEdits.Connections)-1]
 	assert.True(t, lastConn.IsUserAdded, "IsUserAdded flag was lost on save")
-	assert.Equal(t, "Portal", lastConn.Connection.ConnectionType)
+	assert.Equal(t, "Portal", lastConn.ConnectionType)
 
 	// Load into a fresh session and regenerate; the manual layout must come
 	// back and be reapplied to the regenerated template.
@@ -222,8 +222,8 @@ func TestSaveWithoutManualEdits_OmitsManualFields(t *testing.T) {
 
 	var onDisk editor_state.EditorState
 	require.NoError(t, json.Unmarshal(raw, &onDisk))
-	assert.Empty(t, onDisk.ManualZones)
-	assert.Empty(t, onDisk.ManualConnections)
+	assert.Empty(t, onDisk.ManualEdits.Zones)
+	assert.Empty(t, onDisk.ManualEdits.Connections)
 }
 
 // TestStructuralRegeneration_DropsManualEdits confirms that changing a

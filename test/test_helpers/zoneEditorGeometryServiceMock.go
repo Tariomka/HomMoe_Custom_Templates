@@ -8,7 +8,7 @@ import (
 )
 
 // ZoneEditorGeometryServiceMock is a testify mock of
-// connection_editor.IZoneEditorGeometryService, used to unit-test collaborators
+// connection_editor_interfaces.IZoneEditorGeometryService, used to unit-test collaborators
 // without computing a real canvas layout.
 type ZoneEditorGeometryServiceMock struct {
 	mock.Mock

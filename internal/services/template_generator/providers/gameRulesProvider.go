@@ -1,11 +1,8 @@
 package providers
 
 import (
-	"fmt"
-	"strconv"
-	"strings"
-
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
@@ -34,54 +31,27 @@ func (this *GameRulesProvider) CreateGameRules(configuration config.GeneratorCon
 	}
 }
 
-// CreateValueOverrides parses the newline-separated "sid=guardValue" overrides
-// edited in the UI into ValueOverride entries (one per valid line). Blank lines
-// are skipped silently; every other rejected line produces a warning so the
-// edit is not discarded without telling the user. Variant -1 applies the
-// override to all variants.
+// CreateValueOverrides emits one ValueOverride per configured entry, in order.
+// Variant -1 applies the override to all variants.
 func (this *GameRulesProvider) CreateValueOverrides(
-	configuration config.GeneratorConfig) ([]template_model.ValueOverride, []string) {
-	var overrides []template_model.ValueOverride
-	var warnings []string
-	for index, rawLine := range strings.Split(configuration.ValueOverridesText, "\n") {
-		line := strings.TrimSpace(rawLine)
-		if line == "" {
-			continue
-		}
-		override, err := this.parseValueOverride(line, index+1)
-		if err != nil {
-			warnings = append(warnings, err.Error())
-			continue
-		}
-		overrides = append(overrides, override)
-	}
-	return overrides, warnings
+	configuration config.GeneratorConfig) []template_model.ValueOverride {
+	return linq.SelectSlice(
+		configuration.ValueOverrides,
+		func(entry config.ValueOverrideEntry) template_model.ValueOverride {
+			return template_model.ValueOverride{SID: entry.Sid, Variant: -1, GuardValue: entry.GuardValue}
+		},
+	)
 }
 
-// CreateGlobalBans turns the newline-separated banned item / magic SIDs edited
-// in the UI into a GlobalBans block, or nil when nothing is banned.
+// CreateGlobalBans turns the banned item and magic entries into a GlobalBans
+// block, or nil when nothing is banned.
 func (this *GameRulesProvider) CreateGlobalBans(configuration config.GeneratorConfig) *template_model.GlobalBans {
-	items := parseSidLines(configuration.BannedItems)
-	magics := parseSidLines(configuration.BannedMagics)
+	items := linq.SelectSlice(configuration.BannedItems, func(entry config.BanEntry) string { return entry.Sid })
+	magics := linq.SelectSlice(configuration.BannedMagics, func(entry config.BanEntry) string { return entry.Sid })
 	if len(items) == 0 && len(magics) == 0 {
 		return nil
 	}
 	return &template_model.GlobalBans{Items: items, Magics: magics}
-}
-
-func (this *GameRulesProvider) parseValueOverride(line string, lineNumber int) (template_model.ValueOverride, error) {
-	equals := strings.Index(line, "=")
-	if equals <= 0 {
-		return template_model.ValueOverride{}, fmt.Errorf("line %d: '%s' is not sid=value", lineNumber, line)
-	}
-
-	guardValue, err := strconv.Atoi(strings.TrimSpace(line[equals+1:]))
-	if err != nil {
-		return template_model.ValueOverride{}, fmt.Errorf("line %d: '%s' has a non-numeric value", lineNumber, line)
-	}
-
-	sid := strings.TrimSpace(line[:equals])
-	return template_model.ValueOverride{SID: sid, Variant: -1, GuardValue: guardValue}, nil
 }
 
 func (this *GameRulesProvider) createAdvancedWinConditions(
@@ -211,17 +181,6 @@ func expandBonusEntry(entry config.BonusEntry) []template_model.Bonus {
 		return []template_model.Bonus{bonus(mapBonuses.Resource, "ore", entry.Param)}
 	}
 	return nil
-}
-
-// parseSidLines splits a newline-separated SID list into trimmed, non-empty SIDs.
-func parseSidLines(raw string) []string {
-	var sids []string
-	for line := range strings.SplitSeq(raw, "\n") {
-		if line = strings.TrimSpace(line); line != "" {
-			sids = append(sids, line)
-		}
-	}
-	return sids
 }
 
 func percentToModifier(percent int) float64 {

@@ -9,7 +9,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
-	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor/connection_editor_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/generation_tuning"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
 )
@@ -17,18 +17,18 @@ import (
 type zoneEditorHandler struct {
 	mapper           mappers.IGeneratorConfigMapper
 	tierService      zone_interfaces.IZoneTierService
-	connectionEditor connection_editor.IConnectionEditorService
-	zoneEditor       connection_editor.IZoneEditorService
-	geometry         connection_editor.IZoneEditorGeometryService
+	connectionEditor connection_editor_interfaces.IConnectionEditorService
+	zoneEditor       connection_editor_interfaces.IZoneEditorService
+	geometry         connection_editor_interfaces.IZoneEditorGeometryService
 	tuningFactory    generation_tuning.IGenerationTuningFactory
 }
 
 func NewZoneEditorHandler(
 	mapper mappers.IGeneratorConfigMapper,
 	tierService zone_interfaces.IZoneTierService,
-	connectionEditor connection_editor.IConnectionEditorService,
-	zoneEditor connection_editor.IZoneEditorService,
-	geometry connection_editor.IZoneEditorGeometryService,
+	connectionEditor connection_editor_interfaces.IConnectionEditorService,
+	zoneEditor connection_editor_interfaces.IZoneEditorService,
+	geometry connection_editor_interfaces.IZoneEditorGeometryService,
 	tuningFactory generation_tuning.IGenerationTuningFactory) handler_interfaces.IZoneEditorHandler {
 	return &zoneEditorHandler{
 		mapper:           mapper,
@@ -55,9 +55,6 @@ func (this *zoneEditorHandler) CountZoneCastles(zone template_model.Zone) int {
 	return this.zoneEditor.CountZoneCastles(zone)
 }
 
-// GetZoneQuality answers with the tier recorded on the zone, falling back to
-// inference only for a zone that never had one - a template loaded from a raw
-// .rmg.json.
 func (this *zoneEditorHandler) GetZoneQuality(zone template_model.Zone) neutral_zone.Quality {
 	return this.tierService.ResolveQuality(zone)
 }

@@ -9,7 +9,7 @@ import (
 )
 
 // ManualReapplyServiceMock is a testify mock of
-// connection_editor.IManualReapplyService, used to unit-test collaborators
+// connection_editor_interfaces.IManualReapplyService, used to unit-test collaborators
 // without the real castle-propagation logic.
 type ManualReapplyServiceMock struct {
 	mock.Mock
@@ -17,9 +17,10 @@ type ManualReapplyServiceMock struct {
 
 func (this *ManualReapplyServiceMock) ApplyCastleSettingChanges(
 	zones []template_model.Zone,
+	eligible []bool,
 	changes editor_state_model.CastleSettingChanges,
 	configuration *config.GeneratorConfig) {
-	this.Called(zones, changes, configuration)
+	this.Called(zones, eligible, changes, configuration)
 }
 
 func (this *ManualReapplyServiceMock) SetNeutralZoneCastleCount(

@@ -7,6 +7,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor/connection_editor_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/generation_tuning"
 	zone_services "github.com/Tariomka/hommoe_custom_templates/internal/services/zones"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
@@ -14,7 +15,7 @@ import (
 
 // newManualReapplyService builds the service with the same collaborators the
 // application wires.
-func newManualReapplyService() connection_editor.IManualReapplyService {
+func newManualReapplyService() connection_editor_interfaces.IManualReapplyService {
 	return connection_editor.NewManualReapplyService(
 		test_helpers.NewZoneEditorService(),
 		zone_services.NewCastleFactory(),
@@ -40,6 +41,15 @@ func defaultTuning() models.GenerationTuning {
 func makeNeutralZone(label string, quality neutral_zone.Quality, castleCount int) template_model.Zone {
 	return test_helpers.NewZoneEditorService().
 		NewDefaultNeutralZone(label, quality, castleCount, false, defaultTuning())
+}
+
+// allEligible marks every zone as eligible for the castle reapply.
+func allEligible(zones []template_model.Zone) []bool {
+	eligible := make([]bool, len(zones))
+	for index := range eligible {
+		eligible[index] = true
+	}
+	return eligible
 }
 
 // makeSpawnZone builds a player spawn zone with the spawn castle as the primary

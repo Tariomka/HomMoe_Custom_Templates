@@ -40,8 +40,12 @@ func TestWhenStateFileContainsInvalidJson_ReturnsError(t *testing.T) {
 func TestWhenStateFileContainsValidJson_TheDecodedKeysReachTheTarget(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	statePath := writeStateFile(t, `{"templateName":"X","playerCount":4,"mapSize":192}`)
-	expected := editor_state.EditorState{TemplateName: "X", PlayerCount: 4, MapSize: 192}
+	statePath := writeStateFile(t, `{"templateName":"X","players":{"playerCount":4},"mapSize":192}`)
+	expected := editor_state.EditorState{
+		TemplateName: "X",
+		MapSize:      192,
+		Players:      editor_state.PlayerSettings{PlayerCount: 4},
+	}
 	target := editor_state.EditorState{}
 
 	// Act
@@ -58,7 +62,7 @@ func TestWhenStateFileContainsValidJson_TheDecodedKeysReachTheTarget(t *testing.
 func TestWhenStateFileOmitsAKey_TheValueSeededByTheCallerSurvives(t *testing.T) {
 	t.Parallel()
 	// Arrange
-	statePath := writeStateFile(t, `{"playerCount":4}`)
+	statePath := writeStateFile(t, `{"players":{"playerCount":4}}`)
 	target := editor_state.EditorState{TemplateName: "Seeded"}
 
 	// Act
@@ -74,36 +78,36 @@ func TestWhenStateFileOmitsTheContentRows_TheRowsSeededByTheCallerSurvive(t *tes
 	// Arrange
 	statePath := writeStateFile(t, `{"templateName":"X"}`)
 	seededRows := []editor_state.ZoneContentRow{{Sid: "seeded", Count: 1}}
-	target := editor_state.EditorState{PlayerZoneContentRows: seededRows}
+	target := editor_state.EditorState{Content: editor_state.ContentSettings{PlayerZoneContentRows: seededRows}}
 
 	// Act
 	err := newRepository().Load(statePath, &target)
 
 	// Assert
 	require.NoError(t, err)
-	assert.Equal(t, seededRows, target.PlayerZoneContentRows)
+	assert.Equal(t, seededRows, target.Content.PlayerZoneContentRows)
 }
 
-// Written empty and written nil are the same absent key on disk, so neither can
-// clear what the caller seeded. That is a property of the `omitempty` tags, not
-// a defect of the loader - the nil-versus-empty distinction the change
-// detection draws never survived a save and is not meant to.
-func TestWhenStateFileCarriesEmptyContentRows_TheRowsSeededByTheCallerSurviveToo(t *testing.T) {
+// A cleared list is written as [], so unlike an omitted key it replaces what
+// the caller seeded.
+func TestWhenStateFileCarriesEmptyContentRows_TheyReplaceTheSeededRows(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	repository := newRepository()
-	saved := editor_state.EditorState{PlayerZoneContentRows: []editor_state.ZoneContentRow{}}
+	saved := editor_state.EditorState{
+		Content: editor_state.ContentSettings{PlayerZoneContentRows: []editor_state.ZoneContentRow{}},
+	}
 	statePath, err := repository.Save(t.TempDir(), "State", saved)
 	require.NoError(t, err)
 	seededRows := []editor_state.ZoneContentRow{{Sid: "seeded", Count: 1}}
-	target := editor_state.EditorState{PlayerZoneContentRows: seededRows}
+	target := editor_state.EditorState{Content: editor_state.ContentSettings{PlayerZoneContentRows: seededRows}}
 
 	// Act
 	loadErr := repository.Load(statePath, &target)
 
 	// Assert
 	require.NoError(t, loadErr)
-	assert.Equal(t, seededRows, target.PlayerZoneContentRows)
+	assert.Empty(t, target.Content.PlayerZoneContentRows)
 }
 
 func writeStateFile(t *testing.T, body string) string {

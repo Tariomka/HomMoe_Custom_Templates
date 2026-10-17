@@ -289,7 +289,8 @@ func TestWhenTournamentPlayerCountIsFixed_ManualEditsAreLeftAlone(t *testing.T) 
 	state := editor_state_model.NewDefaultEditorStateModel()
 	state.Tournament = true
 	state.PlayerCount = 6
-	state.ManualZones = []template_model.Zone{{Name: "Zone A"}}
+	state.ManualZones = editor_state_model.ManualEditSettingsFromSnapshot(
+		[]template_model.Zone{{Name: "Zone A"}}, nil).ManualZones
 	handler := handlers.NewStateHandler(
 		&test_helpers.FileServiceMock{},
 		validators.NewEditorStateValidator())

@@ -5,7 +5,6 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 	"github.com/brianvoe/gofakeit/v7"
 	"github.com/stretchr/testify/assert"
@@ -88,7 +87,7 @@ func TestWhenUpdateChangesAnEffectiveMode_ManualEditsAreCleared(t *testing.T) {
 			// Arrange
 			state := newEditorState()
 			state.UpdateCurrentState(func(current *editor_state_model.EditorState) {
-				current.ManualZones = []template_model.Zone{{Name: "Zone A"}}
+				current.ManualEditSettings = zoneAManualEdits()
 			})
 
 			// Act
@@ -105,7 +104,7 @@ func TestWhenUpdateChangesAnEffectiveModeWithManualEdits_ReportsTheDiscard(t *te
 	// Arrange
 	state := newEditorState()
 	state.UpdateCurrentState(func(current *editor_state_model.EditorState) {
-		current.ManualZones = []template_model.Zone{{Name: "Zone A"}}
+		current.ManualEditSettings = zoneAManualEdits()
 	})
 
 	// Act
@@ -123,7 +122,7 @@ func TestWhenUpdateLeavesTheEffectiveModes_ManualEditsSurvive(t *testing.T) {
 	state := newEditorState()
 	state.UpdateCurrentState(func(current *editor_state_model.EditorState) {
 		current.Tournament = true
-		current.ManualZones = []template_model.Zone{{Name: "Zone A"}}
+		current.ManualEditSettings = zoneAManualEdits()
 	})
 
 	// Act

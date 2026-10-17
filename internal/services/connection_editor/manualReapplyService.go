@@ -16,22 +16,23 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/preview"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
+	"github.com/Tariomka/hommoe_custom_templates/internal/services/connection_editor/connection_editor_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/template_generator/generation_tuning"
 	"github.com/Tariomka/hommoe_custom_templates/internal/services/zones/zone_interfaces"
 )
 
 type ManualReapplyService struct {
-	zoneEditor    IZoneEditorService
+	zoneEditor    connection_editor_interfaces.IZoneEditorService
 	castleFactory zone_interfaces.ICastleFactory
 	tierService   zone_interfaces.IZoneTierService
 	tuningFactory generation_tuning.IGenerationTuningFactory
 }
 
 func NewManualReapplyService(
-	zoneEditor IZoneEditorService,
+	zoneEditor connection_editor_interfaces.IZoneEditorService,
 	castleFactory zone_interfaces.ICastleFactory,
 	tierService zone_interfaces.IZoneTierService,
-	tuningFactory generation_tuning.IGenerationTuningFactory) IManualReapplyService {
+	tuningFactory generation_tuning.IGenerationTuningFactory) connection_editor_interfaces.IManualReapplyService {
 	return &ManualReapplyService{
 		zoneEditor:    zoneEditor,
 		castleFactory: castleFactory,
@@ -40,9 +41,10 @@ func NewManualReapplyService(
 	}
 }
 
-// ApplyCastleSettingChanges rewrites the castles of the manually edited zones
-// whose castle-count option changed, in place. Everything else about the
-// zones - quality, guard values, pools, sizes, positions - stays untouched:
+// ApplyCastleSettingChanges rewrites, in place, the castles of the eligible
+// zones whose castle-count option changed. The tuning counts every zone.
+// Everything else about the zones - quality, guard values, pools, sizes,
+// positions - stays untouched:
 //   - spawn zones follow the player-castle options (the spawn castle itself,
 //     and with it the player assignment, is preserved);
 //   - hub zones follow the hub-castle option;
@@ -52,6 +54,7 @@ func NewManualReapplyService(
 //     no-castle plan.
 func (this *ManualReapplyService) ApplyCastleSettingChanges(
 	zones []template_model.Zone,
+	eligible []bool,
 	changes editor_state_model.CastleSettingChanges,
 	configuration *config.GeneratorConfig) {
 	if !changes.Any() {
@@ -59,6 +62,10 @@ func (this *ManualReapplyService) ApplyCastleSettingChanges(
 	}
 	tuning := this.tuningFactory.Create(configuration, len(zones))
 	for i := range zones {
+		if !eligible[i] {
+			continue
+		}
+
 		zone := &zones[i]
 		switch zone_helpers.GetZoneTypeFromName(zone.Name) {
 		case preview.ZoneTypePlayer:

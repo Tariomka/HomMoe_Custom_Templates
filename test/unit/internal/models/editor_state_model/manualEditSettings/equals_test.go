@@ -3,6 +3,7 @@ package manualEditSettings_test
 import (
 	"testing"
 
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/neutral_zone"
@@ -28,8 +29,8 @@ func TestWhenATopLevelListIsEmptyInsteadOfNil_TheSnapshotsAreEqual(t *testing.T)
 	t.Parallel()
 	// Arrange
 	empty := editor_state_model.ManualEditSettings{
-		ManualZones:       []template_model.Zone{},
-		ManualConnections: []editor_state_model.ManualConnectionSave{},
+		ManualZones:       []editor_state_model.ManualZoneEdit{},
+		ManualConnections: []editor_state_model.ManualConnectionEdit{},
 	}
 
 	// Act
@@ -56,7 +57,8 @@ func TestWhenAZoneIsAdded_TheSnapshotsAreNotEqual(t *testing.T) {
 	// Arrange
 	stored := newPopulatedManualEditSettings()
 	candidate := newPopulatedManualEditSettings()
-	candidate.ManualZones = append(candidate.ManualZones, template_model.Zone{Name: "Zone B"})
+	candidate.ManualZones = append(candidate.ManualZones,
+		editor_state_model.ManualEditSettingsFromSnapshot([]template_model.Zone{{Name: "Zone B"}}, nil).ManualZones...)
 
 	// Act
 	equal := stored.Equals(candidate)
@@ -94,7 +96,7 @@ func persistedFieldCases() map[string]func(editor_state_model.ManualEditSettings
 			settings.ManualZones[0].Name = "changed"
 		},
 		"WhenTheZoneSizeDiffers_TheSnapshotsAreNotEqual": func(settings editor_state_model.ManualEditSettings) {
-			settings.ManualZones[0].Size = 9
+			settings.ManualZones[0].FieldOverrides.Size = new(9.0)
 		},
 		"WhenTheManualPositionDiffers_TheSnapshotsAreNotEqual": func(
 			settings editor_state_model.ManualEditSettings) {
@@ -109,40 +111,69 @@ func persistedFieldCases() map[string]func(editor_state_model.ManualEditSettings
 			*settings.ManualZones[0].GeneratorRing = 9
 		},
 		"WhenTheQualityDiffers_TheSnapshotsAreNotEqual": func(settings editor_state_model.ManualEditSettings) {
-			*settings.ManualZones[0].Quality = neutral_zone.QualityHighest
+			*settings.ManualZones[0].Quality = int8(neutral_zone.QualityHighest)
+		},
+		"WhenTheZoneOriginDiffers_TheSnapshotsAreNotEqual": func(settings editor_state_model.ManualEditSettings) {
+			settings.ManualZones[0].Origin = editor_state.ZoneOriginAdded
+		},
+		"WhenTheCastleCountDiffers_TheSnapshotsAreNotEqual": func(settings editor_state_model.ManualEditSettings) {
+			settings.ManualZones[0].Castles = new(3)
 		},
 		"WhenTheEncounterHolesDiffer_TheSnapshotsAreNotEqual": func(
 			settings editor_state_model.ManualEditSettings) {
-			settings.ManualZones[0].EncounterHolesSettings.TwoHoleEncounters = 9
+			settings.ManualZones[0].FieldOverrides.EncounterHolesSettings.TwoHoleEncounters = 9
 		},
 		"WhenAContentPoolEntryDiffers_TheSnapshotsAreNotEqual": func(
 			settings editor_state_model.ManualEditSettings) {
-			settings.ManualZones[0].GuardedContentPool[0] = "changed"
+			settings.ManualZones[0].FieldOverrides.GuardedContentPool[0] = "changed"
 		},
 		"WhenAMainObjectDiffers_TheSnapshotsAreNotEqual": func(settings editor_state_model.ManualEditSettings) {
-			settings.ManualZones[0].MainObjects[0].Factions[0] = "changed"
+			settings.ManualZones[0].FieldOverrides.MainObjects[0].Factions[0] = "changed"
 		},
 		"WhenAZoneRoadDiffers_TheSnapshotsAreNotEqual": func(settings editor_state_model.ManualEditSettings) {
-			settings.ManualZones[0].Roads[0].Type = "changed"
+			settings.ManualZones[0].FieldOverrides.Roads[0].Type = "changed"
+		},
+		"WhenAZoneFieldIsUnset_TheSnapshotsAreNotEqual": func(settings editor_state_model.ManualEditSettings) {
+			settings.ManualZones[0].Unset = []string{"roads"}
+		},
+		"WhenTheConnectionNameDiffers_TheSnapshotsAreNotEqual": func(
+			settings editor_state_model.ManualEditSettings) {
+			settings.ManualConnections[0].Name = "changed"
+		},
+		"WhenTheConnectionSourceDiffers_TheSnapshotsAreNotEqual": func(
+			settings editor_state_model.ManualEditSettings) {
+			settings.ManualConnections[0].From = "changed"
+		},
+		"WhenTheConnectionTargetDiffers_TheSnapshotsAreNotEqual": func(
+			settings editor_state_model.ManualEditSettings) {
+			settings.ManualConnections[0].To = "changed"
+		},
+		"WhenTheConnectionTypeDiffers_TheSnapshotsAreNotEqual": func(
+			settings editor_state_model.ManualEditSettings) {
+			settings.ManualConnections[0].ConnectionType = "changed"
 		},
 		"WhenTheConnectionLengthDiffers_TheSnapshotsAreNotEqual": func(
 			settings editor_state_model.ManualEditSettings) {
-			settings.ManualConnections[0].Connection.Length = 9
+			settings.ManualConnections[0].FieldOverrides.Length = new(9.0)
 		},
 		"WhenTheConnectionRoadFlagDiffers_TheSnapshotsAreNotEqual": func(
 			settings editor_state_model.ManualEditSettings) {
-			*settings.ManualConnections[0].Connection.Road = false
+			*settings.ManualConnections[0].FieldOverrides.Road = false
 		},
 		"WhenTheConnectionGuardValueDiffers_TheSnapshotsAreNotEqual": func(
 			settings editor_state_model.ManualEditSettings) {
-			settings.ManualConnections[0].Connection.GuardValue = 9
+			settings.ManualConnections[0].FieldOverrides.GuardValue = new(1)
 		},
 		"WhenAPortalPlacementRuleDiffers_TheSnapshotsAreNotEqual": func(
 			settings editor_state_model.ManualEditSettings) {
-			settings.ManualConnections[0].Connection.PortalPlacementRulesFrom[0].Type = "changed"
+			settings.ManualConnections[0].FieldOverrides.PortalPlacementRulesFrom[0].Type = "changed"
 		},
 		"WhenIsUserAddedDiffers_TheSnapshotsAreNotEqual": func(settings editor_state_model.ManualEditSettings) {
 			settings.ManualConnections[0].IsUserAdded = false
+		},
+		"WhenAConnectionFieldIsUnset_TheSnapshotsAreNotEqual": func(
+			settings editor_state_model.ManualEditSettings) {
+			settings.ManualConnections[0].Unset = []string{"road"}
 		},
 	}
 }
@@ -150,8 +181,8 @@ func persistedFieldCases() map[string]func(editor_state_model.ManualEditSettings
 // newPopulatedManualEditSettings builds a snapshot whose saved fields all
 // carry data, so a comparison that skips one shows up as a missed edit.
 func newPopulatedManualEditSettings() editor_state_model.ManualEditSettings {
-	return editor_state_model.ManualEditSettings{
-		ManualZones: []template_model.Zone{{
+	return editor_state_model.ManualEditSettingsFromSnapshot(
+		[]template_model.Zone{{
 			Name:              "Zone A",
 			Size:              1.5,
 			Quality:           new(neutral_zone.QualityLowest),
@@ -169,15 +200,15 @@ func newPopulatedManualEditSettings() editor_state_model.ManualEditSettings {
 			}},
 			Roads: []template_model.Road{{Type: "road", Road: new(true)}},
 		}},
-		ManualConnections: editor_state_model.ToManualConnectionSaves([]template_model.Connection{{
+		[]template_model.Connection{{
 			Name:                     "A-B",
 			From:                     "Zone A",
 			To:                       "Zone B",
+			ConnectionType:           "Proximity",
 			Length:                   2.5,
 			GuardValue:               1000,
 			Road:                     new(true),
 			PortalPlacementRulesFrom: []template_model.PlacementRule{{Type: "rule"}},
 			IsUserAdded:              true,
-		}}),
-	}
+		}})
 }

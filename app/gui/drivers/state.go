@@ -47,6 +47,12 @@ type State struct {
 	applyNextStateAt time.Time               // for debouncing
 	pendingBaseZones dtos.ZoneEditorZonesDto // uncommitted layout produced by PreviewBaseZones.
 
+	// derivationBaseline holds the settings an all-overridden manual snapshot
+	// was made with, until it is converted; announceConversion opens the
+	// conversion notice when that happens for a loaded file.
+	derivationBaseline *editor_state_model.EditorState
+	announceConversion bool
+
 	confirmExit bool
 	onExit      func() // app closing callback for Gio app.DestroyEvent flow.
 }
@@ -111,6 +117,7 @@ func (this *State) Reset() {
 	this.currentPath = ""
 	this.unsaved = false
 	this.pendingOutcome = editor_state_model.ModeTransitionOutcome{}
+	this.clearDerivationBaseline()
 	this.clearGeneratedState()
 	this.SetStatus("New settings file.", false)
 }
@@ -119,6 +126,9 @@ func (this *State) UpdateState(updateFunc func(*editor_state_model.EditorState))
 	outcome := this.innerState.UpdateCurrentState(updateFunc)
 	if this.innerState.WasStateChanged() || outcome.ManualEditsDiscarded || outcome.TournamentCountCorrected {
 		this.flagAsUnsaved()
+	}
+	if outcome.ManualEditsDiscarded {
+		this.clearDerivationBaseline()
 	}
 
 	this.noteStateTransition(outcome)
@@ -163,16 +173,34 @@ func (this *State) getPreviousStateDto() *editor_state_dto.EditorStateDto {
 	return &editor_state_dto.EditorStateDto{EditorState: *state}
 }
 
-func (this *State) getNextStateDto() *editor_state_dto.EditorStateDto {
-	state := this.innerState.GetNextState()
-	if state == nil {
+func (this *State) getPreviousSettingsDto() *editor_state_dto.EditorStateDto {
+	settings := this.innerState.GetPreviousSettings()
+	if settings == nil {
 		return nil
 	}
 
-	return &editor_state_dto.EditorStateDto{EditorState: *state}
+	return &editor_state_dto.EditorStateDto{EditorState: *settings}
+}
+
+func (this *State) getCurrentSettingsDto() *editor_state_dto.EditorStateDto {
+	return &editor_state_dto.EditorStateDto{EditorState: this.innerState.GetCurrentSettings()}
+}
+
+func (this *State) getNextSettingsDto() *editor_state_dto.EditorStateDto {
+	settings := this.innerState.GetNextSettings()
+	if settings == nil {
+		return nil
+	}
+
+	return &editor_state_dto.EditorStateDto{EditorState: *settings}
 }
 
 func (this *State) flagAsUnsaved() {
 	this.unsaved = true
 	this.confirmExit = false // New edits invalidate a pending exit confirmation.
+}
+
+func (this *State) clearDerivationBaseline() {
+	this.derivationBaseline = nil
+	this.announceConversion = false
 }

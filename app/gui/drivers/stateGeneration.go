@@ -27,9 +27,9 @@ func (this *State) SaveTemplate() { this.handleSaveTemplate() }
 // input.
 func (this *State) AutoRegenerate(now time.Time) (redrawAt time.Time, scheduleRedraw bool) {
 	decision := this.regeneration.DecideRegeneration(dtos.RegenerationDecisionRequestDto{
-		Previous:      this.getPreviousStateDto(),
-		Current:       new(this.GetStateDto()),
-		Next:          this.getNextStateDto(),
+		Previous:      this.getPreviousSettingsDto(),
+		Current:       this.getCurrentSettingsDto(),
+		Next:          this.getNextSettingsDto(),
 		Now:           now,
 		DebounceDueAt: this.applyNextStateAt,
 	})
@@ -92,9 +92,12 @@ func (this *State) handleGenerateTemplate(createStateSnapshotOnFailure bool) {
 	// must be taken before applyGeneratedTemplate snapshots the current state.
 	manualEdits := this.regeneration.DecideManualEditReapplication(this.getPreviousStateDto(), &currentState)
 	this.applyGeneratedTemplate(dto.Template)
+	var notes []string
+	conversionFailed := false
 	if manualEdits.ReapplyWithCastleChanges != nil && this.hasTemplateVariants() {
-		this.reapplyManualEdits(*manualEdits.ReapplyWithCastleChanges)
+		notes, conversionFailed = this.reapplyManualEdits(manualEdits)
 	} else if manualEdits.ReapplyWithCastleChanges == nil {
+		this.clearDerivationBaseline()
 		this.innerState.ClearManualEdits()
 	}
 
@@ -108,11 +111,16 @@ func (this *State) handleGenerateTemplate(createStateSnapshotOnFailure bool) {
 	if manualEdits.ReapplyWithCastleChanges != nil {
 		status += " (Manual zone edits reapplied.)"
 	}
+	var statusSb114 strings.Builder
+	for _, note := range notes {
+		statusSb114.WriteString(" " + note)
+	}
+	status += statusSb114.String()
 	if notice := this.takePendingNotice(); notice != "" {
 		status += " " + notice
 	}
 	status += fmt.Sprintf("\n%s", time.Now().Format("15:04:05"))
-	this.SetStatus(status, false)
+	this.SetStatus(status, conversionFailed)
 }
 
 // applyGeneratedTemplate stores a freshly generated template as the live one
@@ -122,10 +130,6 @@ func (this *State) applyGeneratedTemplate(template *template_model.Template) {
 	this.innerState.SnapshotCurrentState()
 }
 
-// clearGeneratedState forgets the last generated template, used when a
-// brand-new or loaded settings file replaces the current one. Manual edits
-// need no separate handling: they live inside the editor state itself, which
-// the caller is replacing.
 func (this *State) clearGeneratedState() {
 	this.setLastTemplate(nil)
 }

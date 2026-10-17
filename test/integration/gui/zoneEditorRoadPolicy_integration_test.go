@@ -5,7 +5,6 @@ package gui_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template_entity"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers/integration_common"
 	"github.com/stretchr/testify/assert"
@@ -276,15 +275,14 @@ type committedConnectionSummary struct {
 func committedConnectionSummaries(
 	runner *integration_common.AppRunner) []committedConnectionSummary {
 	summaries := make([]committedConnectionSummary, 0)
-	for _, save := range runner.CurrentState().ManualConnections {
-		connection := save.Connection
+	for _, edit := range runner.CurrentState().ManualConnections {
 		summary := committedConnectionSummary{
-			From: connection.From,
-			To:   connection.To,
-			Type: connection.ConnectionType,
+			From: edit.From,
+			To:   edit.To,
+			Type: edit.ConnectionType,
 		}
-		if connection.Road != nil {
-			summary.Road = new(*connection.Road)
+		if edit.FieldOverrides.Road != nil {
+			summary.Road = new(*edit.FieldOverrides.Road)
 		}
 		summaries = append(summaries, summary)
 	}
@@ -298,10 +296,10 @@ func committedConnection(
 	t *testing.T,
 	runner *integration_common.AppRunner,
 	from string,
-	to string) template_entity.Connection {
+	to string) template_model.Connection {
 	t.Helper()
-	for _, save := range runner.CurrentState().ManualConnections {
-		connection := save.Connection
+	for _, edit := range runner.CurrentState().ManualConnections {
+		connection := appliedConnectionOf(t, runner, edit)
 		if (connection.From == from && connection.To == to) ||
 			(connection.From == to && connection.To == from) {
 			return connection
@@ -309,5 +307,5 @@ func committedConnection(
 	}
 	t.Fatalf("the editor state committed no connection between %q and %q", from, to)
 
-	return template_entity.Connection{}
+	return template_model.Connection{}
 }

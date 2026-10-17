@@ -54,8 +54,8 @@ func editedZoneNames(zoneEditor *integration_common.ZoneEditorHandler) []string 
 // manually edited, which is what Apply writes.
 func committedConnectionNames(runner *integration_common.AppRunner) []string {
 	names := make([]string, 0)
-	for _, save := range runner.CurrentState().ManualConnections {
-		names = append(names, save.Connection.Name)
+	for _, edit := range runner.CurrentState().ManualConnections {
+		names = append(names, edit.Name)
 	}
 
 	return names

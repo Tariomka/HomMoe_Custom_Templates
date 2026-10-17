@@ -1,9 +1,10 @@
 package panels
 
 import (
+	"fmt"
 	"image"
 	"image/color"
-	"strings"
+	"slices"
 
 	"gioui.org/layout"
 	"gioui.org/op/clip"
@@ -18,6 +19,7 @@ import (
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/widgets"
 	"github.com/Tariomka/hommoe_custom_templates/internal/handlers/handler_interfaces"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/config_helpers"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/config"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 )
@@ -26,7 +28,7 @@ type BonusesPanel struct {
 	bonuses        []config.BonusEntry
 	bannedItems    []string
 	bannedMagics   []string
-	valueOverrides []string
+	valueOverrides []config.ValueOverrideEntry
 
 	bonusRemoveBtns    []widget.Clickable
 	itemRemoveBtns     []widget.Clickable
@@ -63,18 +65,18 @@ func (this *BonusesPanel) GetPanelWidget(theme *material.Theme) layout.Widget {
 func (this *BonusesPanel) LoadFromState() {
 	settings := this.state.GetStateData()
 	this.bonuses = settings.Bonuses
-	this.bannedItems = splitNonEmptyLines(settings.BannedItems)
-	this.bannedMagics = splitNonEmptyLines(settings.BannedMagics)
-	this.valueOverrides = splitNonEmptyLines(settings.ValueOverridesText)
+	this.bannedItems = getBanSids(settings.BannedItems)
+	this.bannedMagics = getBanSids(settings.BannedMagics)
+	this.valueOverrides = settings.ValueOverrides
 	this.syncRemoveButtons()
 }
 
 func (this *BonusesPanel) SaveToState() {
 	this.state.UpdateState(func(settings *editor_state_model.EditorState) {
 		settings.Bonuses = this.bonuses
-		settings.BannedItems = strings.Join(this.bannedItems, "\n")
-		settings.BannedMagics = strings.Join(this.bannedMagics, "\n")
-		settings.ValueOverridesText = strings.Join(this.valueOverrides, "\n")
+		settings.BannedItems = createBanEntries(this.bannedItems)
+		settings.BannedMagics = createBanEntries(this.bannedMagics)
+		settings.ValueOverrides = this.valueOverrides
 	})
 }
 
@@ -164,10 +166,11 @@ func (this *BonusesPanel) getValueOverridesWidgets(theme *material.Theme) []layo
 		return append(overrideRows, widgets.NewDimmedLabelWidget(theme, "(no overrides)"))
 	}
 
-	for i, line := range this.valueOverrides {
-		name, value := overrideLabel(line)
+	for i, entry := range this.valueOverrides {
 		overrideRows = append(overrideRows, this.getEntryRowWidget(
-			theme, themes.ColorsDotCategories.Resource, name, value, &this.overrideRemoveBtns[i]))
+			theme, themes.ColorsDotCategories.Resource,
+			constants.SidToDisplayName(entry.Sid), fmt.Sprintf("guard value: %d", entry.GuardValue),
+			&this.overrideRemoveBtns[i]))
 	}
 	return overrideRows
 }
@@ -205,7 +208,6 @@ func (this *BonusesPanel) getEntryRowWidget(
 	}
 }
 
-// processClicks handles add-dialog launches and per-row removals.
 func (this *BonusesPanel) processClicks(gtx layout.Context) {
 	opener := this.state.GetDialogHost().Open
 
@@ -231,9 +233,9 @@ func (this *BonusesPanel) processClicks(gtx layout.Context) {
 		}))
 	}
 	if this.pickOverridesBtn.Clicked(gtx) {
-		excluded := overrideSids(this.valueOverrides)
-		opener(dialogs.NewValueOverridePickerDialog(excluded, func(lines []string) {
-			this.valueOverrides = appendUnique(this.valueOverrides, lines)
+		excluded := linq.SelectSlice(this.valueOverrides, overrideSid)
+		opener(dialogs.NewValueOverridePickerDialog(excluded, func(entries []config.ValueOverrideEntry) {
+			this.valueOverrides = appendUniqueOverrides(this.valueOverrides, entries)
 			this.syncRemoveButtons()
 			this.SaveToState()
 		}))
@@ -317,7 +319,6 @@ func bonusDisplayName(entry config.BonusEntry) string {
 	}
 }
 
-// bonusReceiverLabel is the dim trailing text; hidden for resource bonuses.
 func bonusReceiverLabel(entry config.BonusEntry) string {
 	if config_helpers.IsResource(entry.PresetType) {
 		return ""
@@ -330,7 +331,6 @@ func bonusReceiverLabel(entry config.BonusEntry) string {
 	return "start hero"
 }
 
-// bonusDotColor matches the C# BonusEntry.DotBrush color coding.
 func bonusDotColor(typ config.BonusPresetType) color.NRGBA {
 	switch typ {
 	case config.BonusTownPortalFree, config.BonusSpell:
@@ -341,12 +341,14 @@ func bonusDotColor(typ config.BonusPresetType) color.NRGBA {
 		return themes.ColorsDotCategories.Movement
 	case config.BonusStartingItem:
 		return themes.ColorsDotCategories.Set
+	case config.BonusStartingGold, config.BonusStartingGems, config.BonusStartingCrystals,
+		config.BonusStartingMercury, config.BonusStartingWood, config.BonusStartingOre:
+		fallthrough
 	default:
 		return themes.ColorsDotCategories.Resource
 	}
 }
 
-// banCategoryColor matches the C# BanEntry.CategoryBrush color coding.
 func banCategoryColor(category string) color.NRGBA {
 	switch category {
 	case "Movement":
@@ -401,44 +403,25 @@ func appendUnique(values, ids []string) []string {
 	return values
 }
 
-// splitNonEmptyLines returns the trimmed, non-empty lines of text.
-func splitNonEmptyLines(text string) []string {
-	var out []string
-	for line := range strings.SplitSeq(strings.ReplaceAll(text, "\r\n", "\n"), "\n") {
-		line = strings.TrimSpace(line)
-		if line != "" {
-			out = append(out, line)
-		}
-	}
-	return out
+func getBanSids(entries []config.BanEntry) []string {
+	return linq.SelectSlice(entries, func(entry config.BanEntry) string { return entry.Sid })
 }
 
-// overrideSids extracts the SID portion (before '=') of each override line so
-// the value-override picker can hide already-overridden SIDs.
-func overrideSids(lines []string) []string {
-	out := make([]string, 0, len(lines))
-	for _, line := range lines {
-		if before, _, ok := strings.Cut(line, "="); ok {
-			out = append(out, strings.TrimSpace(before))
-		} else {
-			out = append(out, line)
-		}
-	}
-	return out
+func createBanEntries(sids []string) []config.BanEntry {
+	return linq.SelectSlice(sids, func(sid string) config.BanEntry { return config.BanEntry{Sid: sid} })
 }
 
-// overrideLabel splits a "sid=guardValue" line into a display name and a dim
-// trailing label describing the override value.
-func overrideLabel(line string) (name, trailing string) {
-	sid := line
-	value := ""
-	if before, after, ok := strings.Cut(line, "="); ok {
-		sid = strings.TrimSpace(before)
-		value = strings.TrimSpace(after)
-	}
-	if value == "" {
-		return constants.SidToDisplayName(sid), sid
-	}
+func overrideSid(entry config.ValueOverrideEntry) string { return entry.Sid }
 
-	return constants.SidToDisplayName(sid), "guard value: " + value
+// appendUniqueOverrides appends the entries whose SID is not overridden yet.
+func appendUniqueOverrides(values, entries []config.ValueOverrideEntry) []config.ValueOverrideEntry {
+	for _, entry := range entries {
+		if entry.Sid == "" || slices.ContainsFunc(values,
+			func(value config.ValueOverrideEntry) bool { return value.Sid == entry.Sid }) {
+			continue
+		}
+
+		values = append(values, entry)
+	}
+	return values
 }

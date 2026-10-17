@@ -8,7 +8,7 @@ import (
 )
 
 type IFileService interface {
-	LoadSettingsFile(filePath string) (*editor_state_model.EditorState, error)
+	LoadSettingsFile(filePath string) (*editor_state_model.EditorState, []string, error)
 	SaveSettings(filePath string, editorState *editor_state_model.EditorState) (string, error)
 	SaveTemplateWithPreview(
 		directory string,

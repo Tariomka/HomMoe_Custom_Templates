@@ -3,7 +3,6 @@ package editorState_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template_entity"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
@@ -140,7 +139,8 @@ func TestWhenOnlyManualZonesExistOnAModeChange_TheyAreCleared(t *testing.T) {
 	candidate := previous.Clone()
 	candidate.Tournament = true
 	candidate.PlayerCount = editor_state_model.TournamentPlayerCount
-	candidate.ManualZones = []template_model.Zone{{Name: "Zone A"}}
+	candidate.ManualZones = editor_state_model.ManualEditSettingsFromSnapshot(
+		[]template_model.Zone{{Name: "Zone A"}}, nil).ManualZones
 	requested := candidate.Clone()
 
 	// Act
@@ -157,9 +157,8 @@ func TestWhenOnlyManualConnectionsExistOnAModeChange_TheyAreCleared(t *testing.T
 	candidate := previous.Clone()
 	candidate.Tournament = true
 	candidate.PlayerCount = editor_state_model.TournamentPlayerCount
-	candidate.ManualConnections = []editor_state_model.ManualConnectionSave{
-		{Connection: template_entity.Connection{Name: "A-B"}},
-	}
+	candidate.ManualConnections = editor_state_model.ManualEditSettingsFromSnapshot(
+		nil, []template_model.Connection{{Name: "A-B"}}).ManualConnections
 	requested := candidate.Clone()
 
 	// Act
@@ -418,8 +417,7 @@ func TestWhenATransitionIsApplied_TheRequestedStateIsUnchanged(t *testing.T) {
 // withManualEdits stamps a zone and a connection onto a state, standing in for
 // a hand-made layout.
 func withManualEdits(state *editor_state_model.EditorState) {
-	state.ManualZones = []template_model.Zone{{Name: "Zone A"}}
-	state.ManualConnections = []editor_state_model.ManualConnectionSave{
-		{Connection: template_entity.Connection{Name: "A-B"}},
-	}
+	state.ManualEditSettings = editor_state_model.ManualEditSettingsFromSnapshot(
+		[]template_model.Zone{{Name: "Zone A"}},
+		[]template_model.Connection{{Name: "A-B"}})
 }

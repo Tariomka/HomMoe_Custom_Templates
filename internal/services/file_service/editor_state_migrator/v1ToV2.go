@@ -1,36 +1,28 @@
 package editor_state_migrator
 
 import (
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state/editor_state_v1"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state/editor_state_v2"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
 )
 
-// MigrateToV2 upgrades a decoded v1 (or v0) editor state to the current shape.
-// Every settings group crosses by plain struct conversion, and that is the point
-// of the frozen snapshot: adding or renaming a field on a current group breaks
-// this file at compile time instead of silently reinterpreting old files.
-func MigrateToV2(legacy editor_state_v1.EditorState) editor_state.EditorState {
-	return editor_state.EditorState{
-		TemplateIdentity:    editor_state.TemplateIdentity(legacy.TemplateIdentity),
-		MapSettings:         editor_state.MapSettings(legacy.MapSettings),
-		PlayerSettings:      editor_state.PlayerSettings(legacy.PlayerSettings),
-		NeutralZoneSettings: editor_state.NeutralZoneSettings(legacy.NeutralZoneSettings),
-		CastleSettings:      editor_state.CastleSettings(legacy.CastleSettings),
-		GenerationSettings:  editor_state.GenerationSettings(legacy.GenerationSettings),
-		GameRuleSettings:    editor_state.GameRuleSettings(legacy.GameRuleSettings),
+func MigrateToV2(legacy editor_state_v1.EditorState) editor_state_v2.EditorState {
+	return editor_state_v2.EditorState{
+		TemplateIdentity:    editor_state_v2.TemplateIdentity(legacy.TemplateIdentity),
+		MapSettings:         editor_state_v2.MapSettings(legacy.MapSettings),
+		PlayerSettings:      editor_state_v2.PlayerSettings(legacy.PlayerSettings),
+		NeutralZoneSettings: editor_state_v2.NeutralZoneSettings(legacy.NeutralZoneSettings),
+		CastleSettings:      editor_state_v2.CastleSettings(legacy.CastleSettings),
+		GenerationSettings:  editor_state_v2.GenerationSettings(legacy.GenerationSettings),
+		GameRuleSettings:    editor_state_v2.GameRuleSettings(legacy.GameRuleSettings),
 		ContentSettings:     toContentSettings(legacy.ContentSettings),
 		ManualEditSettings:  toManualEditSettings(legacy.ManualEditSettings),
-		SchemaVersion:       editor_state.CurrentEditorStateSchemaVersion,
+		SchemaVersion:       editor_state_v2.SchemaVersion,
 	}
 }
 
-// newV1Seed lowers the seeded defaults into the v1 shape so a v1 decode keeps a
-// default for every key the file omits. Manual edits are deliberately not
-// carried: defaults never hold any, and a v1 file's manual edits replace them
-// wholesale.
-func newV1Seed(seed editor_state.EditorState) editor_state_v1.EditorState {
+func newV1Seed(seed editor_state_v2.EditorState) editor_state_v1.EditorState {
 	return editor_state_v1.EditorState{
 		TemplateIdentity:    editor_state_v1.TemplateIdentity(seed.TemplateIdentity),
 		MapSettings:         editor_state_v1.MapSettings(seed.MapSettings),
@@ -43,8 +35,8 @@ func newV1Seed(seed editor_state.EditorState) editor_state_v1.EditorState {
 	}
 }
 
-func toContentSettings(legacy editor_state_v1.ContentSettings) editor_state.ContentSettings {
-	return editor_state.ContentSettings{
+func toContentSettings(legacy editor_state_v1.ContentSettings) editor_state_v2.ContentSettings {
+	return editor_state_v2.ContentSettings{
 		BannedItems:              legacy.BannedItems,
 		BannedMagics:             legacy.BannedMagics,
 		ValueOverridesText:       legacy.ValueOverridesText,
@@ -58,7 +50,7 @@ func toContentSettings(legacy editor_state_v1.ContentSettings) editor_state.Cont
 	}
 }
 
-func toV1ContentSettings(seed editor_state.ContentSettings) editor_state_v1.ContentSettings {
+func toV1ContentSettings(seed editor_state_v2.ContentSettings) editor_state_v1.ContentSettings {
 	return editor_state_v1.ContentSettings{
 		BannedItems:              seed.BannedItems,
 		BannedMagics:             seed.BannedMagics,
@@ -73,16 +65,16 @@ func toV1ContentSettings(seed editor_state.ContentSettings) editor_state_v1.Cont
 	}
 }
 
-func toBonusEntry(legacy editor_state_v1.BonusEntry) editor_state.BonusEntry {
-	return editor_state.BonusEntry{
-		PresetType:     editor_state.BonusPresetType(legacy.PresetType),
+func toBonusEntry(legacy editor_state_v1.BonusEntry) editor_state_v2.BonusEntry {
+	return editor_state_v2.BonusEntry{
+		PresetType:     editor_state_v2.BonusPresetType(legacy.PresetType),
 		ReceiverFilter: legacy.ReceiverFilter,
 		Param:          legacy.Param,
 		Param2:         legacy.Param2,
 	}
 }
 
-func toV1BonusEntry(seed editor_state.BonusEntry) editor_state_v1.BonusEntry {
+func toV1BonusEntry(seed editor_state_v2.BonusEntry) editor_state_v1.BonusEntry {
 	return editor_state_v1.BonusEntry{
 		PresetType:     editor_state_v1.BonusPresetType(seed.PresetType),
 		ReceiverFilter: seed.ReceiverFilter,
@@ -91,8 +83,8 @@ func toV1BonusEntry(seed editor_state.BonusEntry) editor_state_v1.BonusEntry {
 	}
 }
 
-func toZoneContentRow(legacy editor_state_v1.ZoneContentRow) editor_state.ZoneContentRow {
-	return editor_state.ZoneContentRow{
+func toZoneContentRow(legacy editor_state_v1.ZoneContentRow) editor_state_v2.ZoneContentRow {
+	return editor_state_v2.ZoneContentRow{
 		Sid:     legacy.Sid,
 		Count:   legacy.Count,
 		IsGroup: legacy.IsGroup,
@@ -101,7 +93,7 @@ func toZoneContentRow(legacy editor_state_v1.ZoneContentRow) editor_state.ZoneCo
 	}
 }
 
-func toV1ZoneContentRow(seed editor_state.ZoneContentRow) editor_state_v1.ZoneContentRow {
+func toV1ZoneContentRow(seed editor_state_v2.ZoneContentRow) editor_state_v1.ZoneContentRow {
 	return editor_state_v1.ZoneContentRow{
 		Sid:     seed.Sid,
 		Count:   seed.Count,
@@ -111,16 +103,16 @@ func toV1ZoneContentRow(seed editor_state.ZoneContentRow) editor_state_v1.ZoneCo
 	}
 }
 
-func toContentRuleRow(legacy editor_state_v1.ContentRuleRow) editor_state.ContentRuleRow {
-	return editor_state.ContentRuleRow(legacy)
+func toContentRuleRow(legacy editor_state_v1.ContentRuleRow) editor_state_v2.ContentRuleRow {
+	return editor_state_v2.ContentRuleRow(legacy)
 }
 
-func toV1ContentRuleRow(seed editor_state.ContentRuleRow) editor_state_v1.ContentRuleRow {
+func toV1ContentRuleRow(seed editor_state_v2.ContentRuleRow) editor_state_v1.ContentRuleRow {
 	return editor_state_v1.ContentRuleRow(seed)
 }
 
-func toManualEditSettings(legacy editor_state_v1.ManualEditSettings) editor_state.ManualEditSettings {
-	return editor_state.ManualEditSettings{
+func toManualEditSettings(legacy editor_state_v1.ManualEditSettings) editor_state_v2.ManualEditSettings {
+	return editor_state_v2.ManualEditSettings{
 		ManualZones:       helpers.MapSlice(legacy.ManualZones, toManualZoneSave),
 		ManualConnections: helpers.MapSlice(legacy.ManualConnections, toManualConnectionSave),
 	}
@@ -128,8 +120,8 @@ func toManualEditSettings(legacy editor_state_v1.ManualEditSettings) editor_stat
 
 // toManualZoneSave leaves GeneratorPosition and GeneratorRing nil: v1 never
 // persisted them, and nil correctly reads as "the stamp was never taken".
-func toManualZoneSave(legacy editor_state_v1.ManualZoneSave) editor_state.ManualZoneSave {
-	return editor_state.ManualZoneSave{
+func toManualZoneSave(legacy editor_state_v1.ManualZoneSave) editor_state_v2.ManualZoneSave {
+	return editor_state_v2.ManualZoneSave{
 		Zone:           legacy.Zone,
 		ManualPosition: toVector(legacy.ManualPosition),
 		Quality:        legacy.Quality,
@@ -137,8 +129,8 @@ func toManualZoneSave(legacy editor_state_v1.ManualZoneSave) editor_state.Manual
 }
 
 func toManualConnectionSave(
-	legacy editor_state_v1.ManualConnectionSave) editor_state.ManualConnectionSave {
-	return editor_state.ManualConnectionSave(legacy)
+	legacy editor_state_v1.ManualConnectionSave) editor_state_v2.ManualConnectionSave {
+	return editor_state_v2.ManualConnectionSave(legacy)
 }
 
 func toVector(position *[2]float64) *data.Vec2[float64] {

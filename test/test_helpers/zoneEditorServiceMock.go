@@ -9,7 +9,7 @@ import (
 )
 
 // ZoneEditorServiceMock is a testify mock of
-// connection_editor.IZoneEditorService, used to unit-test collaborators
+// connection_editor_interfaces.IZoneEditorService, used to unit-test collaborators
 // without the real zone/road rebuilding.
 type ZoneEditorServiceMock struct {
 	mock.Mock

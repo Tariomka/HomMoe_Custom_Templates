@@ -195,7 +195,7 @@ When orchestrating subagents, pick the model per task using these ratings
 | kimi-k3           | 7    | 7            | 7     |
 | grok-4.7          | 8    | 6            | 5     |
 | claude-opus-5     | 4    | 6.5          | 7     |
-| claude-sonnet-5.5 | 6    | 7            | 5     |
+| claude-sonnet-5.5 | 6    | 5            | 5     |
 
 
 Application directives:
@@ -211,8 +211,8 @@ Application directives:
 - Review of plans/implementations must be done by gpt-6.1-sol preferably
   (use fable-5.1/fable-5 sparingly as it is much more costly).
 - **Never use Haiku models.**
-- Match model to task shape: use cheap, high-cost-rating models (gpt-6-luna, claude-sonnet-5.5,
-  kimi-k3, grok-4.7) for read-only exploration, searching, summarizing, and mechanical/repetitive edits;
+- Match model to task shape: use cheap, high-cost-rating models (gpt-6-luna, kimi-k3, grok-4.7)
+  for read-only exploration, searching, summarizing, and mechanical/repetitive edits;
   reserve opus-5.5/fable-5.1 for design decisions, tricky debugging, and final review.
 - Parallelize independent exploration and/or action execution
   (like running tests) across cheap subagents rather than serializing
@@ -777,8 +777,8 @@ irrelevant memories.
 | Run with race detector     | `go test -race ./test/...`                             |
 | Check test build-tag layout | `go run ./cmd/testlayoutcheck .` (VS Code task *"Go: Check test build-tag layout"*; see §4.6.1) |
 | Unit test coverage report  | `go test -count=1 '-coverpkg=./internal/...,./app/...' '-coverprofile=coverage.txt' ./test/unit/...` then `go tool cover '-func=coverage.txt'` (see §2.3; VS Code task *"Go: Generate code coverage report"*) |
-| Lint (report only)         | `golangci-lint-v2 run ./... --issues-exit-code=0` (VS Code task *"Go: Get Linter Results"*) |
-| Lint (auto-fix)            | `golangci-lint-v2 run ./... --issues-exit-code=0 --fix` (VS Code task *"Go: Run Linter"*; clears gci/gofmt/golines formatting findings — re-run to verify) |
+| Lint (report only)         | `golangci-lint run ./... --issues-exit-code=0` (VS Code task *"Go: Get Linter Results"*) |
+| Lint (auto-fix)            | `golangci-lint run ./... --issues-exit-code=0 --fix` (VS Code task *"Go: Run Linter"*; clears gci/gofmt/golines formatting findings — re-run to verify) |
 | Format Go code             | `gofmt -w .` (never run on `data/`)                    |
 | Regenerate DI injectors    | `wire gen ./internal/composition/...` (VS Code task *"Go: Generate wire injectors"*; see §4.6.3) |
 | Tidy modules               | `go mod tidy`                                          |

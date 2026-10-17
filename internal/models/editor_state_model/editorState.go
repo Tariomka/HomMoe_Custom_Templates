@@ -5,8 +5,7 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities/topology"
-	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/linq"
-	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
+	"github.com/Tariomka/hommoe_custom_templates/internal/helpers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/registry"
 )
 
@@ -73,18 +72,25 @@ func NewDefaultEditorStateModel() EditorState {
 }
 
 func (this *EditorState) Clone() EditorState {
+	clone := this.CloneWithoutManualEdits()
+	clone.ManualEditSettings = this.ManualEditSettings.Clone()
+	return clone
+}
+
+func (this *EditorState) CloneWithoutManualEdits() EditorState {
 	clone := *this
+	clone.ManualEditSettings = ManualEditSettings{}
 
 	clone.Bonuses = slices.Clone(this.Bonuses)
+	clone.BannedItems = slices.Clone(this.BannedItems)
+	clone.BannedMagics = slices.Clone(this.BannedMagics)
+	clone.ValueOverrides = slices.Clone(this.ValueOverrides)
 	clone.PlayerZoneContentRows = CloneZoneContentRows(this.PlayerZoneContentRows)
 	clone.LowestNeutralContentRows = CloneZoneContentRows(this.LowestNeutralContentRows)
 	clone.LowNeutralContentRows = CloneZoneContentRows(this.LowNeutralContentRows)
 	clone.MediumNeutralContentRows = CloneZoneContentRows(this.MediumNeutralContentRows)
 	clone.HighNeutralContentRows = CloneZoneContentRows(this.HighNeutralContentRows)
 	clone.HubZoneContentRows = CloneZoneContentRows(this.HubZoneContentRows)
-
-	clone.ManualZones = linq.SelectSlice(this.ManualZones, template_model.Zone.Clone)
-	clone.ManualConnections = linq.SelectSlice(this.ManualConnections, ManualConnectionSave.Clone)
 
 	return clone
 }
@@ -144,16 +150,23 @@ func (this *EditorState) EqualsIgnoringManualEdits(other *EditorState) bool {
 		this.gameRuleScalarsEqual(other) &&
 		(this.Bonuses == nil) == (other.Bonuses == nil) &&
 		slices.Equal(this.Bonuses, other.Bonuses) &&
-		contentRowSlicesEqual(this.PlayerZoneContentRows, other.PlayerZoneContentRows) &&
-		contentRowSlicesEqual(this.LowestNeutralContentRows, other.LowestNeutralContentRows) &&
-		contentRowSlicesEqual(this.LowNeutralContentRows, other.LowNeutralContentRows) &&
-		contentRowSlicesEqual(this.MediumNeutralContentRows, other.MediumNeutralContentRows) &&
-		contentRowSlicesEqual(this.HighNeutralContentRows, other.HighNeutralContentRows) &&
-		contentRowSlicesEqual(this.HubZoneContentRows, other.HubZoneContentRows)
+		helpers.Equal(this.BannedItems, other.BannedItems) &&
+		helpers.Equal(this.BannedMagics, other.BannedMagics) &&
+		helpers.Equal(this.ValueOverrides, other.ValueOverrides) &&
+		helpers.EqualFunc(this.PlayerZoneContentRows, other.PlayerZoneContentRows, contentRowsEqual) &&
+		helpers.EqualFunc(this.LowestNeutralContentRows, other.LowestNeutralContentRows, contentRowsEqual) &&
+		helpers.EqualFunc(this.LowNeutralContentRows, other.LowNeutralContentRows, contentRowsEqual) &&
+		helpers.EqualFunc(this.MediumNeutralContentRows, other.MediumNeutralContentRows, contentRowsEqual) &&
+		helpers.EqualFunc(this.HighNeutralContentRows, other.HighNeutralContentRows, contentRowsEqual) &&
+		helpers.EqualFunc(this.HubZoneContentRows, other.HubZoneContentRows, contentRowsEqual)
 }
 
 func (this *EditorState) HasManualEdits() bool {
 	return len(this.ManualZones) > 0 || len(this.ManualConnections) > 0
+}
+
+func (this *EditorState) NeedsDerivation() bool {
+	return this.HasManualEdits() && this.GeneratorVersion == 0
 }
 
 func (this *EditorState) effectiveModesChanged(previous *EditorState) bool {
@@ -242,10 +255,7 @@ func (this *EditorState) generationOptionScalarsEqual(other *EditorState) bool {
 		this.BorderGuardStrengthPercent == other.BorderGuardStrengthPercent
 }
 
-// gameRuleScalarsEqual compares the victory and game-rule options together with
-// the banned content free-text fields.
-//
-//nolint:dupl // comparison chains over disjoint field groups are inherently similar
+// gameRuleScalarsEqual compares the victory and game-rule options.
 func (this *EditorState) gameRuleScalarsEqual(other *EditorState) bool {
 	return this.VictoryCondition == other.VictoryCondition &&
 		this.FactionLawXpPercent == other.FactionLawXpPercent &&
@@ -262,14 +272,7 @@ func (this *EditorState) gameRuleScalarsEqual(other *EditorState) bool {
 		this.TournamentFirstTournamentDay == other.TournamentFirstTournamentDay &&
 		this.TournamentInterval == other.TournamentInterval &&
 		this.TournamentPointsToWin == other.TournamentPointsToWin &&
-		this.TournamentSaveArmy == other.TournamentSaveArmy &&
-		this.BannedItems == other.BannedItems &&
-		this.BannedMagics == other.BannedMagics &&
-		this.ValueOverridesText == other.ValueOverridesText
-}
-
-func contentRowSlicesEqual(left, right []ZoneContentRow) bool {
-	return (left == nil) == (right == nil) && slices.EqualFunc(left, right, contentRowsEqual)
+		this.TournamentSaveArmy == other.TournamentSaveArmy
 }
 
 // contentRowsEqual compares the scalar row fields and the rules element-wise.

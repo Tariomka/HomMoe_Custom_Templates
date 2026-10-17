@@ -20,7 +20,9 @@ type TemplateHandlerMock struct {
 	BuildPreviewLayoutFunc             func(dtos.PreviewLayoutRequestDto) dtos.PreviewLayoutDto
 	GetContentRuleEditorOptionsFunc    func(models.SidMapping) dtos.ContentRuleEditorOptionsDto
 	DescribeContentRuleFunc            func(models.SidMapping, editor_state_model.ContentRuleRow) dtos.ContentRuleDescriptionDto
-	ReapplyCastleSettingsFunc          func(dtos.CastleSettingsReapplyRequestDto) []template_model.Zone
+	CaptureManualEditsFunc             func(dtos.ManualEditCaptureRequestDto) (dtos.ManualEditCaptureDto, error)
+	ExpandManualEditsFunc              func(dtos.ManualEditExpandRequestDto) dtos.ManualEditExpansionDto
+	ConvertManualEditsFunc             func(dtos.ManualEditConvertRequestDto) (dtos.ManualEditCaptureDto, error)
 	GetZoneEditorOptionsFunc           func(editor_state_dto.EditorStateDto, int) dtos.ZoneEditorOptionsDto
 	CountZoneCastlesFunc               func(template_model.Zone) int
 	GetZoneQualityFunc                 func(template_model.Zone) neutral_zone.Quality
@@ -59,13 +61,41 @@ func (this *TemplateHandlerMock) UpdateTemplate(templateDto dtos.TemplateUpdateD
 	return template, arguments.Error(1)
 }
 
-func (this *TemplateHandlerMock) ReapplyCastleSettings(
-	request dtos.CastleSettingsReapplyRequestDto,
-) []template_model.Zone {
-	if this.ReapplyCastleSettingsFunc != nil {
-		return this.ReapplyCastleSettingsFunc(request)
+// CaptureManualEdits defaults to the derivation-free (all-overridden) form.
+func (this *TemplateHandlerMock) CaptureManualEdits(
+	request dtos.ManualEditCaptureRequestDto,
+) (dtos.ManualEditCaptureDto, error) {
+	if this.CaptureManualEditsFunc != nil {
+		return this.CaptureManualEditsFunc(request)
 	}
-	return request.Zones
+	return dtos.ManualEditCaptureDto{
+		ManualEdits: editor_state_model.ManualEditSettingsFromSnapshot(request.Zones, request.Connections),
+	}, nil
+}
+
+// ExpandManualEdits defaults to decoding the stored edits without a derivation.
+func (this *TemplateHandlerMock) ExpandManualEdits(
+	request dtos.ManualEditExpandRequestDto,
+) dtos.ManualEditExpansionDto {
+	if this.ExpandManualEditsFunc != nil {
+		return this.ExpandManualEditsFunc(request)
+	}
+	zones, connections := request.State.ToSnapshot()
+	return dtos.ManualEditExpansionDto{
+		Zones:       zones,
+		Connections: connections,
+		ManualEdits: request.State.ManualEditSettings,
+	}
+}
+
+// ConvertManualEdits defaults to returning the snapshot unchanged.
+func (this *TemplateHandlerMock) ConvertManualEdits(
+	request dtos.ManualEditConvertRequestDto,
+) (dtos.ManualEditCaptureDto, error) {
+	if this.ConvertManualEditsFunc != nil {
+		return this.ConvertManualEditsFunc(request)
+	}
+	return dtos.ManualEditCaptureDto{ManualEdits: request.ManualEdits}, nil
 }
 
 func (this *TemplateHandlerMock) GetZoneEditorOptions(

@@ -60,7 +60,7 @@ func writeTournamentFixture(t *testing.T, playerCount int) string {
 
 func enableTournamentInFile(t *testing.T, path string) {
 	t.Helper()
-	patchStateFile(t, path, func(document map[string]any) { document["tournament"] = true })
+	patchStateFile(t, path, func(document map[string]any) { gameRulesSection(document)["tournament"] = true })
 }
 
 // selectTournamentVictoryInFile switches the file to the other tournament
@@ -68,9 +68,15 @@ func enableTournamentInFile(t *testing.T, path string) {
 func selectTournamentVictoryInFile(t *testing.T, path string) {
 	t.Helper()
 	patchStateFile(t, path, func(document map[string]any) {
-		document["tournament"] = false
-		document["victoryCondition"] = registry.GetWinningConditionValues().Tournament
+		gameRules := gameRulesSection(document)
+		gameRules["tournament"] = false
+		gameRules["victoryCondition"] = registry.GetWinningConditionValues().Tournament
 	})
+}
+
+func gameRulesSection(document map[string]any) map[string]any {
+	section, _ := document["gameRules"].(map[string]any)
+	return section
 }
 
 func patchStateFile(t *testing.T, path string, patch func(document map[string]any)) {

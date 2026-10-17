@@ -18,26 +18,27 @@ func TestWhenZonesAreApplied_ManualZonesAreStoredInCurrentState(t *testing.T) {
 	zone := template_model.Zone{Name: "Zone A", Size: gofakeit.Float64Range(0.5, 2), ManualPosition: position}
 
 	// Act
-	state.SetManualEdits([]template_model.Zone{zone}, nil)
+	state.SetManualEdits(editor_state_model.ManualEditSettingsFromSnapshot([]template_model.Zone{zone}, nil))
 
 	// Assert
-	assert.Equal(t, []template_model.Zone{zone}, state.GetCurrentState().ManualZones)
+	zones, _ := state.GetCurrentState().ToSnapshot()
+	assert.Equal(t, []template_model.Zone{zone}, zones)
 }
 
-func TestWhenConnectionsAreApplied_ManualConnectionSavesAreStoredInCurrentState(t *testing.T) {
+func TestWhenConnectionsAreApplied_ManualConnectionsAreStoredInCurrentState(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	state := newEditorState()
 	connection := template_model.Connection{Name: "A-B", From: "Zone A", To: "Zone B", IsUserAdded: true}
 
 	// Act
-	state.SetManualEdits(nil, []template_model.Connection{connection})
+	state.SetManualEdits(
+		editor_state_model.ManualEditSettingsFromSnapshot(nil, []template_model.Connection{connection}),
+	)
 
 	// Assert
-	assert.Equal(t,
-		[]editor_state_model.ManualConnectionSave{
-			{Connection: template_model.ToConnectionEntity(connection), IsUserAdded: true}},
-		state.GetCurrentState().ManualConnections)
+	_, connections := state.GetCurrentState().ToSnapshot()
+	assert.Equal(t, []template_model.Connection{connection}, connections)
 }
 
 // The editor keeps editing its own zones after applying; the committed
@@ -49,12 +50,12 @@ func TestWhenAnInputZoneIsMutatedAfterStoring_TheStoredSnapshotIsUnchanged(t *te
 			t.Parallel()
 			// Arrange
 			state := newEditorState()
-			zone := newPopulatedManualZone()
-			state.SetManualEdits([]template_model.Zone{zone}, nil)
-			expected := fieldCase.read(zone)
+			edits := newPopulatedManualEdits()
+			state.SetManualEdits(edits)
+			expected := fieldCase.read(edits.ManualZones[0])
 
 			// Act
-			fieldCase.mutate(zone)
+			fieldCase.mutate(edits.ManualZones[0])
 
 			// Assert
 			assert.Equal(t, expected, fieldCase.read(state.GetCurrentState().ManualZones[0]))
@@ -70,7 +71,7 @@ func TestWhenTheFirstSnapshotIsStored_TheChangeIsReported(t *testing.T) {
 	state := newEditorState()
 
 	// Act
-	changed := state.SetManualEdits([]template_model.Zone{newPopulatedManualZone()}, nil)
+	changed := state.SetManualEdits(newPopulatedManualEdits())
 
 	// Assert
 	assert.True(t, changed)
@@ -80,10 +81,10 @@ func TestWhenTheSameSnapshotIsStoredAgain_NoChangeIsReported(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	state := newEditorState()
-	state.SetManualEdits([]template_model.Zone{newPopulatedManualZone()}, nil)
+	state.SetManualEdits(newPopulatedManualEdits())
 
 	// Act
-	changed := state.SetManualEdits([]template_model.Zone{newPopulatedManualZone()}, nil)
+	changed := state.SetManualEdits(newPopulatedManualEdits())
 
 	// Assert
 	assert.False(t, changed)
@@ -93,12 +94,13 @@ func TestWhenOnlyAZoneMoved_TheChangeIsReported(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	state := newEditorState()
-	state.SetManualEdits([]template_model.Zone{newPopulatedManualZone()}, nil)
+	state.SetManualEdits(newPopulatedManualEdits())
 	movedZone := newPopulatedManualZone()
 	movedZone.ManualPosition = new(data.NewVec2(9.0, 9.0))
 
 	// Act
-	changed := state.SetManualEdits([]template_model.Zone{movedZone}, nil)
+	changed := state.SetManualEdits(
+		editor_state_model.ManualEditSettingsFromSnapshot([]template_model.Zone{movedZone}, nil))
 
 	// Assert
 	assert.True(t, changed)
@@ -111,11 +113,14 @@ func TestWhenOnlyAConnectionLengthChanged_TheChangeIsReported(t *testing.T) {
 	// Arrange
 	state := newEditorState()
 	connection := template_model.Connection{Name: "A-B", From: "Zone A", To: "Zone B", Length: 2}
-	state.SetManualEdits(nil, []template_model.Connection{connection})
+	state.SetManualEdits(
+		editor_state_model.ManualEditSettingsFromSnapshot(nil, []template_model.Connection{connection}),
+	)
 	connection.Length = 3
 
 	// Act
-	changed := state.SetManualEdits(nil, []template_model.Connection{connection})
+	changed := state.SetManualEdits(
+		editor_state_model.ManualEditSettingsFromSnapshot(nil, []template_model.Connection{connection}))
 
 	// Assert
 	assert.True(t, changed)
@@ -128,11 +133,14 @@ func TestWhenOnlyIsUserAddedChanged_TheChangeIsReported(t *testing.T) {
 	// Arrange
 	state := newEditorState()
 	connection := template_model.Connection{Name: "A-B", From: "Zone A", To: "Zone B"}
-	state.SetManualEdits(nil, []template_model.Connection{connection})
+	state.SetManualEdits(
+		editor_state_model.ManualEditSettingsFromSnapshot(nil, []template_model.Connection{connection}),
+	)
 	connection.IsUserAdded = true
 
 	// Act
-	changed := state.SetManualEdits(nil, []template_model.Connection{connection})
+	changed := state.SetManualEdits(
+		editor_state_model.ManualEditSettingsFromSnapshot(nil, []template_model.Connection{connection}))
 
 	// Assert
 	assert.True(t, changed)
@@ -144,7 +152,8 @@ func TestWhenAnEmptyLayoutIsStoredOverNothing_NoChangeIsReported(t *testing.T) {
 	state := newEditorState()
 
 	// Act
-	changed := state.SetManualEdits([]template_model.Zone{}, []template_model.Connection{})
+	changed := state.SetManualEdits(
+		editor_state_model.ManualEditSettingsFromSnapshot([]template_model.Zone{}, []template_model.Connection{}))
 
 	// Assert
 	assert.False(t, changed)

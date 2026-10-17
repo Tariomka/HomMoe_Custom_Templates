@@ -36,8 +36,7 @@ var ZoneSet = wire.NewSet(
 	zone_services.NewZoneFactory,
 	zone_services.NewZoneTierService,
 	zone_services.NewZoneLabelProvider,
-	base.NewTopologyConnectionService,
-)
+	base.NewTopologyConnectionService)
 
 // GenerationSet builds the template generator and the providers it delegates to.
 var GenerationSet = wire.NewSet(
@@ -50,26 +49,26 @@ var GenerationSet = wire.NewSet(
 	providers.NewTopologyProvider,
 	providers.NewZoneLayoutProvider,
 	provideTopologyServices,
-	template_generator.NewTemplateGenerator,
-)
+	template_generator.NewTemplateGenerator)
 
 // EditorSet builds the services backing the manual zone editor and the previews.
 var EditorSet = wire.NewSet(
 	bonuses.NewBonusEntryService,
 	connection_editor.NewConnectionEditorService,
+	connection_editor.NewManualEditDeltaService,
 	connection_editor.NewManualReapplyService,
 	connection_editor.NewZoneEditorService,
 	connection_editor.NewZoneEditorGeometryService,
 	content_rules.NewContentRuleService,
 	preview_service.NewPreviewLayoutService,
 	providePreviewGenerator,
-	zone_content.NewZoneContentEditorService,
-)
+	zone_content.NewZoneContentEditorService)
 
 // InfrastructureSet builds the persistence and mapping collaborators.
 var InfrastructureSet = wire.NewSet(
 	repositories.NewEditorStateRepository,
 	repositories.NewLegacyEditorStateRepository,
+	repositories.NewV2EditorStateRepository,
 	repositories.NewPreviewRepository,
 	repositories.NewTemplateRepository,
 	editor_state_migrator.NewEditorStateMigrator,
@@ -78,8 +77,7 @@ var InfrastructureSet = wire.NewSet(
 	mappers.NewEditorStateMapper,
 	mappers.NewMandatoryContentItemMapper,
 	mappers.NewTemplateMapper,
-	validators.NewEditorStateValidator,
-)
+	validators.NewEditorStateValidator)
 
 // HandlerSet builds the handlers the GUI facade delegates to.
 var HandlerSet = wire.NewSet(
@@ -89,8 +87,7 @@ var HandlerSet = wire.NewSet(
 	handlers.NewStateHandler,
 	handlers.NewTemplateHandler,
 	handlers.NewZoneEditorHandler,
-	handlers.NewZoneContentHandler,
-)
+	handlers.NewZoneContentHandler)
 
 // GuiHandlerSet is the complete graph behind InitializeGuiHandler.
 var GuiHandlerSet = wire.NewSet(
@@ -99,8 +96,7 @@ var GuiHandlerSet = wire.NewSet(
 	EditorSet,
 	InfrastructureSet,
 	HandlerSet,
-	handlers.NewGuiHandler,
-)
+	handlers.NewGuiHandler)
 
 // FileSystemSet is the complete graph behind InitializeFileSystemHandler. It is
 // deliberately disjoint from GuiHandlerSet: browsing the local disk shares no
@@ -108,13 +104,11 @@ var GuiHandlerSet = wire.NewSet(
 var FileSystemSet = wire.NewSet(
 	file_system.NewDirectoryBrowserService,
 	file_system.NewPathResolutionService,
-	handlers.NewFileSystemHandler,
-)
+	handlers.NewFileSystemHandler)
 
 // RegenerationSet is the complete graph behind InitializeRegenerationHandler.
 // Like FileSystemSet it is disjoint from GuiHandlerSet: deciding *when* to
 // regenerate shares no collaborator with actually generating.
 var RegenerationSet = wire.NewSet(
 	editor_services.NewRegenerationDecisionService,
-	handlers.NewRegenerationHandler,
-)
+	handlers.NewRegenerationHandler)

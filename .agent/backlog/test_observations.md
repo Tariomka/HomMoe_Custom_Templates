@@ -169,13 +169,20 @@ Still unit-untestable (dialog-callback or Gio territory):
   fallback. Batch F covered the branch end-to-end instead, through the
   `integration_test`-gated `State.SetCurrentPath` that the GUI suite's fixture
   directories are seeded with.
-- stateManualEdits.go - `reapplyManualEdits`' castle-change branch is NOT a
-  testability limitation any more: it is reached from the public `Generate` when
-  the mocked `IRegenerationHandler.DecideManualEditReapplication` returns a
-  non-nil `ReapplyWithCastleChanges` with at least one change flag set and the
-  template has variants, and it then calls the
-  mocked `IGuiHandler.ReapplyCastleSettings`. No unit test covers it yet; the
-  integration suite's manual-edit scenarios do. Recorded, not assigned.
+- stateManualEdits.go - `reapplyManualEdits` (Batch M) is fully unit-tested
+  through the public `Generate` with the mocked handler's
+  `ConvertManualEdits` / `ExpandManualEdits`. The one unit gap is
+  `convertManualEdits`' conversion-notice branch: `announceConversion` is set
+  only by `handleLoadState` (file-dialog callback, see above), so the modal
+  opening is covered by the tagged
+  `test/integration/manualEditConversionFlow_integration_test.go` and the GUI
+  `test/integration/gui/manualEditConversion_integration_test.go` (modal, OK,
+  golden).
+- app/gui/dialogs/messageDialog.go (Batch M) - `NewMessageDialog`, `Title`,
+  `PreferredSize`, `Body`: Gio rendering and `widget.Clickable` routing, covered
+  by the GUI suite (`manualEditConversion_integration_test.go`, including the
+  `TestWhenALegacyFileWithEditsIsConverted_TheConversionNoticeMatchesGolden`
+  snapshot).
 - test/test_helpers/integration_common - the `integration_test`-tagged helpers
   (the app runner, snapshots, run mode, tab and dialog handlers, coordinates)
   need `editor.Window` + a headless GPU context, so §4.6 forbids unit tests;

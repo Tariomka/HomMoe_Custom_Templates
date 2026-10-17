@@ -14,10 +14,16 @@ type FileServiceMock struct {
 	mock.Mock
 }
 
-func (this *FileServiceMock) LoadSettingsFile(filePath string) (*editor_state_model.EditorState, error) {
+// LoadSettingsFile returns the configured state and error, plus warnings when a
+// third return value is configured.
+func (this *FileServiceMock) LoadSettingsFile(filePath string) (*editor_state_model.EditorState, []string, error) {
 	arguments := this.Called(filePath)
 	state, _ := arguments.Get(0).(*editor_state_model.EditorState)
-	return state, arguments.Error(1)
+	var warnings []string
+	if len(arguments) > 2 {
+		warnings, _ = arguments.Get(2).([]string)
+	}
+	return state, warnings, arguments.Error(1)
 }
 
 func (this *FileServiceMock) SaveSettings(

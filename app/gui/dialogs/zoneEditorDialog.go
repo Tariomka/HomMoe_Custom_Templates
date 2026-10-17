@@ -195,9 +195,7 @@ func (this *ZoneEditorDialog) setEditingSet(zones []template_model.Zone, connect
 	for i := range connections {
 		working := connections[i]
 		this.working = append(this.working, &working)
-		clone := connections[i]
-		clone.IsUserAdded = false
-		this.original = append(this.original, clone)
+		this.original = append(this.original, connections[i])
 	}
 	this.geometryDirty = true
 	this.markGraphDirty()
@@ -408,7 +406,6 @@ func (this *ZoneEditorDialog) undoSessionEdits() {
 	this.working = this.working[:0]
 	for i := range this.original {
 		clone := this.original[i]
-		clone.IsUserAdded = false
 		this.working = append(this.working, &clone)
 	}
 	this.reset()

@@ -137,6 +137,33 @@ func (this *Window) TopZoneEditor() (IZoneEditorDialog, bool) {
 	return dialog, ok
 }
 
+// TopDialogTitle ONLY FOR INTEGRATION TEST USE
+// Returns the title of the top-most dialog, or an empty string when none is open.
+func (this *Window) TopDialogTitle() string {
+	dialog := this.state.GetDialogHost().GetTopDialog()
+	if dialog == nil {
+		return ""
+	}
+
+	return dialog.Title()
+}
+
+// IPickerDialog is the observation and driving surface of dialogs.MultiSelectPicker,
+// satisfied by the accessors on its own *_testexports.go file. Declared here for
+// the same reason as IFileExplorerDialog.
+type IPickerDialog interface {
+	SetSearch(text string)
+	ClickEntry(id string) bool
+	ClickAdd()
+}
+
+// TopPicker ONLY FOR INTEGRATION TEST USE
+// Returns the top-most dialog as a multi-select picker, and whether it is one.
+func (this *Window) TopPicker() (IPickerDialog, bool) {
+	dialog, ok := this.state.GetDialogHost().GetTopDialog().(IPickerDialog)
+	return dialog, ok
+}
+
 // SelectedPanelScrollPosition ONLY FOR INTEGRATION TEST USE
 // Returns the selected panel's first visible child and its pixel offset, plus
 // whether that panel exposes a position at all.

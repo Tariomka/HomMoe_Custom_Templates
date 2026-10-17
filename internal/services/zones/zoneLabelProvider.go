@@ -173,6 +173,9 @@ func (this *ZoneLabelProvider) createTopologyAdjacency(
 			}
 			adjacency.Link(orderedLabels[current], orderedLabels[next])
 		}
+	case config.TopologyRandom, config.TopologySquare, config.TopologyGeometric,
+		config.TopologyCross, config.TopologyFractal, config.TopologyGeometricHub:
+		fallthrough
 	default:
 		orderedLabels := this.CreateOrderedZoneLabels(configuration, playerLabels, neutralZones)
 		for current := range orderedLabels {

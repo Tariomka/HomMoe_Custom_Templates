@@ -53,9 +53,9 @@ func TestWhenOnlyManualEditsDifferFromSnapshot_ReportsStateNotChanged(t *testing
 	// Arrange
 	state := newEditorState()
 	state.SnapshotCurrentState()
-	state.SetManualEdits(
+	state.SetManualEdits(editor_state_model.ManualEditSettingsFromSnapshot(
 		[]template_model.Zone{{Name: "Zone A"}},
-		[]template_model.Connection{{Name: "A-B"}})
+		[]template_model.Connection{{Name: "A-B"}}))
 
 	// Act
 	wasChanged := state.WasStateChanged()

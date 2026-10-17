@@ -37,7 +37,7 @@ func TestWhenTheGroupIsUnwrapped_TheEntityMatchesTheOriginal(t *testing.T) {
 	assert.Equal(t, entity, unwrapped)
 }
 
-func TestWhenAnEmptyGroupIsUnwrapped_TheEntityIsEmpty(t *testing.T) {
+func TestWhenAnEmptyGroupIsUnwrapped_OnlyTheVersionAndTheClearedPlayerRowsAreSet(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	model := editor_state_model.ContentSettings{}
@@ -46,5 +46,37 @@ func TestWhenAnEmptyGroupIsUnwrapped_TheEntityIsEmpty(t *testing.T) {
 	entity := editor_state_model.ToContentSettingsEntity(model)
 
 	// Assert
-	assert.Equal(t, editor_state.ContentSettings{}, entity)
+	assert.Equal(t,
+		editor_state.ContentSettings{
+			ContentDefaultsVersion: editor_state.CurrentContentDefaultsVersion,
+			PlayerZoneContentRows:  []editor_state.ZoneContentRow{},
+		},
+		entity)
+}
+
+func TestWhenPlayerRowsEqualTheDefaults_TheyAreOmitted(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	model := editor_state_model.ContentSettings{
+		PlayerZoneContentRows: editor_state_model.GetDefaultPlayerZoneContentRows(),
+	}
+
+	// Act
+	entity := editor_state_model.ToContentSettingsEntity(model)
+
+	// Assert
+	assert.Nil(t, entity.PlayerZoneContentRows)
+}
+
+func TestWhenPlayerRowsDifferFromTheDefaults_TheyAreWritten(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	rows := editor_state_model.GetDefaultPlayerZoneContentRows()[1:]
+	model := editor_state_model.ContentSettings{PlayerZoneContentRows: rows}
+
+	// Act
+	entity := editor_state_model.ToContentSettingsEntity(model)
+
+	// Assert
+	assert.Equal(t, editor_state_model.ToZoneContentRowEntities(rows), entity.PlayerZoneContentRows)
 }

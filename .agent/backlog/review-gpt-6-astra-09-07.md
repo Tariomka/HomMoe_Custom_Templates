@@ -8,10 +8,15 @@
 
 **Severity:** 🔴 High: bug/correctness/user-visible · 🟠 Medium: architecture, performance, CI gaps · 🟡 Low: readability/hygiene · ⚪ Informational.
 
-**Finding count:** **32 actionable items: 8 High, 17 Medium, 7 Low.** This includes owner-requested architecture/product work scoped on 2026-09-08, not just proved defects. Informational observations and prior-item dispositions are not included in that count. Findings are source-verified unless a runtime reproduction is explicitly recorded. Performance claims are reasoned, not benchmark measurements. In-game behavior was not tested.
+**Finding count:** **32 actionable items: 8 High, 17 Medium, 7 Low.** This includes owner-requested architecture/product work scoped on 2026-09-08, not just proved defects. Informational observations and prior-item dispositions are not included in that count. Findings are source-verified unless a runtime reproduction is explicitly recorded. Performance claims are reasoned, not benchmark measurements. In-game behavior was not tested. **Current total (2026-10-12): 33 actionable items: 9 High, 17 Medium, 7 Low**, including the owner-added §1.16.
 
-**Current progress (2026-10-04):** **24 fixed, 8 remaining**: 0 High, 5 Medium,
-3 Low. Batch K (§2.3) closed with owner commits `1ee746b` and `27b2933` on 2026-10-04 (plan
+**Current progress (2026-10-13):** **28 fixed, 5 remaining**: 0 High, 2 Medium,
+3 Low. Batch M (§1.16, §2.4, §2.5, §2.6; Batch Q folded in) is owner-reviewed and
+committed (`58948f9`, `a185dbe`, `f24b1fa`). Next: Batch N (§2.7, §2.9).
+
+**Previous progress (2026-10-12):** **24 fixed, 9 remaining**: 1 High, 5 Medium,
+3 Low. §1.16 (High) was added by the owner from the Batch L investigation; §2.4's
+investigation is delivered and its decision gate is open. Batch K (§2.3) closed with owner commits `1ee746b` and `27b2933` on 2026-10-04 (plan
 `d50f34d`); the owner reviewed it and accepted 73.2% coverage. Batches A/D, B, C, E, F, G, H, I,
 J and K are owner-committed and closed; Batch I
 (§7.1, §7.2) closed with owner commit `dd2b8bf` on 2026-10-04 (plan `599ff23`),
@@ -403,6 +408,20 @@ an actual change, which also removes the per-frame overwrite of unlisted types.
 
 **Owner decision.** Confirm whether changing the editor type should clear old placement rules or merely display the effective type. Never silently rewrite protected schema vocabulary.
 
+### 1.16 ✅ FIXED — Manual snapshots silently override later zone-affecting settings
+
+**Progress (2026-10-13).** Batch M, plan [batch-m-persistence-format.md](../plans/batch-m-persistence-format.md) (owner decisions M-D1–M-D9, M1–M29), fixed by the C3 representation (Batch Q folded into M); owner commit `f24b1fa`. Manual edits now store only structure plus the fields that differ from a fresh generation, and every regeneration rebuilds them on the new one (`ManualEditDeltaService`), so untouched values follow every setting while an explicit override survives. Driver-level regressions in `test/integration/manualEditRegeneration_integration_test.go` cover map size, resource and structure density, player/neutral/hub zone size, neutral-stack and border-guard strength (incl. connection `guardValue`), abandoned outposts, advanced guard randomization, player castles and City Hold on Geometric Hub, each guarded by a check that the setting changes the generation, plus an override control and a no-op (rename) control. Hub-castle biomes are covered by the same derivation (derived hub zones follow the fresh generation) without a dedicated case.
+
+**Origin.** Found by the Batch L investigation (2026-10-12) and added to this review by the owner, who classified it as an unintended bug. Evidence and the full per-setting table are in [the Batch L report §6](../investigations/batch-l-compact-state.md#6-the-snapshot-wins-bug-review-116).
+
+**Evidence.** [LayoutDefiningOptionsChanged](../../internal/models/editor_state_model/editorState.go) excludes zone-affecting settings, so after a manual edit [handleGenerateTemplate](../../app/gui/drivers/stateGeneration.go) regenerates and [reapplyManualEdits](../../app/gui/drivers/stateManualEdits.go) writes the whole stored snapshot back over the fresh variant. Only castle counts are reapplied ([ManualReapplyService](../../internal/services/connection_editor/manualReapplyService.go)); `UpdateTemplate` rebuilds template-level mandatory content and reconciles roads. Measured on the real driver with paired same-generation comparisons: `MapSize` (all six content values), resource and structure density (content values), player/neutral/hub zone size (`size`), neutral-stack strength (`guardMultiplier`, main-object guards), border-guard strength (main-object guards and connection `guardValue`), abandoned outposts (never added), City Hold (hub main objects, roads, biomes) and, in advanced mode, guard randomization stay at their pre-change values; hub castle changes leave the hub biomes stale.
+
+**Why wrong.** The settings panel accepts the change and the template regenerates, but the exported template keeps the old values in every zone, with no warning. A border-guard or density change after one zone drag silently has no effect.
+
+**Fix.** Separate batch Q, not authorized. A precise fix needs per-field provenance (which values the user edited), which the current snapshot cannot provide; see the Batch L report §6 and §12. Options for the owner: fix together with an approved §2.4 representation that stores overrides, or ship a lossy stop-gap first (re-derive the listed fields, losing same-field manual edits, or treat zone-affecting settings as layout-defining and discard edits with a warning). Tests: one regression per stale setting through the driver, with a castle control and a no-op control.
+
+**Owner decision.** Choose the fix route and its ordering relative to M.
+
 ## §2 Architecture, product scope, and duplication
 
 ### 2.1 ✅ FIXED — Connection-curve construction is duplicated with divergent visual policies
@@ -491,7 +510,11 @@ K1–K16, F1–F6), owner commits `1ee746b` (Phase 1) and `27b2933` (Phases 2–
 
 **Implementation / verification.** Inventory descriptors, validation/load paths, ordinary/tournament dispatch, preview helpers, zone labeling, factories, constructors, benchmarks, and all test fixtures before deletion; retain code shared with surviving topologies. Update the [README topology catalogue](../../README.md) and other active user documentation. Regenerate Wire. Replace retired topology tests with explicit rejection and surviving-dispatch coverage, including Random tournament fallback, Circles, Geometric Hub, and all remaining supported choices. Extend [topology-provider tests](../../test/unit/internal/services/template_generator/providers/topologyProvider/createTopologyVariant_test.go), [tournament tests](../../test/unit/internal/services/template_generator/providers/topology/tournamentTopology/createTopologyVariant_test.go), and [wire-format integration tests](../../test/integration/editorStateWireFormat_integration_test.go); cover old-version rejected loads and unchanged current state after failure. Compile/run the appropriate unit, integration, GUI, and performance suites explicitly so retired constants cannot remain hidden behind tags. Add GUI selection coverage and remeasure coverage after the deliberate code/test deletions. Keep §1.12's two-player enforcement as a separate coordinated item.
 
-### 2.4 🟠 Investigate compact manual deltas and derivable editor state before redesign
+### 2.4 ✅ FIXED — Investigate compact manual deltas and derivable editor state before redesign
+
+**Progress (2026-10-13).** The owner chose C3 at the Batch L decision gate (M-D1 to M-D9; report §15 is answered by them). Batch M implements it (owner commit `f24b1fa`): compact live model and v3 `manualEdits` (structure, `origin`/`castles`, `fieldOverrides`, `unset`), capture against a fresh generation at Apply, expansion at every regeneration, legacy snapshots converted at the first regeneration with a one-time notice, `generatorVersion` with a golden-hash determinism guard, default-row omission behind `contentDefaultsVersion`, and the per-frame cloning fix. Measured: the 6-player hub move fixture's manual section shrinks from 108,289 B to 8,133 B (7.5%); save + load 10.28 ms → 6.18 ms, 818 KB → 287 KB, 4,930 → 1,146 allocs; an idle frame with edits allocates as much as one without.
+
+**Progress (2026-10-12).** Batch L delivered the feasibility investigation: [the report](../investigations/batch-l-compact-state.md), with live and persisted measurements, determinism and identity evidence, four prototyped alternatives (all round-tripping export and preview on 40 fixtures), a lossless-omission table, §2.5/§2.6 coordination points and acceptance tests. It recommends structure plus derived-field overrides (option C3). It also found §1.16. **The decision gate is open**: no representation, seed, delta or migration work is authorized until the owner decides; the item stays open until then.
 
 **Evidence / owner request O11.** [ManualZoneSave](../../internal/models/editor_state_model/manualZoneSave.go) persists complete edited zones; [EditorState](../../internal/models/editor_state_model/editorState.go) retains manual zone/connection snapshots. A single manual edit can therefore persist substantially more than the changed data. Redundant candidates include generated pools, guard reaction distribution, content limits, inferable zone classification, and unchanged default content rows. These are candidates to verify, not fields approved for deletion.
 
@@ -501,7 +524,9 @@ K1–K16, F1–F6), owner commits `1ee746b` (Phase 1) and `27b2933` (Phases 2–
 
 **Verification plan.** Analyze fixtures representing untouched generation, single-zone moves, additions/deletions, connection edits, explicit content overrides, nil/empty values, and old saved states. Define reconstruction/round-trip and size/performance acceptance tests for the chosen design; do not claim improvement without a baseline. If implementation is approved, add dedicated model/delta tests, migration tests, and [wire-format integration coverage](../../test/integration/editorStateWireFormat_integration_test.go), plus manual-edit GUI regression flows. Coordinate its approved format outcome with §2.5/§2.6 in one migration plan; no speculative migration is authorized by this investigation item.
 
-### 2.5 🟠 Represent bans and value overrides as structured lists throughout
+### 2.5 ✅ FIXED — Represent bans and value overrides as structured lists throughout
+
+**Progress (2026-10-13).** Batch M Phase 3 (owner commit `a185dbe`): typed `BanEntry{sid}` and `ValueOverrideEntry{sid, guardValue}` in the entity, model, configuration and Bonuses panel; `GameRulesProvider` emits from typed lists with `Variant=-1`, order and duplicates kept. Legacy text is parsed once by the v2 → v3 migration, whose line-numbered warnings for malformed override lines reach the load status. GUI coverage of picking, removing, saving and loading all three lists (Phase 5).
 
 **Evidence / owner request O12.** [ContentSettings model](../../internal/models/editor_state_model/contentSettings.go) and [entity](../../internal/entities/editor_state/contentSettings.go) still store `BannedItems`, `BannedMagics`, and `ValueOverridesText` as strings. [GameRulesProvider](../../internal/services/template_generator/providers/gameRulesProvider.go) parses the strings during generation. In contrast, [BonusEntry entity](../../internal/entities/editor_state/bonusEntry.go), [model wrapper](../../internal/models/editor_state_model/bonusEntry.go), and [config aliases](../../internal/models/config/types.go) already provide the requested pattern.
 
@@ -509,7 +534,9 @@ K1–K16, F1–F6), owner commits `1ee746b` (Phase 1) and `27b2933` (Phases 2–
 
 **Implementation / verification.** Inventory all readers, parsers, cloning/conversion seams, and UI controls before replacing the string fields; do not widen layer exceptions or edit the protected RMG schema. Preserve malformed-text warnings at the UI/legacy parsing boundaries: the implementation plan must trace their delivery to the user and specify the resulting typed generation API, rather than silently dropping warnings or testing malformed text at a seam that no longer parses it. Use one coordinated new-schema migration with §2.6, informed by §2.4's decision gate, while continuing to load supported older states. Extend [override generation tests](../../test/unit/internal/services/template_generator/providers/gameRulesProvider/createValueOverrides_test.go), content-state clone/mapping tests, and [wire-format integration tests](../../test/integration/editorStateWireFormat_integration_test.go). Test multiple entries, blanks, malformed legacy text, duplicates/order, round trips, mutation isolation, and unchanged exported rules; add Bonuses-panel editing/save/load GUI coverage. This item does not authorize a separate bonuses DTO-exception refactor.
 
-### 2.6 🟠 Persist editor settings in sections while retaining flat identity/map/schema fields
+### 2.6 ✅ FIXED — Persist editor settings in sections while retaining flat identity/map/schema fields
+
+**Progress (2026-10-13).** Batch M Phase 3 (owner commit `a185dbe`): schema 3 keeps `schemaVersion`, `generatorVersion`, the identity and map fields at the root and writes the sections `players`, `neutralZones`, `castles`, `generation`, `gameRules`, `content`, `manualEdits`; v2 is frozen in `editor_state_v2`, and v0–v2 still load through one migration chain. Root-versus-section keys are asserted in the rewritten wire-format integration test.
 
 **Evidence / owner request O13.** [EditorState entity](../../internal/entities/editor_state/editorState.go) embeds ten groups into a flat aggregate; [JSON tests](../../test/unit/internal/entities/editor_state/editorState/editorStateJson_test.go) and [wire-format integration tests](../../test/integration/editorStateWireFormat_integration_test.go) pin that current representation.
 
@@ -757,11 +784,12 @@ The configured run includes existing exclusions (protected registry duplication,
 | I: docs | §7.1, §7.2 | Complete: owner commit `dd2b8bf` (plan `599ff23`); every audited README/QUICKSTART inaccuracy, test observations, AGENTS.md interface example. Independent plan/implementation reviews (GPT-6.1 Sol); docs-only checks (links, snippet compile, vet on comment-touched packages); no coverage run (owner decision). |
 | J: reopened service boundary | §2.2 | Complete: owner commit `3c0ad87`, whole zone-content exception removed (bonuses kept), Windows verification and independent plan/implementation reviews; finding marked fixed 2026-09-28. Coverage 74.5% (covered statements 6909 → 6915); native Linux unavailable. |
 | K: topology retirement | §2.3 | Complete: owner commits `1ee746b` and `27b2933` (plan `d50f34d`), owner-reviewed 2026-10-04. Retired IDs rejected at load, balanced tournaments, panic-free lookup contract; independent plan/implementation reviews (GPT-6.1 Sol). Owner accepted 73.2% coverage (74.5% before; the drop is deleted fully-covered code only); native Linux unavailable. |
-| L: compact-state investigation | §2.4 | Can begin independently; owner reviews live/persisted feasibility and reconstruction semantics before implementation or schema design. |
-| M: coordinated persistence format | §2.5, §2.6; approved outcome of §2.4 only | Follow L's decision gate. One migration plan, supported legacy loading, typed entries, and explicit root-versus-section wire assertions. |
-| N: panel/state organization | §2.7, §2.9 | Driver accessors first; preserve public panel API, GUI snapshots, and state round trips. Coordinate Bonuses work with M. |
+| L: compact-state investigation | §2.4 | Investigation delivered 2026-10-12 ([report](../investigations/batch-l-compact-state.md)); the owner's decision gate is open. Found §1.16. |
+| M: coordinated persistence format | §2.5, §2.6; approved outcome of §2.4 only | Complete: owner-reviewed and committed (`58948f9`, `a185dbe`, `f24b1fa`); plan [batch-m-persistence-format.md](../plans/batch-m-persistence-format.md). Schema 3 with sections and typed lists, C3 manual edits, generator version guard, default-row omission, cloning fix, linter v2.14.0. Independent plan and implementation reviews (GPT-6.1 Sol). Coverage 74.4% (floor 73.1%), lint zero; native Linux unavailable. |
+| N: panel/state organization | §2.7, §2.9 | Next. Driver accessors first; preserve public panel API, GUI snapshots, and state round trips. Bonuses panel now uses Batch M's typed entries (§2.5 delivered). |
 | O: focused naming and lookup | §2.8, §2.10 | Separate behavior-preserving changes; schedule rename outside overlapping service work, regenerate Wire, test the config lookup directly. |
 | P: vector arithmetic audit | §4.1 | Coordinate with F; equivalent permitted production edits only, dedicated numerical tests and hot-path checks. |
+| Q: snapshot-wins fix | §1.16 | Folded into M (M-D4): fixed by the C3 representation, with driver-level regressions per stale setting. |
 
 For every code batch: capture coverage before/after, build, unit suite, test-layout check, full lint baseline, relevant tagged integration/GUI suites, and Wire regeneration when constructors/provider sets change. Preserve **74.4% or higher comparable Windows coverage** and **0 lint issues**, unless a measured denominator/platform change is separately explained and approved. Owner stages/commits. Mark items in place; never renumber.
 

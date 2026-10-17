@@ -3,7 +3,9 @@
 package integration_common
 
 import (
+	"cmp"
 	"image"
+	"slices"
 
 	"gioui.org/f32"
 	"gioui.org/io/semantic"
@@ -118,6 +120,36 @@ func (this *AppRunner) ClickTopmostCheckboxIn(area image.Rectangle) {
 	}
 
 	this.clickBounds(topmost)
+}
+
+// ClickNthButtonIn taps the center of the index-th button labelled label inside
+// area, counting top to bottom and then left to right. It is for a label every
+// row of a list repeats, such as a remove button.
+func (this *AppRunner) ClickNthButtonIn(area image.Rectangle, label string, index int) {
+	this.tb.Helper()
+	this.mu.Lock()
+	this.frameLocked()
+	matches := make([]image.Rectangle, 0)
+	for _, node := range this.router.AppendSemantics(nil) {
+		bounds := node.Desc.Bounds
+		if node.Desc.Class != semantic.Button || node.Desc.Label != label {
+			continue
+		}
+		if bounds.Min.Add(bounds.Max).Div(2).In(area) {
+			matches = append(matches, bounds)
+		}
+	}
+	this.mu.Unlock()
+
+	slices.SortFunc(matches, func(left, right image.Rectangle) int {
+		return cmp.Or(cmp.Compare(left.Min.Y, right.Min.Y), cmp.Compare(left.Min.X, right.Min.X))
+	})
+	if index < 0 || index >= len(matches) {
+		this.tb.Fatalf("button %d labelled %q is out of range: %d inside %v", index, label, len(matches), area)
+		return
+	}
+
+	this.clickBounds(matches[index])
 }
 
 func (this *AppRunner) clickBounds(bounds image.Rectangle) {

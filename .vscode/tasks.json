@@ -132,7 +132,7 @@
         {
             "label": "Go: Run Linter",
             "type": "shell",
-            "command": "golangci-lint-v2",
+            "command": "golangci-lint",
             "args": [ "run", "./...", "--issues-exit-code=0", "--fix" ],
             "problemMatcher": {
                 "owner": "go",
@@ -160,7 +160,7 @@
         {
             "label": "Go: Get Linter Results",
             "type": "shell",
-            "command": "golangci-lint-v2",
+            "command": "golangci-lint",
             "args": [
                 "run",
                 "./...",

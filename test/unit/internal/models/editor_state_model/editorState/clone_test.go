@@ -98,18 +98,31 @@ func TestWhenAManualZoneIsMutatedInPlaceOnTheClone_SourceIsUnchanged(t *testing.
 	assert.Equal(t, originalName, state.ManualZones[0].Name)
 }
 
-func TestWhenAManualConnectionIsMutatedInPlaceOnTheClone_SourceIsUnchanged(t *testing.T) {
+func TestWhenAManualConnectionOverrideIsMutatedInPlaceOnTheClone_SourceIsUnchanged(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	state := newFullyPopulatedState(t)
 	clone := state.Clone()
-	originalName := state.ManualConnections[0].Connection.Name
 
 	// Act
-	clone.ManualConnections[0].Connection.Name = originalName + "-changed"
+	*clone.ManualConnections[0].FieldOverrides.Road = false
 
 	// Assert
-	assert.Equal(t, originalName, state.ManualConnections[0].Connection.Name)
+	assert.True(t, *state.ManualConnections[0].FieldOverrides.Road)
+}
+
+func TestWhenAManualConnectionUnsetEntryIsMutatedInPlaceOnTheClone_SourceIsUnchanged(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	state := newFullyPopulatedState(t)
+	clone := state.Clone()
+	originalEntry := state.ManualConnections[0].Unset[0]
+
+	// Act
+	clone.ManualConnections[0].Unset[0] = originalEntry + "-changed"
+
+	// Assert
+	assert.Equal(t, originalEntry, state.ManualConnections[0].Unset[0])
 }
 
 // TestWhenEveryReferenceFieldIsWalked_CloneSharesNoStorageWithTheSource is the

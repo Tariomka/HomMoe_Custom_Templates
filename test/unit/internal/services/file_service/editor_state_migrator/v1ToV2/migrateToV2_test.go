@@ -3,8 +3,8 @@ package v1ToV2_test
 import (
 	"testing"
 
-	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state/editor_state_v1"
+	"github.com/Tariomka/hommoe_custom_templates/internal/entities/editor_state/editor_state_v2"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities/template_entity"
 	"github.com/Tariomka/hommoe_custom_templates/internal/entities/topology"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
@@ -16,27 +16,27 @@ func TestWhenALegacyStateIsMigrated_EverySettingsGroupCrossesUnchanged(t *testin
 	t.Parallel()
 	// Arrange
 	legacy := newLegacyState()
-	expected := editor_state.EditorState{
-		TemplateIdentity:    editor_state.TemplateIdentity(legacy.TemplateIdentity),
-		MapSettings:         editor_state.MapSettings(legacy.MapSettings),
-		PlayerSettings:      editor_state.PlayerSettings(legacy.PlayerSettings),
-		NeutralZoneSettings: editor_state.NeutralZoneSettings(legacy.NeutralZoneSettings),
-		CastleSettings:      editor_state.CastleSettings(legacy.CastleSettings),
-		GenerationSettings:  editor_state.GenerationSettings(legacy.GenerationSettings),
-		GameRuleSettings:    editor_state.GameRuleSettings(legacy.GameRuleSettings),
+	expected := editor_state_v2.EditorState{
+		TemplateIdentity:    editor_state_v2.TemplateIdentity(legacy.TemplateIdentity),
+		MapSettings:         editor_state_v2.MapSettings(legacy.MapSettings),
+		PlayerSettings:      editor_state_v2.PlayerSettings(legacy.PlayerSettings),
+		NeutralZoneSettings: editor_state_v2.NeutralZoneSettings(legacy.NeutralZoneSettings),
+		CastleSettings:      editor_state_v2.CastleSettings(legacy.CastleSettings),
+		GenerationSettings:  editor_state_v2.GenerationSettings(legacy.GenerationSettings),
+		GameRuleSettings:    editor_state_v2.GameRuleSettings(legacy.GameRuleSettings),
 	}
 
 	// Act
 	migrated := editor_state_migrator.MigrateToV2(legacy)
-	migrated.ContentSettings = editor_state.ContentSettings{}
-	migrated.ManualEditSettings = editor_state.ManualEditSettings{}
-	migrated.SchemaOptions = editor_state.SchemaOptions{}
+	migrated.ContentSettings = editor_state_v2.ContentSettings{}
+	migrated.ManualEditSettings = editor_state_v2.ManualEditSettings{}
+	migrated.SchemaOptions = editor_state_v2.SchemaOptions{}
 
 	// Assert
 	assert.Equal(t, expected, migrated)
 }
 
-func TestWhenALegacyStateIsMigrated_ItLandsAtTheCurrentSchemaVersion(t *testing.T) {
+func TestWhenALegacyStateIsMigrated_ItLandsAtSchemaVersionTwo(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	legacy := newLegacyState()
@@ -45,7 +45,7 @@ func TestWhenALegacyStateIsMigrated_ItLandsAtTheCurrentSchemaVersion(t *testing.
 	migrated := editor_state_migrator.MigrateToV2(legacy)
 
 	// Assert
-	assert.Equal(t, editor_state.CurrentEditorStateSchemaVersion, migrated.SchemaVersion)
+	assert.Equal(t, editor_state_v2.SchemaVersion, migrated.SchemaVersion)
 }
 
 // The version a v1 file happens to carry is not the version the migrated state
@@ -60,19 +60,19 @@ func TestWhenALegacyStateCarriesItsOwnVersion_TheMigratedStateOverwritesIt(t *te
 	migrated := editor_state_migrator.MigrateToV2(legacy)
 
 	// Assert
-	assert.Equal(t, editor_state.CurrentEditorStateSchemaVersion, migrated.SchemaVersion)
+	assert.Equal(t, editor_state_v2.SchemaVersion, migrated.SchemaVersion)
 }
 
 func TestWhenALegacyStateCarriesContentRows_TheirRulesCrossToo(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	legacy := newLegacyState()
-	expected := []editor_state.ZoneContentRow{{
+	expected := []editor_state_v2.ZoneContentRow{{
 		Sid:     "row_sid",
 		Count:   3,
 		IsGroup: true,
 		IsMine:  true,
-		Rules:   []editor_state.ContentRuleRow{{Name: "Guarded", DistanceName: "Far", VariantID: new(4)}},
+		Rules:   []editor_state_v2.ContentRuleRow{{Name: "Guarded", DistanceName: "Far", VariantID: new(4)}},
 	}}
 
 	// Act
@@ -86,8 +86,8 @@ func TestWhenALegacyStateCarriesBonuses_TheirPresetOrdinalsCross(t *testing.T) {
 	t.Parallel()
 	// Arrange
 	legacy := newLegacyState()
-	expected := []editor_state.BonusEntry{{
-		PresetType:     editor_state.BonusStartingGold,
+	expected := []editor_state_v2.BonusEntry{{
+		PresetType:     editor_state_v2.BonusStartingGold,
 		ReceiverFilter: "all_heroes",
 		Param:          "9500",
 		Param2:         "1",
@@ -152,7 +152,7 @@ func TestWhenALegacyZoneIsMigrated_ItCarriesNoGeneratorStamps(t *testing.T) {
 	// Assert
 	assert.Equal(
 		t,
-		editor_state.ManualZoneSave{
+		editor_state_v2.ManualZoneSave{
 			Zone:           legacy.ManualZones[0].Zone,
 			ManualPosition: new(data.NewVec2(0.25, 0.75)),
 			Quality:        legacy.ManualZones[0].Quality,
@@ -164,7 +164,7 @@ func TestWhenALegacyStateCarriesManualConnections_TheyCrossUnchanged(t *testing.
 	t.Parallel()
 	// Arrange
 	legacy := newLegacyState()
-	expected := []editor_state.ManualConnectionSave{{
+	expected := []editor_state_v2.ManualConnectionSave{{
 		Connection:  template_entity.Connection{Name: "Conn A", ConnectionType: "Portal"},
 		IsUserAdded: true,
 	}}

@@ -64,6 +64,23 @@ func TestWhenStatePathIsPadded_LoadsTheTrimmedPath(t *testing.T) {
 	fileService.AssertCalled(t, "LoadSettingsFile", path)
 }
 
+func TestWhenTheMigrationWarns_TheWarningsAreReturnedAsLoadWarnings(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	state := editor_state_model.NewDefaultEditorStateModel()
+	warnings := []string{gofakeit.Sentence(4)}
+	fileService := &test_helpers.FileServiceMock{}
+	fileService.On("LoadSettingsFile", mock.Anything).Return(&state, nil, warnings)
+	handler := handlers.NewStateHandler(fileService, newPassingValidator())
+
+	// Act
+	loaded, err := handler.LoadState(gofakeit.Word()+".gen.json", true)
+
+	// Assert
+	require.NoError(t, err)
+	assert.Equal(t, warnings, loaded.LoadWarnings)
+}
+
 func TestWhenSettingsFileCannotBeLoaded_PropagatesTheError(t *testing.T) {
 	t.Parallel()
 	// Arrange

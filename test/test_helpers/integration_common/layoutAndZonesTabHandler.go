@@ -2,7 +2,11 @@
 
 package integration_common
 
-import "gioui.org/f32"
+import (
+	"image"
+
+	"gioui.org/f32"
+)
 
 // randomTopologyOptionLabel is the one topology whose preview is regenerated
 // with fresh randomness on every run, so it is the one SelectTopology must not
@@ -56,6 +60,19 @@ func (this *LayoutAndZonesTabHandler) OpenZoneEditor() *ZoneEditorHandler {
 	// only drawn - and its canvas only measured - on the frame after that.
 	this.runner.NextFrame()
 	return newZoneEditorHandler(this.BaseHandler)
+}
+
+// DragBorderGuardStrengthToMaximum drags the Border guard strength slider from
+// its default to its right end. The change is debounced, so the template follows
+// it only once BaseHandler.WaitForRegeneration has let the debounce window pass.
+func (this *LayoutAndZonesTabHandler) DragBorderGuardStrengthToMaximum() *LayoutAndZonesTabHandler {
+	this.runner.tb.Helper()
+	this.runner.NextFrame()
+	this.runner.DragTo(
+		image.Pt(borderGuardSliderStartX, borderGuardSliderCenterY),
+		image.Pt(borderGuardSliderEndX, borderGuardSliderCenterY))
+	this.commit()
+	return this
 }
 
 // ToggleAdvancedZoneControl splits the neutral zone counts into four tier rows.

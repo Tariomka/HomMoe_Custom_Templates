@@ -6,9 +6,11 @@ import (
 
 	"github.com/Tariomka/hommoe_custom_templates/app/gui/drivers"
 	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_errors"
+	"github.com/Tariomka/hommoe_custom_templates/internal/common/common_generator"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos"
 	"github.com/Tariomka/hommoe_custom_templates/internal/dtos/editor_state_dto"
 	"github.com/Tariomka/hommoe_custom_templates/internal/helpers/data"
+	"github.com/Tariomka/hommoe_custom_templates/internal/models/editor_state_model"
 	"github.com/Tariomka/hommoe_custom_templates/internal/models/template_model"
 	"github.com/Tariomka/hommoe_custom_templates/test/test_helpers"
 	"github.com/brianvoe/gofakeit/v7"
@@ -343,6 +345,181 @@ func TestWhenAnUntouchedBaseIsAppliedWithoutManualEdits_TheDocumentStaysSaved(t 
 
 	// Assert
 	assert.False(t, state.IsUnsaved())
+}
+
+func TestWhenCaptureSucceeds_TheCapturedEditsAreStored(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	state, handlerMock, zones, connections := newGeneratedState()
+	expectAcceptedUpdate(handlerMock)
+	captured := editor_state_model.ManualEditSettingsFromSnapshot(zones[:1], connections)
+	handlerMock.CaptureManualEditsFunc = func(dtos.ManualEditCaptureRequestDto) (dtos.ManualEditCaptureDto, error) {
+		return dtos.ManualEditCaptureDto{ManualEdits: captured}, nil
+	}
+
+	// Act
+	state.ApplyEditedZones(dtos.ZoneEditorZonesDto{Zones: zones, Connections: connections})
+
+	// Assert
+	stateData := state.GetStateData()
+	assert.Equal(t, captured.Clone(), stateData.ManualEditSettings)
+}
+
+func TestWhenCaptureSucceeds_TheGeneratorVersionIsTheCurrentOne(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	state, handlerMock, zones, connections := newGeneratedState()
+	expectAcceptedUpdate(handlerMock)
+
+	// Act
+	state.ApplyEditedZones(dtos.ZoneEditorZonesDto{Zones: zones, Connections: connections})
+
+	// Assert
+	stateData := state.GetStateData()
+	assert.Equal(t, common_generator.GeneratorOutputVersion, stateData.GeneratorVersion)
+}
+
+func TestWhenCaptureIsRequested_TheRequestSettingsCarryNoManualEdits(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	state, handlerMock, zones, connections := newGeneratedState()
+	expectAcceptedUpdate(handlerMock)
+	state.ApplyEditedZones(dtos.ZoneEditorZonesDto{Zones: zones, Connections: connections})
+	var captureRequest dtos.ManualEditCaptureRequestDto
+	handlerMock.CaptureManualEditsFunc = func(
+		request dtos.ManualEditCaptureRequestDto) (dtos.ManualEditCaptureDto, error) {
+		captureRequest = request
+		return dtos.ManualEditCaptureDto{}, nil
+	}
+
+	// Act
+	state.ApplyEditedZones(dtos.ZoneEditorZonesDto{Zones: zones, Connections: connections})
+
+	// Assert
+	requestState := captureRequest.State.EditorState
+	assert.False(t, requestState.HasManualEdits())
+}
+
+func TestWhenCaptureIsRequested_TheRequestCarriesTheUpdatedVariantZones(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	state, handlerMock, zones, connections := newGeneratedState()
+	updatedTemplate := test_helpers.GetDefaultTemplateModel()
+	updatedTemplate.Variants[0].Zones[0].Name = gofakeit.ProductName()
+	handlerMock.On("UpdateTemplate", mock.Anything).
+		Return(dtos.TemplateLoadDto{Template: &updatedTemplate}, nil)
+	var captureRequest dtos.ManualEditCaptureRequestDto
+	handlerMock.CaptureManualEditsFunc = func(
+		request dtos.ManualEditCaptureRequestDto) (dtos.ManualEditCaptureDto, error) {
+		captureRequest = request
+		return dtos.ManualEditCaptureDto{}, nil
+	}
+
+	// Act
+	state.ApplyEditedZones(dtos.ZoneEditorZonesDto{Zones: zones, Connections: connections})
+
+	// Assert
+	assert.Equal(t, updatedTemplate.Variants[0].Zones, captureRequest.Zones)
+}
+
+func TestWhenCaptureFails_TheStateStillNeedsDerivation(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	state, handlerMock, zones, connections := newGeneratedState()
+	expectAcceptedUpdate(handlerMock)
+	expectCaptureFailure(handlerMock)
+
+	// Act
+	state.ApplyEditedZones(dtos.ZoneEditorZonesDto{Zones: zones, Connections: connections})
+
+	// Assert
+	stateData := state.GetStateData()
+	assert.True(t, stateData.NeedsDerivation())
+}
+
+func TestWhenCaptureFails_TheAllOverriddenFormOfTheUpdatedVariantIsStored(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	state, handlerMock, zones, connections := newGeneratedState()
+	updatedTemplate := test_helpers.GetDefaultTemplateModel()
+	updatedTemplate.Variants[0].Zones[0].Name = gofakeit.ProductName()
+	handlerMock.On("UpdateTemplate", mock.Anything).
+		Return(dtos.TemplateLoadDto{Template: &updatedTemplate}, nil)
+	expectCaptureFailure(handlerMock)
+	variant := updatedTemplate.Variants[0]
+	expected := editor_state_model.ManualEditSettingsFromSnapshot(variant.Zones, variant.Connections)
+
+	// Act
+	state.ApplyEditedZones(dtos.ZoneEditorZonesDto{Zones: zones, Connections: connections})
+
+	// Assert
+	stateData := state.GetStateData()
+	assert.Equal(t, expected.Clone(), stateData.ManualEditSettings)
+}
+
+func TestWhenCaptureFails_TheDocumentBecomesUnsaved(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	state, handlerMock, zones, connections := newGeneratedState()
+	expectAcceptedUpdate(handlerMock)
+	expectCaptureFailure(handlerMock)
+
+	// Act
+	state.ApplyEditedZones(dtos.ZoneEditorZonesDto{Zones: zones, Connections: connections})
+
+	// Assert
+	assert.True(t, state.IsUnsaved())
+}
+
+func TestWhenCaptureFails_AnErrorStatusIsReported(t *testing.T) {
+	t.Parallel()
+	// Arrange
+	state, handlerMock, zones, connections := newGeneratedState()
+	expectAcceptedUpdate(handlerMock)
+	expectCaptureFailure(handlerMock)
+
+	// Act
+	state.ApplyEditedZones(dtos.ZoneEditorZonesDto{Zones: zones, Connections: connections})
+
+	// Assert
+	message, isError := state.GetStatus()
+	assert.True(t, isError, "status: %s", message)
+}
+
+// The snapshot was made against the settings at Apply, so a later setting
+// change must not move the baseline it is converted against.
+func TestWhenCaptureFailedAndASettingChangedAfterwards_RegenerationConvertsAgainstTheApplyTimeSettings(
+	t *testing.T) {
+	t.Parallel()
+	// Arrange
+	state, handlerMock, zones, connections := newGeneratedState()
+	expectAcceptedUpdate(handlerMock)
+	expectCaptureFailure(handlerMock)
+	densityAtApply := state.GetStateData().ResourceDensityPercent
+	state.ApplyEditedZones(dtos.ZoneEditorZonesDto{Zones: zones, Connections: connections})
+	state.UpdateState(func(settings *editor_state_model.EditorState) {
+		settings.ResourceDensityPercent = densityAtApply + 50
+	})
+	baselineDensity := 0
+	handlerMock.ConvertManualEditsFunc = func(
+		request dtos.ManualEditConvertRequestDto) (dtos.ManualEditCaptureDto, error) {
+		baselineDensity = request.Baseline.ResourceDensityPercent
+		return dtos.ManualEditCaptureDto{ManualEdits: request.ManualEdits}, nil
+	}
+
+	// Act
+	state.Generate()
+
+	// Assert
+	assert.Equal(t, densityAtApply, baselineDensity)
+}
+
+// expectCaptureFailure makes the derivation capture fail, as when the edited
+// layout cannot be generated against.
+func expectCaptureFailure(handlerMock *test_helpers.TemplateHandlerMock) {
+	handlerMock.CaptureManualEditsFunc = func(dtos.ManualEditCaptureRequestDto) (dtos.ManualEditCaptureDto, error) {
+		return dtos.ManualEditCaptureDto{}, gofakeit.ErrorValidation()
+	}
 }
 
 // newGeneratedState returns a State holding the default template, plus its
